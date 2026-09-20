@@ -1,0 +1,584 @@
+{
+  "type": "FeatureCollection",
+  "name": "chennai_wards_synthetic_demo",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - FOR PROTOTYPE VISUALIZATION ONLY - NOT AN OFFICIAL GCC SURVEY",
+  "is_synthetic": true,
+  "geometry_source": "demo_seed",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "ward_01_thiruvottiyur",
+      "properties": {
+        "ward_id": "ward_01_thiruvottiyur",
+        "ward_number": "01",
+        "name": "Thiruvottiyur",
+        "zone_id": "zone_01",
+        "zone_name": "Zone 1 - Thiruvottiyur",
+        "total_population": 215000,
+        "elderly_population": 21500,
+        "children_population": 19350,
+        "outdoor_worker_population": 58000,
+        "poverty_rate_proxy": 0.32,
+        "vegetation_ndvi_proxy": 0.18,
+        "builtup_surface_fraction": 0.78,
+        "latitude": 13.164,
+        "longitude": 80.301,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.282, 13.148],
+            [80.298, 13.146],
+            [80.312, 13.155],
+            [80.318, 13.170],
+            [80.321, 13.185],
+            [80.308, 13.188],
+            [80.292, 13.181],
+            [80.280, 13.165],
+            [80.282, 13.148]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_02_manali",
+      "properties": {
+        "ward_id": "ward_02_manali",
+        "ward_number": "02",
+        "name": "Manali",
+        "zone_id": "zone_02",
+        "zone_name": "Zone 2 - Manali",
+        "total_population": 142000,
+        "elderly_population": 12780,
+        "children_population": 14200,
+        "outdoor_worker_population": 46800,
+        "poverty_rate_proxy": 0.38,
+        "vegetation_ndvi_proxy": 0.12,
+        "builtup_surface_fraction": 0.85,
+        "latitude": 13.168,
+        "longitude": 80.258,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.240, 13.148],
+            [80.260, 13.145],
+            [80.282, 13.148],
+            [80.280, 13.165],
+            [80.292, 13.181],
+            [80.275, 13.190],
+            [80.250, 13.186],
+            [80.238, 13.168],
+            [80.240, 13.148]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_03_madhavaram",
+      "properties": {
+        "ward_id": "ward_03_madhavaram",
+        "ward_number": "03",
+        "name": "Madhavaram",
+        "zone_id": "zone_03",
+        "zone_name": "Zone 3 - Madhavaram",
+        "total_population": 189000,
+        "elderly_population": 17010,
+        "children_population": 18900,
+        "outdoor_worker_population": 49140,
+        "poverty_rate_proxy": 0.28,
+        "vegetation_ndvi_proxy": 0.22,
+        "builtup_surface_fraction": 0.70,
+        "latitude": 13.148,
+        "longitude": 80.231,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.210, 13.132],
+            [80.238, 13.130],
+            [80.258, 13.140],
+            [80.260, 13.145],
+            [80.240, 13.148],
+            [80.238, 13.168],
+            [80.218, 13.165],
+            [80.205, 13.148],
+            [80.210, 13.132]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_04_tondiarpet",
+      "properties": {
+        "ward_id": "ward_04_tondiarpet",
+        "ward_number": "04",
+        "name": "Tondiarpet",
+        "zone_id": "zone_04",
+        "zone_name": "Zone 4 - Tondiarpet",
+        "total_population": 245000,
+        "elderly_population": 22050,
+        "children_population": 22050,
+        "outdoor_worker_population": 73500,
+        "poverty_rate_proxy": 0.42,
+        "vegetation_ndvi_proxy": 0.08,
+        "builtup_surface_fraction": 0.90,
+        "latitude": 13.125,
+        "longitude": 80.289,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.268, 13.112],
+            [80.288, 13.110],
+            [80.306, 13.122],
+            [80.308, 13.142],
+            [80.298, 13.146],
+            [80.282, 13.148],
+            [80.269, 13.135],
+            [80.268, 13.112]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_05_royapuram",
+      "properties": {
+        "ward_id": "ward_05_royapuram",
+        "ward_number": "05",
+        "name": "Royapuram",
+        "zone_id": "zone_05",
+        "zone_name": "Zone 5 - Royapuram",
+        "total_population": 278000,
+        "elderly_population": 27800,
+        "children_population": 25020,
+        "outdoor_worker_population": 88960,
+        "poverty_rate_proxy": 0.45,
+        "vegetation_ndvi_proxy": 0.06,
+        "builtup_surface_fraction": 0.94,
+        "latitude": 13.109,
+        "longitude": 80.294,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.275, 13.090],
+            [80.296, 13.088],
+            [80.308, 13.098],
+            [80.312, 13.118],
+            [80.306, 13.122],
+            [80.288, 13.110],
+            [80.268, 13.112],
+            [80.275, 13.090]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_06_thiruvika_nagar",
+      "properties": {
+        "ward_id": "ward_06_thiruvika_nagar",
+        "ward_number": "06",
+        "name": "Thiru-Vi-Ka Nagar",
+        "zone_id": "zone_06",
+        "zone_name": "Zone 6 - Thiru-Vi-Ka Nagar",
+        "total_population": 221000,
+        "elderly_population": 22100,
+        "children_population": 19890,
+        "outdoor_worker_population": 59670,
+        "poverty_rate_proxy": 0.35,
+        "vegetation_ndvi_proxy": 0.14,
+        "builtup_surface_fraction": 0.84,
+        "latitude": 13.111,
+        "longitude": 80.245,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.228, 13.095],
+            [80.252, 13.092],
+            [80.275, 13.090],
+            [80.268, 13.112],
+            [80.269, 13.135],
+            [80.258, 13.140],
+            [80.238, 13.130],
+            [80.228, 13.115],
+            [80.228, 13.095]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_07_ambattur",
+      "properties": {
+        "ward_id": "ward_07_ambattur",
+        "ward_number": "07",
+        "name": "Ambattur",
+        "zone_id": "zone_07",
+        "zone_name": "Zone 7 - Ambattur",
+        "total_population": 312000,
+        "elderly_population": 28080,
+        "children_population": 28080,
+        "outdoor_worker_population": 81120,
+        "poverty_rate_proxy": 0.22,
+        "vegetation_ndvi_proxy": 0.25,
+        "builtup_surface_fraction": 0.68,
+        "latitude": 13.114,
+        "longitude": 80.154,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.130, 13.092],
+            [80.165, 13.090],
+            [80.182, 13.108],
+            [80.180, 13.135],
+            [80.162, 13.142],
+            [80.132, 13.138],
+            [80.120, 13.115],
+            [80.130, 13.092]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_08_anna_nagar",
+      "properties": {
+        "ward_id": "ward_08_anna_nagar",
+        "ward_number": "08",
+        "name": "Anna Nagar",
+        "zone_id": "zone_08",
+        "zone_name": "Zone 8 - Anna Nagar",
+        "total_population": 268000,
+        "elderly_population": 29480,
+        "children_population": 21440,
+        "outdoor_worker_population": 42880,
+        "poverty_rate_proxy": 0.15,
+        "vegetation_ndvi_proxy": 0.32,
+        "builtup_surface_fraction": 0.62,
+        "latitude": 13.085,
+        "longitude": 80.210,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.185, 13.068],
+            [80.218, 13.065],
+            [80.235, 13.078],
+            [80.232, 13.098],
+            [80.212, 13.108],
+            [80.188, 13.102],
+            [80.182, 13.085],
+            [80.185, 13.068]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_09_teynampet",
+      "properties": {
+        "ward_id": "ward_09_teynampet",
+        "ward_number": "09",
+        "name": "Teynampet",
+        "zone_id": "zone_09",
+        "zone_name": "Zone 9 - Teynampet",
+        "total_population": 256000,
+        "elderly_population": 28160,
+        "children_population": 20480,
+        "outdoor_worker_population": 48640,
+        "poverty_rate_proxy": 0.20,
+        "vegetation_ndvi_proxy": 0.24,
+        "builtup_surface_fraction": 0.74,
+        "latitude": 13.042,
+        "longitude": 80.248,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.232, 13.025],
+            [80.258, 13.022],
+            [80.278, 13.035],
+            [80.276, 13.062],
+            [80.252, 13.065],
+            [80.230, 13.055],
+            [80.228, 13.038],
+            [80.232, 13.025]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_10_kodambakkam",
+      "properties": {
+        "ward_id": "ward_10_kodambakkam",
+        "ward_number": "10",
+        "name": "Kodambakkam",
+        "zone_id": "zone_10",
+        "zone_name": "Zone 10 - Kodambakkam",
+        "total_population": 289000,
+        "elderly_population": 28900,
+        "children_population": 23120,
+        "outdoor_worker_population": 57800,
+        "poverty_rate_proxy": 0.24,
+        "vegetation_ndvi_proxy": 0.18,
+        "builtup_surface_fraction": 0.80,
+        "latitude": 13.052,
+        "longitude": 80.221,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.198, 13.038],
+            [80.228, 13.038],
+            [80.242, 13.048],
+            [80.240, 13.072],
+            [80.220, 13.075],
+            [80.198, 13.065],
+            [80.192, 13.048],
+            [80.198, 13.038]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_11_valasaravakkam",
+      "properties": {
+        "ward_id": "ward_11_valasaravakkam",
+        "ward_number": "11",
+        "name": "Valasaravakkam",
+        "zone_id": "zone_11",
+        "zone_name": "Zone 11 - Valasaravakkam",
+        "total_population": 178000,
+        "elderly_population": 16020,
+        "children_population": 16020,
+        "outdoor_worker_population": 39160,
+        "poverty_rate_proxy": 0.18,
+        "vegetation_ndvi_proxy": 0.28,
+        "builtup_surface_fraction": 0.66,
+        "latitude": 13.040,
+        "longitude": 80.175,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.155, 13.022],
+            [80.188, 13.022],
+            [80.198, 13.038],
+            [80.198, 13.065],
+            [80.182, 13.068],
+            [80.158, 13.055],
+            [80.150, 13.035],
+            [80.155, 13.022]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_12_alandur",
+      "properties": {
+        "ward_id": "ward_12_alandur",
+        "ward_number": "12",
+        "name": "Alandur",
+        "zone_id": "zone_12",
+        "zone_name": "Zone 12 - Alandur",
+        "total_population": 164000,
+        "elderly_population": 16400,
+        "children_population": 14760,
+        "outdoor_worker_population": 37720,
+        "poverty_rate_proxy": 0.21,
+        "vegetation_ndvi_proxy": 0.26,
+        "builtup_surface_fraction": 0.69,
+        "latitude": 12.997,
+        "longitude": 80.201,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.182, 12.980],
+            [80.212, 12.978],
+            [80.228, 12.992],
+            [80.225, 13.018],
+            [80.205, 13.024],
+            [80.185, 13.015],
+            [80.178, 12.995],
+            [80.182, 12.980]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_13_adyar",
+      "properties": {
+        "ward_id": "ward_13_adyar",
+        "ward_number": "13",
+        "name": "Adyar",
+        "zone_id": "zone_13",
+        "zone_name": "Zone 13 - Adyar",
+        "total_population": 218000,
+        "elderly_population": 26160,
+        "children_population": 17440,
+        "outdoor_worker_population": 34880,
+        "poverty_rate_proxy": 0.12,
+        "vegetation_ndvi_proxy": 0.36,
+        "builtup_surface_fraction": 0.58,
+        "latitude": 13.006,
+        "longitude": 80.257,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.240, 12.988],
+            [80.265, 12.985],
+            [80.282, 13.002],
+            [80.280, 13.028],
+            [80.258, 13.030],
+            [80.238, 13.018],
+            [80.235, 13.000],
+            [80.240, 12.988]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_14_perungudi",
+      "properties": {
+        "ward_id": "ward_14_perungudi",
+        "ward_number": "14",
+        "name": "Perungudi",
+        "zone_id": "zone_14",
+        "zone_name": "Zone 14 - Perungudi",
+        "total_population": 195000,
+        "elderly_population": 15600,
+        "children_population": 17550,
+        "outdoor_worker_population": 46800,
+        "poverty_rate_proxy": 0.26,
+        "vegetation_ndvi_proxy": 0.29,
+        "builtup_surface_fraction": 0.64,
+        "latitude": 12.965,
+        "longitude": 80.244,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.220, 12.945],
+            [80.255, 12.942],
+            [80.272, 12.962],
+            [80.268, 12.985],
+            [80.245, 12.988],
+            [80.222, 12.975],
+            [80.215, 12.955],
+            [80.220, 12.945]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "ward_15_sholinganallur",
+      "properties": {
+        "ward_id": "ward_15_sholinganallur",
+        "ward_number": "15",
+        "name": "Sholinganallur",
+        "zone_id": "zone_15",
+        "zone_name": "Zone 15 - Sholinganallur",
+        "total_population": 234000,
+        "elderly_population": 16380,
+        "children_population": 21060,
+        "outdoor_worker_population": 51480,
+        "poverty_rate_proxy": 0.19,
+        "vegetation_ndvi_proxy": 0.35,
+        "builtup_surface_fraction": 0.60,
+        "latitude": 12.901,
+        "longitude": 80.228,
+        "is_synthetic": true,
+        "geometry_source": "demo_seed",
+        "disclaimer": "SYNTHETIC DEMONSTRATION WARD BOUNDARIES - NOT AN OFFICIAL GCC SURVEY"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [80.205, 12.875],
+            [80.242, 12.872],
+            [80.262, 12.895],
+            [80.258, 12.935],
+            [80.235, 12.942],
+            [80.208, 12.925],
+            [80.198, 12.895],
+            [80.205, 12.875]
+          ]
+        ]
+      }
+    }
+  ]
+}
