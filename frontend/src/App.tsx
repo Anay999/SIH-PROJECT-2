@@ -7,7 +7,6 @@ import { WorkspaceProvider } from './context/WorkspaceContext';
 import { RoleGuard } from './components/auth/RoleGuard';
 import { AppShell } from './layouts/AppShell';
 
-import { LandingPage } from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
 import { CitizenPortalPage } from './pages/CitizenPortalPage';
 import { AdminConsolePage } from './pages/AdminConsolePage';
@@ -45,7 +44,7 @@ export const App: React.FC = () => {
           <BrowserRouter>
             <Routes>
               {/* Public & Authentication Gateways */}
-              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/landing" element={<Navigate to="/" replace />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/login" element={<AuthPage />} />
 

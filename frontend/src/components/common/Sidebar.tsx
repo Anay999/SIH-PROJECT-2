@@ -16,7 +16,6 @@ import {
   Activity,
   ChevronLeft,
   ChevronRight,
-  Globe,
   Shield,
   Lock,
   LogOut,
@@ -228,19 +227,6 @@ export const Sidebar: React.FC = () => {
             </div>
           ))}
         </div>
-
-        {/* 3D Earth Globe Portal Link */}
-        {!isCollapsed && (
-          <div className="pt-2 border-t border-slate-200">
-            <NavLink
-              to="/landing"
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-bold text-cyan-700 bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 transition group"
-            >
-              <Globe className="w-4 h-4 shrink-0 text-cyan-600 group-hover:rotate-45 transition-transform" />
-              <span className="truncate">3D Earth Globe Landing</span>
-            </NavLink>
-          </div>
-        )}
       </div>
 
       {/* User Session & Role Footer */}
