@@ -34,8 +34,9 @@ class CreateUserPayload(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100, description="Official full name")
     role: str = Field(..., description="Role: CITIZEN, MUNICIPAL_OFFICER, ADMIN")
     phone_number: str = Field(..., min_length=10, max_length=20, description="Contact phone with country code")
+    city: Optional[str] = Field("Chennai", description="Assigned municipal city jurisdiction")
     email: Optional[str] = Field(None, max_length=100, description="Email address")
-    password: str = Field(..., min_length=8, description="Initial temporary or permanent password")
+    password: str = Field(..., min_length=6, description="Initial temporary or permanent password")
 
 class UpdateUserStatusPayload(BaseModel):
     is_active: bool = Field(..., description="Active state of the user account")
@@ -63,6 +64,7 @@ def list_users(
             "username": u.username,
             "full_name": u.full_name,
             "role": u.role,
+            "city": getattr(u, "city", "Chennai") or "Chennai",
             "phone_masked": phone_masked,
             "phone_number": u.phone_number, # Admin can view unmasked for official communication
             "email": u.email,
@@ -105,6 +107,14 @@ def create_user(
     if not clean_phone.startswith("+"):
         clean_phone = "+91" + clean_phone if len(clean_phone) == 10 else "+" + clean_phone
 
+    # Check for duplicate phone
+    existing_phone = db.query(User).filter(User.phone_number == clean_phone).first()
+    if existing_phone:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Mobile number '{clean_phone}' is already registered to '{existing_phone.username}'."
+        )
+
     new_id = f"usr_{uuid.uuid4().hex[:12]}"
     user = User(
         id=new_id,
@@ -114,6 +124,7 @@ def create_user(
         email=payload.email.strip() if payload.email else None,
         password_hash=hash_password(payload.password),
         role=target_role,
+        city=payload.city.strip() if payload.city else "Chennai",
         is_active=True,
         phone_verified=True,
         created_at_utc=datetime.now(timezone.utc),
@@ -133,6 +144,7 @@ def create_user(
             "username": user.username,
             "full_name": user.full_name,
             "role": user.role,
+            "city": user.city,
             "phone_number": clean_phone
         }
     )
@@ -140,7 +152,7 @@ def create_user(
 
     return {
         "success": True,
-        "message": f"User '{user.username}' successfully created with role {user.role}.",
+        "message": f"Account '{user.username}' successfully provisioned as {user.role} in {user.city}.",
         "user_id": user.id
     }
 

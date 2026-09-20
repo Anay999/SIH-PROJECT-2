@@ -13,7 +13,10 @@ import {
   FileText,
   LogOut,
   UserCheck,
-  UserX
+  UserX,
+  MapPin,
+  Building,
+  Key
 } from 'lucide-react';
 
 interface ManagedUser {
@@ -21,6 +24,7 @@ interface ManagedUser {
   username: string;
   full_name: string;
   role: 'ADMIN' | 'MUNICIPAL_OFFICER' | 'CITIZEN';
+  city?: string;
   phone_masked: string;
   phone_number: string;
   email?: string;
@@ -66,7 +70,7 @@ interface SystemHealth {
 
 export const AdminConsolePage: React.FC = () => {
   const { user: currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'users' | 'audit' | 'system'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'add_member' | 'audit' | 'system'>('users');
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditRecord[]>([]);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
@@ -74,11 +78,12 @@ export const AdminConsolePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // New User Modal State
+  // New User / Member Onboarding State
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
   const [newUsername, setNewUsername] = useState<string>('');
   const [newFullName, setNewFullName] = useState<string>('');
   const [newRole, setNewRole] = useState<'MUNICIPAL_OFFICER' | 'CITIZEN' | 'ADMIN'>('MUNICIPAL_OFFICER');
+  const [newCity, setNewCity] = useState<string>('Chennai');
   const [newPhone, setNewPhone] = useState<string>('');
   const [newEmail, setNewEmail] = useState<string>('');
   const [newPassword, setNewPassword] = useState<string>('');
@@ -195,11 +200,12 @@ export const AdminConsolePage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          username: newUsername,
-          full_name: newFullName,
+          username: newUsername.trim(),
+          full_name: newFullName.trim(),
           role: newRole,
-          phone_number: newPhone,
-          email: newEmail || undefined,
+          city: newCity,
+          phone_number: newPhone.trim(),
+          email: newEmail.trim() || undefined,
           password: newPassword,
         }),
       });
@@ -218,6 +224,8 @@ export const AdminConsolePage: React.FC = () => {
       setNewPhone('');
       setNewEmail('');
       setNewPassword('');
+      setNewCity('Chennai');
+      setActiveTab('users');
       fetchUsers();
       fetchSystemHealth();
     } catch (e: any) {
@@ -260,11 +268,11 @@ export const AdminConsolePage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => setActiveTab('add_member')}
             className="inline-flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold tracking-wider uppercase shadow-lg shadow-emerald-600/20 transition"
           >
             <UserPlus className="w-4 h-4" />
-            <span>Provision Account</span>
+            <span>+ Add Member</span>
           </button>
         </div>
       </div>
@@ -307,6 +315,18 @@ export const AdminConsolePage: React.FC = () => {
         >
           <Users className="w-4 h-4" />
           <span>User Directory ({users.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('add_member')}
+          className={`px-4 py-2.5 text-xs font-bold tracking-wider uppercase border-b-2 transition-colors flex items-center space-x-2 ${
+            activeTab === 'add_member'
+              ? 'border-emerald-500 text-emerald-400'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <UserPlus className="w-4 h-4" />
+          <span>+ Add Member</span>
         </button>
 
         <button
@@ -361,6 +381,7 @@ export const AdminConsolePage: React.FC = () => {
                   <tr>
                     <th className="px-4 py-3">Account Identity</th>
                     <th className="px-4 py-3">Role Authority</th>
+                    <th className="px-4 py-3">Jurisdiction</th>
                     <th className="px-4 py-3">Contact Information</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Last Active</th>
@@ -387,6 +408,10 @@ export const AdminConsolePage: React.FC = () => {
                         >
                           {u.role}
                         </span>
+                      </td>
+
+                      <td className="px-4 py-3 font-mono text-[11px] text-slate-300">
+                        {u.city || 'Chennai'}
                       </td>
 
                       <td className="px-4 py-3 font-mono text-[11px]">
@@ -457,6 +482,292 @@ export const AdminConsolePage: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: ADD MEMBER (ADMIN PROVISIONING PORTAL) */}
+      {activeTab === 'add_member' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Form */}
+          <div className="lg:col-span-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+            <div className="border-b border-slate-800 pb-4">
+              <div className="flex items-center space-x-2">
+                <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <UserPlus className="w-5 h-5" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Provision Team Member / Official</h2>
+                  <p className="text-xs text-slate-400">
+                    Create new Municipal Officers, Administrators, or pre-provisioned Citizen accounts.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Explanatory Policy Box */}
+            <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 text-xs flex items-start space-x-3">
+              <Shield className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-white">Strict RBAC Authority Rule:</span>
+                <p className="mt-1 text-slate-300">
+                  Only currently authenticated <strong className="text-emerald-300">Administrators</strong> can create and assign <strong className="text-amber-300">Municipal Officer</strong> or <strong className="text-red-300">Admin</strong> credentials. General public users registering via the public portal are strictly confined to Citizen access.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateUser} className="space-y-5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Role */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1.5 flex items-center space-x-1.5">
+                    <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Role Authority Level *</span>
+                  </label>
+                  <select
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:border-emerald-500 transition"
+                  >
+                    <option value="MUNICIPAL_OFFICER">Municipal Officer (Operations, Alerts & Wards)</option>
+                    <option value="ADMIN">System Administrator (Full Authority & User Mgmt)</option>
+                    <option value="CITIZEN">Citizen (Public Safety & Directions)</option>
+                  </select>
+                </div>
+
+                {/* City Jurisdiction */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1.5 flex items-center space-x-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Municipal Jurisdiction (City) *</span>
+                  </label>
+                  <select
+                    value={newCity}
+                    onChange={(e) => setNewCity(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-medium focus:outline-none focus:border-emerald-500 transition"
+                  >
+                    <option value="Chennai">Chennai (Greater Chennai Corporation)</option>
+                    <option value="Delhi NCR">Delhi NCR (MCD / NDMC)</option>
+                    <option value="Mumbai">Mumbai (BMC / MCGM)</option>
+                    <option value="Ahmedabad">Ahmedabad (AMC)</option>
+                    <option value="Bengaluru">Bengaluru (BBMP)</option>
+                    <option value="Hyderabad">Hyderabad (GHMC)</option>
+                    <option value="Kolkata">Kolkata (KMC)</option>
+                    <option value="Jaipur">Jaipur (JMC)</option>
+                    <option value="Lucknow">Lucknow (LMC)</option>
+                    <option value="Pune">Pune (PMC)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Username */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1.5">Username Handle *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    placeholder="e.g. officer_royapuram or admin_south"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Alphanumeric handle used for login and audit identity.</span>
+                </div>
+
+                {/* Full Name */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1.5">Official Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newFullName}
+                    onChange={(e) => setNewFullName(e.target.value)}
+                    placeholder="e.g. Dr. Rajesh Sundaram"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Displayed on public directives and operational logs.</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Phone Number */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1.5">Official Mobile Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Primary credential token for 2FA and OTP broadcasts.</span>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1.5">Official Email Address (Optional)</label>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="officer@chennaicorp.gov.in"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                  />
+                  <span className="text-[10px] text-slate-500 mt-1 block">Used for report dispatches and administrative notices.</span>
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1.5 flex items-center space-x-1.5">
+                  <Key className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Initial Access Password *</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 characters (alphanumeric + symbol recommended)"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                />
+                <span className="text-[10px] text-slate-500 mt-1 block">The member will use this password alongside their mobile/username to log in.</span>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewUsername('');
+                    setNewFullName('');
+                    setNewPhone('');
+                    setNewEmail('');
+                    setNewPassword('');
+                    setNewCity('Chennai');
+                    setActiveTab('users');
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-600/30 transition"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Provision & Activate Member</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right Column: Role Privileges Card */}
+          <div className="space-y-5">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
+                <Shield className="w-4 h-4 text-emerald-400" />
+                <span>Selected Role Privileges</span>
+              </h3>
+
+              {newRole === 'MUNICIPAL_OFFICER' && (
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                    <span className="font-bold text-blue-400 text-xs">MUNICIPAL OFFICER</span>
+                    <p className="text-[11px] text-slate-300 mt-1">
+                      Operational command over heat emergencies, resource dispatch, and ward heat action plan execution.
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-[11px] text-slate-300">
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <span>Issue municipal emergency alerts & broadcasts</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <span>Manage hospital ICU surge & shelter capacities</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <span>Ward vulnerability inspector & thermal telemetry</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                      <span>Export heatwave risk & analytics intelligence</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {newRole === 'ADMIN' && (
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30">
+                    <span className="font-bold text-red-400 text-xs">SYSTEM ADMINISTRATOR</span>
+                    <p className="text-[11px] text-slate-300 mt-1">
+                      Unrestricted administrative authority over identity, provisioning, system security, and audit trails.
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-[11px] text-slate-300">
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                      <span>Provision new Municipal Officers & Admins</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                      <span>Role elevation & emergency session revocation</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                      <span>Account deactivation & security audit trail</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                      <span>Infrastructure & telemetry monitoring</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {newRole === 'CITIZEN' && (
+                <div className="space-y-3">
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
+                    <span className="font-bold text-emerald-400 text-xs">CITIZEN USER</span>
+                    <p className="text-[11px] text-slate-300 mt-1">
+                      Public heat protection, emergency route navigation, and community cooling center locator.
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-[11px] text-slate-300">
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>Real-time personal thermal risk assessment</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>Emergency shaded route navigation</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>Public heat alert subscriptions</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-2.5">
+              <div className="flex items-center space-x-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                <Building className="w-4 h-4 text-cyan-400" />
+                <span>Selected Jurisdiction</span>
+              </div>
+              <p className="text-sm font-semibold text-white">
+                {newCity} Municipal Corporation
+              </p>
+              <p className="text-[11px] text-slate-400">
+                The provisioned officer/member will be assigned operational jurisdiction over {newCity} wards, hospitals, and cooling shelters.
+              </p>
             </div>
           </div>
         </div>
@@ -649,6 +960,26 @@ export const AdminConsolePage: React.FC = () => {
                   <option value="MUNICIPAL_OFFICER">Municipal Officer (Operations & Directives)</option>
                   <option value="CITIZEN">Citizen (Public Safety & Directions)</option>
                   <option value="ADMIN">System Administrator (Full Authority)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Municipal Jurisdiction (City)</label>
+                <select
+                  value={newCity}
+                  onChange={(e) => setNewCity(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="Chennai">Chennai (Greater Chennai Corporation)</option>
+                  <option value="Delhi NCR">Delhi NCR (MCD / NDMC)</option>
+                  <option value="Mumbai">Mumbai (BMC / MCGM)</option>
+                  <option value="Ahmedabad">Ahmedabad (AMC)</option>
+                  <option value="Bengaluru">Bengaluru (BBMP)</option>
+                  <option value="Hyderabad">Hyderabad (GHMC)</option>
+                  <option value="Kolkata">Kolkata (KMC)</option>
+                  <option value="Jaipur">Jaipur (JMC)</option>
+                  <option value="Lucknow">Lucknow (LMC)</option>
+                  <option value="Pune">Pune (PMC)</option>
                 </select>
               </div>
 

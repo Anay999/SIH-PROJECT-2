@@ -318,9 +318,18 @@ export const AuthPage: React.FC = () => {
           </form>
         )}
 
-        {/* TAB 2: REGISTER ACCOUNT (Mobile + Name + Municipal City + Roaming GPS) */}
+        {/* TAB 2: REGISTER ACCOUNT (Citizen Self-Registration Only) */}
         {authMode === 'register' && (
           <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+            <div className="p-3 rounded-xl bg-blue-950/50 border border-blue-800/60 text-xs text-blue-200 flex items-start gap-2.5">
+              <Shield className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-white block font-bold">Citizen Self-Registration</strong>
+                <span className="text-[11px] text-slate-300">
+                  Citizens can register on their own for hyper-local heatwave advisories and cooling shelter navigation. Municipal Officers and Administrators are provisioned directly by active Administrators.
+                </span>
+              </div>
+            </div>
             <div className="space-y-1 text-xs">
               <label className="block text-slate-300 font-semibold">Mobile Number</label>
               <div className="relative">

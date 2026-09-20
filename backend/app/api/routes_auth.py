@@ -246,6 +246,17 @@ def register_with_mobile(
             detail={"code": "PHONE_REGISTERED", "message": "This mobile number is already registered. Please sign in."}
         )
 
+    # Strict RBAC enforcement: Only an administrator can provision Municipal Officer or Admin roles.
+    # Public self-registration is strictly for Citizen accounts.
+    if payload.role and payload.role.strip().upper() != UserRole.CITIZEN.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "PUBLIC_REGISTRATION_RESTRICTED",
+                "message": "Only an existing Administrator can provision Municipal Officer or Admin accounts. Public registration is restricted to Citizen accounts."
+            }
+        )
+
     # Validate city jurisdiction
     city_prof = get_city_profile(payload.city)
     city_name = city_prof["name"]
@@ -260,7 +271,7 @@ def register_with_mobile(
         full_name=payload.full_name.strip(),
         phone_number=normalized_phone,
         password_hash=hash_password(payload.password),
-        role=payload.role if payload.role in [r.value for r in UserRole] else UserRole.CITIZEN.value,
+        role=UserRole.CITIZEN.value,
         city=city_name,
         is_active=True,
         phone_verified=True,

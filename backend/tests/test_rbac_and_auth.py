@@ -169,13 +169,14 @@ def test_admin_user_management_lifecycle():
     # 1. Create a new test user
     import uuid
     new_username = f"test_officer_{uuid.uuid4().hex[:6]}"
+    new_phone = f"+9198{uuid.uuid4().int % 100000000:08d}"
     create_res = client.post(
         "/api/v1/admin/users",
         json={
             "username": new_username,
             "full_name": "Test Sub Officer",
             "role": "MUNICIPAL_OFFICER",
-            "phone_number": "+919876543210",
+            "phone_number": new_phone,
             "email": "test_officer@chennaicorp.gov.in",
             "password": "SecurePassword123"
         },
