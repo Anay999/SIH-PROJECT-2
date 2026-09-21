@@ -19,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (identifier: string, password: string) => Promise<{ success: boolean; role?: UserRole; error?: string }>;
   loginWithOtp: (challengeId: string, otp: string) => Promise<{ success: boolean; role?: UserRole; error?: string }>;
-  register: (payload: { phone_number: string; full_name: string; city: string; password?: string; role?: string }) => Promise<{ success: boolean; role?: UserRole; error?: string }>;
+  register: (payload: { phone_number: string; full_name: string; city: string; password?: string; email?: string; role?: string }) => Promise<{ success: boolean; role?: UserRole; error?: string }>;
   updateCity: (city: string) => Promise<boolean>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
@@ -110,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (payload: { phone_number: string; full_name: string; city: string; password?: string; role?: string }) => {
+  const register = async (payload: { phone_number: string; full_name: string; city: string; password?: string; email?: string; role?: string }) => {
     setIsLoading(true);
     try {
       const res = await fetch('/api/v1/auth/register', {
@@ -121,7 +121,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone_number: payload.phone_number,
           full_name: payload.full_name,
           city: payload.city,
-          password: payload.password || 'HeatShield@123',
+          email: payload.email || undefined,
+          password: payload.password || 'ThermoSafe@2026',
           role: payload.role || 'CITIZEN'
         }),
       });

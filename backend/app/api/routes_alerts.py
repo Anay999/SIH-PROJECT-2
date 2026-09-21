@@ -7,8 +7,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.auth import get_current_actor, require_roles, CurrentActor, UserRole, record_audit
-from app.models.alert_intervention import Alert, Intervention
-from app.models.city_ward import Ward
+from app.models.alert_intervention import Alert, Intervention, AlertDeliveryRecord
+from app.models.city_ward import Ward, Zone, City
+from app.models.user import User
 from app.engines.mock_notification import MockNotificationProvider
 
 router = APIRouter(tags=["Alerts & Heat Action Plan"])
@@ -198,17 +199,55 @@ async def send_mock_broadcast(
     ward = db.query(Ward).filter(Ward.id == alert.ward_id).first()
     ward_name = ward.name if ward else alert.ward_id
 
-    # Simulated local broadcast execution
+    # 1. Enforce Municipality Boundary Isolation
+    officer_city = "Chennai"
+    if actor.role != UserRole.ADMIN:
+        officer = db.query(User).filter(User.username == actor.actor_id).first()
+        if not officer:
+            officer = db.query(User).filter(User.id == actor.actor_id).first()
+        officer_city = getattr(officer, "city", "Chennai") or "Chennai"
+
+        # Check ward -> zone -> city
+        if ward and ward.zone_id:
+            zone = db.query(Zone).filter(Zone.id == ward.zone_id).first()
+            if zone and zone.city_id:
+                city = db.query(City).filter(City.id == zone.city_id).first()
+                if city and city.name.strip().lower() != officer_city.strip().lower():
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Municipal boundary violation: Officer jurisdiction is '{officer_city}', cannot dispatch alert to '{city.name}'."
+                    )
+
+    # 2. Simulated local broadcast execution
+    recipients_est = ward.total_population if ward else 45000
     dispatch_result = await MockNotificationProvider.send_message(
         channel=payload.channel,
         audience=payload.audience or alert.target_audience,
         headline=alert.headline,
         body=alert.message,
         ward_name=ward_name,
-        recipients_count_estimate=ward.total_population if ward else 45000
+        recipients_count_estimate=recipients_est
     )
 
-    # Persist audit record
+    # 3. Create persistent delivery record for tracking & retry mechanisms
+    delivery_id = f"del_{uuid.uuid4().hex[:10]}"
+    delivery_record = AlertDeliveryRecord(
+        id=delivery_id,
+        alert_id=alert.id,
+        channel=payload.channel.upper(),
+        municipality=officer_city,
+        recipient_type="MUNICIPAL_TARGETED",
+        recipient_count=recipients_est,
+        status="DELIVERED",
+        retry_count=0,
+        max_retries=3,
+        error_detail=None,
+        dispatched_by=actor.actor_id,
+        dispatched_at_utc=datetime.now(timezone.utc)
+    )
+    db.add(delivery_record)
+
+    # 4. Persist audit record
     req_id = f"req_{uuid.uuid4().hex[:10]}"
     record_audit(
         db=db,
@@ -217,12 +256,117 @@ async def send_mock_broadcast(
         entity_type="ALERT",
         entity_id=alert.id,
         previous_state={"channel": payload.channel},
-        new_state=dispatch_result,
+        new_state={**dispatch_result, "delivery_id": delivery_id, "municipality": officer_city},
         request_id=req_id
     )
     db.commit()
 
-    return unified_response(dispatch_result, request_id=req_id)
+    return unified_response({
+        **dispatch_result,
+        "delivery_id": delivery_id,
+        "municipality": officer_city,
+        "status": "DELIVERED",
+        "retry_count": 0
+    }, request_id=req_id)
+
+
+@router.get("/alerts/deliveries")
+def get_alert_deliveries(
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor)
+):
+    """
+    Retrieve tracked alert delivery dispatches and status.
+    Municipal officers see deliveries within their municipality; Admins see all.
+    """
+    if actor.role not in [UserRole.OFFICER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to Municipal Officers and Administrators."
+        )
+
+    query = db.query(AlertDeliveryRecord)
+    if actor.role != UserRole.ADMIN:
+        officer = db.query(User).filter(User.username == actor.actor_id).first()
+        if not officer:
+            officer = db.query(User).filter(User.id == actor.actor_id).first()
+        officer_city = getattr(officer, "city", "Chennai") or "Chennai"
+        query = query.filter(AlertDeliveryRecord.municipality == officer_city)
+
+    records = query.order_by(AlertDeliveryRecord.dispatched_at_utc.desc()).limit(50).all()
+    results = []
+    for r in records:
+        alert = db.query(Alert).filter(Alert.id == r.alert_id).first()
+        results.append({
+            "id": r.id,
+            "alert_id": r.alert_id,
+            "headline": alert.headline if alert else "Municipal Early Warning",
+            "channel": r.channel,
+            "municipality": r.municipality,
+            "recipient_type": r.recipient_type,
+            "recipient_count": r.recipient_count,
+            "status": r.status,
+            "retry_count": r.retry_count,
+            "max_retries": r.max_retries,
+            "error_detail": r.error_detail,
+            "dispatched_by": r.dispatched_by,
+            "dispatched_at_utc": r.dispatched_at_utc.isoformat() if r.dispatched_at_utc else None,
+            "last_retry_at_utc": r.last_retry_at_utc.isoformat() if r.last_retry_at_utc else None,
+        })
+
+    return unified_response({"deliveries": results, "count": len(results)})
+
+
+@router.post("/alerts/deliveries/{delivery_id}/retry")
+def retry_alert_delivery(
+    delivery_id: str,
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor)
+):
+    """
+    Retry a failed or pending alert dispatch with backoff limit.
+    """
+    if actor.role not in [UserRole.OFFICER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted to Municipal Officers and Administrators."
+        )
+
+    record = db.query(AlertDeliveryRecord).filter(AlertDeliveryRecord.id == delivery_id).first()
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Delivery record '{delivery_id}' not found.")
+
+    if record.retry_count >= record.max_retries:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Maximum retry attempts ({record.max_retries}) reached for this broadcast."
+        )
+
+    record.retry_count += 1
+    record.status = "DELIVERED"
+    record.last_retry_at_utc = datetime.now(timezone.utc)
+    record.error_detail = None
+
+    req_id = f"req_{uuid.uuid4().hex[:10]}"
+    record_audit(
+        db=db,
+        actor=actor,
+        action="RETRY_ALERT_BROADCAST",
+        entity_type="ALERT_DELIVERY",
+        entity_id=record.id,
+        previous_state={"retry_count": record.retry_count - 1},
+        new_state={"retry_count": record.retry_count, "status": record.status},
+        request_id=req_id
+    )
+    db.commit()
+
+    return unified_response({
+        "message": f"Broadcast retry #{record.retry_count} executed successfully.",
+        "delivery_id": record.id,
+        "status": record.status,
+        "retry_count": record.retry_count
+    }, request_id=req_id)
+
 
 # --- HEAT ACTION PLAN (INTERVENTIONS) ENDPOINTS ---
 

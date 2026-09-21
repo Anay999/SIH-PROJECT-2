@@ -1,28 +1,33 @@
 @import "tailwindcss";
 
 @theme {
-  --color-command-bg: #f8fafc;
+  --color-command-bg: #faf9f6;
   --color-command-panel: #ffffff;
   --color-command-card: #ffffff;
-  --color-command-cardHover: #f1f5f9;
-  --color-command-border: #e2e8f0;
-  --color-command-borderLight: #cbd5e1;
-  --color-command-text: #0f172a;
-  --color-command-muted: #475569;
-  --color-command-subtle: #64748b;
+  --color-command-cardHover: #f5f3ef;
+  --color-command-border: #ede7de;
+  --color-command-borderLight: #e2dad0;
+  --color-command-text: #1c1917;
+  --color-command-muted: #57534e;
+  --color-command-subtle: #78716c;
 
-  --color-risk-low: #10b981;
-  --color-risk-moderate: #2563eb;
-  --color-risk-high: #f59e0b;
+  --color-brand-orange: #f97316;
+  --color-brand-deepOrange: #ea580c;
+  --color-brand-darkOrange: #c2410c;
+  --color-brand-warmDark: #9a3412;
+
+  --color-risk-low: #059669;
+  --color-risk-moderate: #eab308;
+  --color-risk-high: #f97316;
   --color-risk-veryHigh: #ea580c;
-  --color-risk-extreme: #dc2626;
-  --color-risk-ai: #7c3aed;
+  --color-risk-extreme: #b91c1c;
+  --color-risk-ai: #ea580c;
   --color-risk-solar: #d97706;
 }
 
 body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #faf9f6;
+  color: #1c1917;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
 }

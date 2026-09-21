@@ -73,3 +73,21 @@ class Intervention(Base):
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     ward = relationship("Ward", back_populates="interventions")
+
+
+class AlertDeliveryRecord(Base):
+    __tablename__ = "alert_deliveries"
+
+    id = Column(String(60), primary_key=True)
+    alert_id = Column(String(60), ForeignKey("alerts.id"), nullable=False)
+    channel = Column(String(30), nullable=False) # SMS | WHATSAPP | IN_APP
+    municipality = Column(String(50), nullable=False, default="Chennai")
+    recipient_type = Column(String(50), default="CITIZEN") # ALL_CITIZENS | VULNERABLE_ZONE | TARGETED
+    recipient_count = Column(Integer, default=1)
+    status = Column(String(30), nullable=False, default="SENT") # PENDING | SENT | DELIVERED | FAILED | RETRIED
+    retry_count = Column(Integer, default=0)
+    max_retries = Column(Integer, default=3)
+    error_detail = Column(String(300), nullable=True)
+    dispatched_by = Column(String(100), nullable=False)
+    dispatched_at_utc = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_retry_at_utc = Column(DateTime, nullable=True)

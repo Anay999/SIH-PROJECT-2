@@ -45,6 +45,7 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
         "health_readiness.view",
         "simulation.run",
         "evidence.view",
+        "municipal.users.view",
     },
     UserRole.ADMIN.value: {
         "public.view",
@@ -62,6 +63,7 @@ ROLE_PERMISSIONS: Dict[str, Set[str]] = {
         "health_readiness.view",
         "simulation.run",
         "evidence.view",
+        "municipal.users.view",
         "admin.users.view",
         "admin.users.create",
         "admin.users.update",

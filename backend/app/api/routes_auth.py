@@ -50,6 +50,7 @@ class RegisterPayload(BaseModel):
     full_name: str = Field(..., min_length=2, description="Full Name of citizen or officer")
     city: str = Field("Chennai", description="Municipal city jurisdiction (Chennai, Delhi, Ahmedabad, Jaipur, Lucknow)")
     password: str = Field(..., min_length=6, description="Account password (min 6 characters)")
+    email: Optional[str] = Field(None, description="Optional contact or official email address")
     role: Optional[str] = Field("CITIZEN", description="Role: CITIZEN or MUNICIPAL_OFFICER")
 
 class UpdateLocationPayload(BaseModel):
@@ -86,7 +87,7 @@ def login_with_password(
     db: Session = Depends(get_db)
 ):
     """
-    Authenticates mobile number or username with password.
+    Authenticates mobile number, username, or email with password.
     Zero Client Trust: Role & permissions are derived exclusively from the database record.
     Creates a secure server-side session and sets an HttpOnly, SameSite cookie.
     Does NOT return the raw session credential in the JSON body.
@@ -94,14 +95,18 @@ def login_with_password(
     client_ip = get_client_ip(request)
     identifier = payload.username.strip()
 
-    # Search by username, exact phone, or normalized mobile number
+    # Search by username, exact phone, normalized mobile number, or email
     normalized_phone = None
     try:
         normalized_phone = normalize_phone_number(identifier)
     except Exception:
         pass
 
-    filters = [(User.username == identifier), (User.phone_number == identifier)]
+    filters = [
+        (User.username == identifier),
+        (User.phone_number == identifier),
+        (User.email.ilike(identifier)),
+    ]
     if normalized_phone:
         filters.append(User.phone_number == normalized_phone)
     clean_digits = "".join(ch for ch in identifier if ch.isdigit())
@@ -270,6 +275,7 @@ def register_with_mobile(
         username=username,
         full_name=payload.full_name.strip(),
         phone_number=normalized_phone,
+        email=payload.email.strip().lower() if payload.email else None,
         password_hash=hash_password(payload.password),
         role=UserRole.CITIZEN.value,
         city=city_name,

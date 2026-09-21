@@ -3,7 +3,7 @@ from app.models.weather import WeatherObservation, WeatherForecast
 from app.models.thermal import ThermalMetric
 from app.models.vulnerability import VulnerabilityProfile
 from app.models.health_risk import MortalityRiskEstimate, HospitalizationRiskEstimate
-from app.models.alert_intervention import HeatwaveEvent, Alert, Intervention
+from app.models.alert_intervention import HeatwaveEvent, Alert, Intervention, AlertDeliveryRecord
 from app.models.facilities import CoolingCenter, Hospital
 from app.models.audit import AuditLog
 from app.models.simulation import SimulationRecord
@@ -23,6 +23,7 @@ __all__ = [
     "HeatwaveEvent",
     "Alert",
     "Intervention",
+    "AlertDeliveryRecord",
     "CoolingCenter",
     "Hospital",
     "AuditLog",

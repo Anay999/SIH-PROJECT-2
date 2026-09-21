@@ -4,15 +4,10 @@ import {
   LayoutDashboard,
   Map,
   Calendar,
-  Thermometer,
-  HeartPulse,
-  Navigation,
   Building2,
-  Snowflake,
   Bell,
   ClipboardList,
   BarChart3,
-  Database,
   Activity,
   ChevronLeft,
   ChevronRight,
@@ -20,9 +15,13 @@ import {
   Lock,
   LogOut,
   MapPin,
-  FlaskConical,
-  KeyRound,
-  Sliders
+  Sliders,
+  Users,
+  Server,
+  UserPlus,
+  FileText,
+  AlertTriangle,
+  KeyRound
 } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -50,91 +49,52 @@ export const Sidebar: React.FC = () => {
   const isCitizen = user?.role === 'CITIZEN';
   const isAdmin = user?.role === 'ADMIN';
 
-  // 1. CITIZEN: Only citizen / public safety permissions
+  // 1. CITIZEN: Dedicated Citizen Safety Portal
   const CITIZEN_SECTIONS: NavSection[] = [
     {
-      title: 'Public Safety & Outlook',
+      title: 'Public Safety Portal',
       items: [
-        { to: '/citizen', label: 'Citizen Safety Portal', icon: Shield, badge: 'Live', badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-        { to: '/emergency-gis', label: 'Nearby Help & Routing', icon: Navigation, badge: 'OSRM', badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200' },
-        { to: '/forecast', label: '5-Day Heat Outlook', icon: Calendar },
+        { to: '/citizen', label: 'Citizen Heat Dashboard', icon: Shield, badge: 'Live', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
       ]
     }
   ];
 
-  // 2. MUNICIPAL OFFICER: Totality of municipal operational permissions
+  // 2. MUNICIPAL OFFICER: The 10 Specific Municipal Operation Workflows
   const OFFICER_SECTIONS: NavSection[] = [
     {
-      title: 'Climate Intelligence',
+      title: 'Municipal Intelligence & Maps',
       items: [
-        { to: '/', label: 'Overview & Operations', icon: LayoutDashboard },
-        { to: '/map', label: 'Live Heat Map (GIS)', icon: Map, badge: 'HTSI', badgeColor: 'bg-rose-50 text-rose-700 border border-rose-200' },
-        { to: '/forecast', label: '5-Day Weather Forecast', icon: Calendar },
-        { to: '/thermal', label: 'Thermal Stress (HTSI)', icon: Thermometer, badge: 'WBGT', badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200' },
-        { to: '/health-risk', label: 'Health Risk & Surge', icon: HeartPulse, badge: 'HAMRI', badgeColor: 'bg-rose-50 text-rose-700 border border-rose-200' },
-        { to: '/vulnerability', label: 'Vulnerability Index', icon: Activity },
+        { to: '/overview', label: '1. Municipality Overview', icon: LayoutDashboard },
+        { to: '/map', label: '2. ThermoMap', icon: Map, badge: '2D GIS', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
+        { to: '/vulnerability', label: '3. Ward Risk', icon: Activity },
+        { to: '/forecast', label: '4. Forecast', icon: Calendar },
+        { to: '/priority-areas', label: '5. Vulnerability', icon: AlertTriangle },
       ]
     },
     {
-      title: 'Emergency Response & GIS',
+      title: 'Facilities & Emergency Response',
       items: [
-        { to: '/emergency-gis', label: 'Emergency Relief & Roads', icon: Navigation, badge: 'OSRM', badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200' },
-        { to: '/hospitals', label: 'Hospitals & ICUs', icon: Building2 },
-        { to: '/cooling-centres', label: 'Cooling Relief Stations', icon: Snowflake },
-      ]
-    },
-    {
-      title: 'Directives & Operations',
-      items: [
-        { to: '/alerts', label: 'Alerts & Broadcasts', icon: Bell, badge: 'Fast2SMS', badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-        { to: '/heat-action-plan', label: 'Directives & Heat Plan', icon: ClipboardList, badge: pendingActionsCount > 0 ? `${pendingActionsCount}` : undefined, badgeColor: 'bg-blue-600 text-white' },
-        { to: '/data-sources', label: 'Sensors & Methodology', icon: Database },
+        { to: '/cooling-centres', label: '6. Facilities', icon: Building2 },
+        { to: '/users', label: '7. Registered Users', icon: Users, badge: 'Citizens', badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300' },
+        { to: '/alerts', label: '8. Alert Management', icon: Bell, badge: 'SMS/WA', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
+        { to: '/heat-action-plan', label: '9. Heat Action Plan', icon: ClipboardList, badge: pendingActionsCount > 0 ? `${pendingActionsCount}` : undefined, badgeColor: 'bg-orange-600 text-white' },
+        { to: '/analytics', label: '10. Analytics', icon: BarChart3 },
       ]
     }
   ];
 
-  // 3. ADMIN: Superuser with the ENTIRE THING
+  // 3. ADMIN: System Administration, Models, Telemetry & Member Management
   const ADMIN_SECTIONS: NavSection[] = [
     {
       title: 'System Administration',
       items: [
-        { to: '/admin', label: 'Admin Security Console', icon: Lock, badge: 'SUPERUSER', badgeColor: 'bg-rose-50 text-rose-700 border border-rose-200' },
-      ]
-    },
-    {
-      title: 'Climate Intelligence',
-      items: [
-        { to: '/', label: 'Command Overview', icon: LayoutDashboard },
-        { to: '/map', label: 'Live Heat Map (GIS)', icon: Map, badge: 'HTSI', badgeColor: 'bg-rose-50 text-rose-700 border border-rose-200' },
-        { to: '/forecast', label: 'Forecast (5-Day)', icon: Calendar },
-        { to: '/thermal', label: 'Thermal Stress (HTSI)', icon: Thermometer, badge: 'WBGT', badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200' },
-        { to: '/health-risk', label: 'Health Risk & Surge', icon: HeartPulse, badge: 'HAMRI', badgeColor: 'bg-rose-50 text-rose-700 border border-rose-200' },
-        { to: '/vulnerability', label: 'Vulnerability Index', icon: Activity },
-      ]
-    },
-    {
-      title: 'Emergency Response & GIS',
-      items: [
-        { to: '/emergency-gis', label: 'Emergency GIS & Routing', icon: Navigation, badge: 'OSRM', badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200' },
-        { to: '/hospitals', label: 'Hospitals & ICUs', icon: Building2 },
-        { to: '/cooling-centres', label: 'Cooling Relief Stations', icon: Snowflake },
-      ]
-    },
-    {
-      title: 'Directives & Simulation',
-      items: [
-        { to: '/alerts', label: 'Alerts & Broadcasts', icon: Bell, badge: 'Fast2SMS', badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-        { to: '/heat-action-plan', label: 'Heat Action Plan', icon: ClipboardList, badge: pendingActionsCount > 0 ? `${pendingActionsCount}` : undefined, badgeColor: 'bg-blue-600 text-white' },
-        { to: '/simulation', label: '15-Ward Simulation Studio', icon: FlaskConical, badge: 'Deterministic', badgeColor: 'bg-purple-50 text-purple-700 border border-purple-200' },
-      ]
-    },
-    {
-      title: 'Platform & Model Controls',
-      items: [
-        { to: '/settings', label: 'Model Settings & Tuning', icon: Sliders, badge: 'Weights', badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200' },
-        { to: '/api-monitor', label: 'Controlling API Keys & Monitor', icon: KeyRound, badge: 'Telemetry', badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-        { to: '/analytics', label: 'Operations Analytics', icon: BarChart3 },
-        { to: '/data-sources', label: 'Data Methodology & Sources', icon: Database },
+        { to: '/admin', label: 'System & Telemetry Console', icon: Lock, badge: 'SUPERUSER', badgeColor: 'bg-red-100 text-red-800 border border-red-300' },
+        { to: '/admin', label: 'Model Configuration (5 AI)', icon: Sliders, badge: 'TFT/GNN', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
+        { to: '/admin', label: 'API Configuration & Health', icon: KeyRound, badge: 'Masked', badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300' },
+        { to: '/admin', label: 'User & Officer Management', icon: Users },
+        { to: '/admin', label: '+ Provision Team Member', icon: UserPlus },
+        { to: '/admin', label: 'Architecture Flow (GeoAI)', icon: Server },
+        { to: '/admin', label: 'Security Audit Trail', icon: FileText },
       ]
     }
   ];

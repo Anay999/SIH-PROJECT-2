@@ -26,6 +26,7 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { VulnerabilityPage } from './pages/VulnerabilityPage';
 import { ThermalStressPage } from './pages/ThermalStressPage';
 import { HealthRiskPage } from './pages/HealthRiskPage';
+import { RegisteredUsersPage } from './pages/RegisteredUsersPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,9 +134,17 @@ export const App: React.FC = () => {
                 <Route path="emergency-gis" element={<EmergencyGisPage />} />
                 <Route path="public-safety" element={<PublicSafetyPage />} />
                 <Route
+                  path="users"
+                  element={
+                    <RoleGuard allowedRoles={['MUNICIPAL_OFFICER', 'ADMIN']}>
+                      <RegisteredUsersPage />
+                    </RoleGuard>
+                  }
+                />
+                <Route
                   path="analytics"
                   element={
-                    <RoleGuard allowedRoles={['ADMIN']}>
+                    <RoleGuard allowedRoles={['MUNICIPAL_OFFICER', 'ADMIN']}>
                       <AnalyticsPage />
                     </RoleGuard>
                   }
