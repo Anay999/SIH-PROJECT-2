@@ -174,8 +174,8 @@ export const OverviewPage: React.FC = () => {
       nightMin: '29.7°C',
       coolingAccess: 'Deficit (1.8km to hub)',
       status: 'Action Required',
-      badgeBg: 'bg-rose-950/80 text-rose-300 border border-rose-800/80',
-      cardBg: 'bg-[#0f172a] border border-slate-800 hover:border-rose-500/60 text-white'
+      badgeBg: 'bg-rose-50 text-rose-700 border border-rose-200',
+      cardBg: 'bg-white border border-slate-200 hover:border-rose-400 text-slate-900 shadow-xs'
     },
     {
       id: 'ward_05_royapuram',
@@ -186,8 +186,8 @@ export const OverviewPage: React.FC = () => {
       nightMin: '29.2°C',
       coolingAccess: 'Low (NDVI 0.12)',
       status: 'Review required',
-      badgeBg: 'bg-orange-950/80 text-orange-300 border border-orange-800/80',
-      cardBg: 'bg-[#0f172a] border border-slate-800 hover:border-orange-500/60 text-white'
+      badgeBg: 'bg-orange-50 text-orange-700 border border-orange-200',
+      cardBg: 'bg-white border border-slate-200 hover:border-orange-400 text-slate-900 shadow-xs'
     },
     {
       id: 'ward_06_thiruvika_nagar',
@@ -198,8 +198,8 @@ export const OverviewPage: React.FC = () => {
       nightMin: '28.9°C',
       coolingAccess: 'Moderate',
       status: 'Monitoring',
-      badgeBg: 'bg-amber-950/80 text-amber-300 border border-amber-800/80',
-      cardBg: 'bg-[#0f172a] border border-slate-800 hover:border-amber-500/60 text-white'
+      badgeBg: 'bg-amber-50 text-amber-700 border border-amber-200',
+      cardBg: 'bg-white border border-slate-200 hover:border-amber-400 text-slate-900 shadow-xs'
     },
   ];
 
@@ -230,36 +230,36 @@ export const OverviewPage: React.FC = () => {
           </p>
         </div>
 
-        {/* Sleek Dark Metric Cards on Light Canvas */}
+        {/* Clean Light Metric Cards matching Screenshot 1 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           {/* Card 1: Daytime Temp */}
-          <div className="bg-[#0f172a] p-4 rounded-2xl border border-slate-800 shadow-md text-white hover:border-amber-500/40 transition">
-            <span className="text-[11px] text-amber-400 block mb-0.5 font-bold uppercase tracking-wider">1. Daytime Temperature</span>
-            <div className="text-2xl font-black text-white font-mono">{temporalDelta.temp.toFixed(1)}°C</div>
-            <span className="text-[11px] text-amber-300 font-sans font-medium">
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-amber-400 hover:shadow-md transition">
+            <span className="text-[11px] text-amber-600 block mb-0.5 font-bold uppercase tracking-wider">1. Daytime Temperature</span>
+            <div className="text-2xl font-black text-slate-900 font-mono">{temporalDelta.temp.toFixed(1)}°C</div>
+            <span className="text-[11px] text-amber-700 font-sans font-medium">
               {temporalDelta.tempDelta > 0 ? `+${temporalDelta.tempDelta.toFixed(1)}°C peak rise` : temporalDelta.tempDelta < 0 ? `${temporalDelta.tempDelta.toFixed(1)}°C morning baseline` : 'Elevated peak'}
             </span>
           </div>
 
           {/* Card 2: Humidity */}
-          <div className="bg-[#0f172a] p-4 rounded-2xl border border-slate-800 shadow-md text-white hover:border-cyan-500/40 transition">
-            <span className="text-[11px] text-cyan-400 block mb-0.5 font-bold uppercase tracking-wider">2. Humidity Burden</span>
-            <div className="text-2xl font-black text-cyan-300 font-mono">{temporalDelta.humidity}% RH</div>
-            <span className="text-[11px] text-slate-300 font-sans">Suppresses sweat evaporation</span>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-sky-400 hover:shadow-md transition">
+            <span className="text-[11px] text-sky-600 block mb-0.5 font-bold uppercase tracking-wider">2. Humidity Burden</span>
+            <div className="text-2xl font-black text-sky-700 font-mono">{temporalDelta.humidity}% RH</div>
+            <span className="text-[11px] text-slate-500 font-sans">Suppresses sweat evaporation</span>
           </div>
 
           {/* Card 3: Nighttime Heat */}
-          <div className="bg-[#0f172a] p-4 rounded-2xl border border-slate-800 shadow-md text-white hover:border-rose-500/40 transition">
-            <span className="text-[11px] text-rose-400 block mb-0.5 font-bold uppercase tracking-wider">3. Night Heat Retention</span>
-            <div className="text-2xl font-black text-rose-400 font-mono">{temporalDelta.nighttimeMin.toFixed(1)}°C min</div>
-            <span className="text-[11px] text-slate-300 font-sans">Reduced physiological recovery</span>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-rose-400 hover:shadow-md transition">
+            <span className="text-[11px] text-rose-600 block mb-0.5 font-bold uppercase tracking-wider">3. Night Heat Retention</span>
+            <div className="text-2xl font-black text-rose-600 font-mono">{temporalDelta.nighttimeMin.toFixed(1)}°C min</div>
+            <span className="text-[11px] text-slate-500 font-sans">Reduced physiological recovery</span>
           </div>
 
           {/* Card 4: Network Status */}
-          <div className="bg-[#0f172a] p-4 rounded-2xl border border-slate-800 shadow-md text-white hover:border-emerald-500/40 transition">
-            <span className="text-[11px] text-emerald-400 block mb-0.5 font-bold uppercase tracking-wider">4. Relief Stations</span>
-            <div className="text-2xl font-black text-emerald-400 font-mono">Verified Active</div>
-            <span className="text-[11px] text-slate-300 font-sans">Cold ORS hydration operational</span>
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-emerald-400 hover:shadow-md transition">
+            <span className="text-[11px] text-emerald-600 block mb-0.5 font-bold uppercase tracking-wider">4. Relief Stations</span>
+            <div className="text-2xl font-black text-emerald-600 font-mono">Verified Active</div>
+            <span className="text-[11px] text-slate-500 font-sans">Cold ORS hydration operational</span>
           </div>
         </div>
 
@@ -303,68 +303,68 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Movement Metric 1: Temperature - Sleek Dark Card */}
-          <div className="p-4 rounded-2xl bg-[#0f172a] border border-slate-800 space-y-2 shadow-md text-white">
-            <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
+          {/* Movement Metric 1: Temperature - Clean Light Card */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-xs text-slate-900 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
               <span>Dry-Bulb Temperature</span>
-              <span className="text-rose-400 font-mono font-bold flex items-center gap-0.5">
+              <span className="text-rose-600 font-mono font-bold flex items-center gap-0.5">
                 <TrendingUp className="w-3.5 h-3.5" />
                 Rising
               </span>
             </div>
             <div className="flex items-baseline justify-between font-mono">
-              <span className="text-slate-400 text-sm">35.9°C</span>
-              <span className="text-slate-500 text-xs">→</span>
-              <span className="text-xl font-bold text-white">38.5°C</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-950/90 text-rose-300 border border-rose-800/80">
+              <span className="text-slate-500 text-sm">35.9°C</span>
+              <span className="text-slate-400 text-xs">→</span>
+              <span className="text-xl font-bold text-slate-900">38.5°C</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
                 +2.6°C
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
+            <p className="text-[11px] text-slate-600 leading-snug">
               Afternoon solar accumulation peaking across high-density industrial and tin-roof sectors.
             </p>
           </div>
 
-          {/* Movement Metric 2: Humidity - Sleek Dark Card */}
-          <div className="p-4 rounded-2xl bg-[#0f172a] border border-slate-800 space-y-2 shadow-md text-white">
-            <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
+          {/* Movement Metric 2: Humidity - Clean Light Card */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-xs text-slate-900 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
               <span>Relative Humidity</span>
-              <span className="text-cyan-400 font-mono font-bold flex items-center gap-0.5">
+              <span className="text-sky-600 font-mono font-bold flex items-center gap-0.5">
                 <TrendingUp className="w-3.5 h-3.5" />
                 Moisture Influx
               </span>
             </div>
             <div className="flex items-baseline justify-between font-mono">
-              <span className="text-slate-400 text-sm">61%</span>
-              <span className="text-slate-500 text-xs">→</span>
-              <span className="text-xl font-bold text-cyan-300">68%</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-cyan-950/90 text-cyan-300 border border-cyan-800/80">
+              <span className="text-slate-500 text-sm">61%</span>
+              <span className="text-slate-400 text-xs">→</span>
+              <span className="text-xl font-bold text-sky-700">68%</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
                 +7%
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
+            <p className="text-[11px] text-slate-600 leading-snug">
               Maritime moisture compounding human heat index and wet-bulb globe temperature.
             </p>
           </div>
 
-          {/* Movement Metric 3: Nighttime Minimum - Sleek Dark Card */}
-          <div className="p-4 rounded-2xl bg-[#0f172a] border border-slate-800 space-y-2 shadow-md text-white">
-            <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
+          {/* Movement Metric 3: Nighttime Minimum - Clean Light Card */}
+          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-xs text-slate-900 hover:shadow-md transition">
+            <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
               <span>Nighttime Minimum Forecast</span>
-              <span className="text-amber-400 font-mono font-bold flex items-center gap-0.5">
+              <span className="text-amber-600 font-mono font-bold flex items-center gap-0.5">
                 <TrendingUp className="w-3.5 h-3.5" />
                 Elevated Heat Island
               </span>
             </div>
             <div className="flex items-baseline justify-between font-mono">
-              <span className="text-slate-400 text-sm">27.7°C</span>
-              <span className="text-slate-500 text-xs">→</span>
-              <span className="text-xl font-bold text-amber-300">29.5°C</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-950/90 text-amber-300 border border-amber-800/80">
+              <span className="text-slate-500 text-sm">27.7°C</span>
+              <span className="text-slate-400 text-xs">→</span>
+              <span className="text-xl font-bold text-amber-700">29.5°C</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                 +1.8°C
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 leading-snug">
+            <p className="text-[11px] text-slate-600 leading-snug">
               Concrete urban surfaces retaining heat through late night hours, diminishing cardiovascular rest.
             </p>
           </div>
@@ -528,16 +528,16 @@ export const OverviewPage: React.FC = () => {
                 <div
                   key={area.id}
                   onClick={() => selectWard(area.id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-md ${
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs ${
                     selectedWardId === area.id
-                      ? 'bg-slate-900 border-cyan-400 ring-2 ring-cyan-500/50 shadow-lg text-white'
+                      ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/30 shadow-md text-slate-900'
                       : area.cardBg
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-sm font-bold text-white tracking-tight">{area.name}</h3>
-                      <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+                      <h3 className="text-sm font-bold text-slate-900 tracking-tight">{area.name}</h3>
+                      <span className="text-[10px] font-mono text-blue-600 uppercase font-bold tracking-wider">
                         Municipal High Priority Zone
                       </span>
                     </div>
@@ -546,22 +546,22 @@ export const OverviewPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <p className="text-xs text-slate-300 mt-2 leading-relaxed font-sans">
-                    <strong className="text-white font-bold">Why:</strong> {area.why}
+                  <p className="text-xs text-slate-600 mt-2 leading-relaxed font-sans">
+                    <strong className="text-slate-900 font-bold">Why:</strong> {area.why}
                   </p>
 
-                  <div className="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-800 text-xs font-mono bg-slate-900/90 p-2.5 rounded-xl">
+                  <div className="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-200 text-xs font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-sans font-medium">Afternoon Heat</span>
-                      <span className="text-white font-bold">{area.temp}</span>
+                      <span className="text-[10px] text-slate-500 block font-sans font-medium">Afternoon Heat</span>
+                      <span className="text-slate-900 font-bold">{area.temp}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-sans font-medium">Night Minimum</span>
-                      <span className="text-rose-400 font-bold">{area.nightMin}</span>
+                      <span className="text-[10px] text-slate-500 block font-sans font-medium">Night Minimum</span>
+                      <span className="text-rose-600 font-bold">{area.nightMin}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-sans font-medium">Cooling Access</span>
-                      <span className="text-cyan-300 font-semibold truncate">{area.coolingAccess}</span>
+                      <span className="text-[10px] text-slate-500 block font-sans font-medium">Cooling Access</span>
+                      <span className="text-sky-700 font-semibold truncate">{area.coolingAccess}</span>
                     </div>
                   </div>
                 </div>
@@ -598,46 +598,46 @@ export const OverviewPage: React.FC = () => {
           {actionPlans.slice(0, 3).map((action, idx) => {
             const glowBorder =
               idx === 0
-                ? 'hover:border-rose-500/60'
+                ? 'hover:border-rose-300'
                 : idx === 1
-                ? 'hover:border-amber-500/60'
-                : 'hover:border-cyan-500/60';
+                ? 'hover:border-amber-300'
+                : 'hover:border-blue-300';
 
             return (
               <div
                 key={action.id}
-                className={`bg-[#0f172a] border border-slate-800 ${glowBorder} rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-md text-white hover:shadow-xl transition`}
+                className={`bg-white border border-slate-200 ${glowBorder} rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-xs text-slate-900 hover:shadow-md transition`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+                    <span className="text-[10px] font-mono text-blue-600 uppercase font-bold tracking-wider">
                       {action.department}
                     </span>
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                         action.status === 'Approved'
-                          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : action.status === 'Under Review'
-                          ? 'bg-amber-950/80 text-amber-300 border border-amber-800/80'
-                          : 'bg-blue-950/80 text-blue-300 border border-blue-800/80'
+                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                          : 'bg-blue-50 text-blue-700 border border-blue-200'
                       }`}
                     >
                       {action.status}
                     </span>
                   </div>
 
-                  <h3 className="text-xs font-bold text-white leading-snug tracking-tight">{action.title}</h3>
-                  <p className="text-xs text-slate-300 leading-relaxed font-sans">
-                    <strong className="text-white font-bold">Why:</strong> {action.reason}
+                  <h3 className="text-xs font-bold text-slate-900 leading-snug tracking-tight">{action.title}</h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                    <strong className="text-slate-900 font-bold">Why:</strong> {action.reason}
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-400 font-mono font-medium">{action.wardName}</span>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-500 font-mono font-medium">{action.wardName}</span>
                   <button
                     type="button"
                     onClick={() => setReviewAction(action)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700 shadow-xs"
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 shadow-2xs"
                   >
                     Review action
                   </button>

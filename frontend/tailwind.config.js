@@ -9,15 +9,15 @@ export default {
     extend: {
       colors: {
         command: {
-          bg: '#080c14',
-          panel: '#0f172a',
-          card: '#151f32',
-          cardHover: '#1c2842',
-          border: '#1e293b',
-          borderLight: '#334155',
-          text: '#f8fafc',
-          muted: '#94a3b8',
-          subtle: '#64748b',
+          bg: '#f8fafc',
+          panel: '#ffffff',
+          card: '#ffffff',
+          cardHover: '#f1f5f9',
+          border: '#e2e8f0',
+          borderLight: '#cbd5e1',
+          text: '#0f172a',
+          muted: '#64748b',
+          subtle: '#94a3b8',
         },
         risk: {
           low: '#10b981',       // Emerald (0-20)

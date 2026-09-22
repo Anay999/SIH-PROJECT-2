@@ -250,49 +250,51 @@ export const LiveHeatMapPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans">
-      {/* Primary Map View Mode Selector */}
-      <div className="bg-[#0b1326] p-2 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 shadow-xl">
+      {/* Primary Map View Mode Selector (Light Theme matching Screenshot 1) */}
+      <div className="bg-white p-2 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setActiveViewMode('thermal_terrain_3d')}
-            className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition ${
+            className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition ${
               activeViewMode === 'thermal_terrain_3d'
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg'
-                : 'text-cyan-400 hover:bg-blue-950/60 border border-cyan-500/40 bg-[#070e1c]'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md'
+                : 'text-slate-700 hover:bg-slate-100 hover:text-blue-700 border border-slate-200 bg-slate-50'
             }`}
           >
-            <Box className="w-4 h-4 text-cyan-300 animate-pulse" />
+            <Box className="w-4 h-4 text-cyan-500" />
             <span>3D Thermal Terrain Command Center</span>
-            <span className="px-1.5 py-0.2 bg-blue-950 text-cyan-300 rounded text-[9px] border border-cyan-400/40">OFFICER 3D</span>
+            <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-[9px] font-bold border border-blue-200">
+              OFFICER 3D
+            </span>
           </button>
 
           <button
             onClick={() => setActiveViewMode('thermomap_2d')}
             className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition ${
               activeViewMode === 'thermomap_2d'
-                ? 'bg-orange-600 text-white shadow-lg'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800 bg-[#070e1c] border border-slate-800'
+                ? 'bg-orange-600 text-white shadow-md'
+                : 'text-slate-700 hover:bg-slate-100 hover:text-orange-600 bg-slate-50 border border-slate-200'
             }`}
           >
-            <MapIcon className="w-4 h-4 text-orange-400" />
+            <MapIcon className="w-4 h-4 text-orange-500" />
             <span>2D ThermoMap & Pan-India Grid</span>
           </button>
 
           <button
             onClick={() => setActiveViewMode('legacy_choropleth')}
-            className={`px-3 py-2 rounded-xl font-medium text-xs transition ${
+            className={`px-3 py-2 rounded-xl font-semibold text-xs transition ${
               activeViewMode === 'legacy_choropleth'
-                ? 'bg-slate-800 text-white border border-slate-600'
-                : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-slate-800 text-white border border-slate-700 shadow-xs'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
             }`}
           >
             <span>Ward Choropleth (Legacy)</span>
           </button>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-400 pr-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>GIS Operational Command</span>
+        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-500 pr-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <span className="font-semibold text-slate-700">GIS Operational Command</span>
         </div>
       </div>
 
@@ -317,18 +319,18 @@ export const LiveHeatMapPage: React.FC = () => {
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-command-border pb-4">
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Layers className="w-5 h-5 text-cyan-400" />
+                <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-cyan-600" />
                   Priority Areas & Satellite Heat Stress Analysis
                 </h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 font-semibold">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 border border-amber-500/30 font-semibold">
               SYNTHETIC DEMONSTRATION WARD BOUNDARIES
             </span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
               NOT OFFICIAL GCC GEOGRAPHY
             </span>
           </div>
-          <p className="text-xs text-command-muted mt-1 max-w-3xl leading-relaxed">
+          <p className="text-xs text-slate-500 mt-1 max-w-3xl leading-relaxed">
             Spatial thermal stress assessment across demonstration areas. Polygons represent illustrative planning zones mapped over high-resolution satellite imagery (Esri World Imagery adapter).
           </p>
         </div>
@@ -336,12 +338,12 @@ export const LiveHeatMapPage: React.FC = () => {
         {/* Action & Filter Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Layer Selector */}
-          <div className="flex items-center gap-1.5 bg-command-card px-2.5 py-1.5 rounded-lg border border-command-border">
-            <span className="text-xs text-command-subtle font-mono">Metric:</span>
+          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-xs">
+            <span className="text-xs text-slate-500 font-mono">Metric:</span>
             <select
               value={activeLayer}
               onChange={(e) => setActiveLayer(e.target.value as MetricLayer)}
-              className="bg-command-panel text-xs text-white border border-command-border rounded px-2.5 py-1 focus:outline-none focus:border-cyan-500 font-mono cursor-pointer"
+              className="bg-slate-50 text-xs text-slate-900 border border-slate-200 rounded px-2.5 py-1 focus:outline-none focus:border-cyan-500 font-mono cursor-pointer"
             >
               <option value="htsi">Human Thermal Stress (HTSI)</option>
               <option value="wbgt">Wet-Bulb Globe Temp (WBGT)</option>
@@ -355,11 +357,11 @@ export const LiveHeatMapPage: React.FC = () => {
           </div>
 
           {/* Facility Filter Pills */}
-          <div className="flex items-center bg-command-card rounded-lg border border-command-border p-1 text-xs font-mono">
+          <div className="flex items-center bg-white rounded-lg border border-slate-200 p-1 text-xs font-mono shadow-xs">
             <button
               onClick={() => setFacilityFilter('all')}
               className={`px-2 py-1 rounded transition ${
-                facilityFilter === 'all' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                facilityFilter === 'all' ? 'bg-cyan-50 text-cyan-700 font-bold border border-cyan-200' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               All Pins
@@ -367,25 +369,25 @@ export const LiveHeatMapPage: React.FC = () => {
             <button
               onClick={() => setFacilityFilter('cooling')}
               className={`px-2 py-1 rounded transition flex items-center gap-1 ${
-                facilityFilter === 'cooling' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-slate-400 hover:text-white'
+                facilityFilter === 'cooling' ? 'bg-cyan-50 text-cyan-700 font-bold border border-cyan-200' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Snowflake className="w-3 h-3 text-cyan-400" />
+              <Snowflake className="w-3 h-3 text-cyan-600" />
               <span>Cooling</span>
             </button>
             <button
               onClick={() => setFacilityFilter('hospitals')}
               className={`px-2 py-1 rounded transition flex items-center gap-1 ${
-                facilityFilter === 'hospitals' ? 'bg-red-500/20 text-red-300 font-bold' : 'text-slate-400 hover:text-white'
+                facilityFilter === 'hospitals' ? 'bg-red-50 text-red-700 font-bold border border-red-200' : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <HospitalIcon className="w-3 h-3 text-red-400" />
+              <HospitalIcon className="w-3 h-3 text-red-600" />
               <span>Hospitals</span>
             </button>
             <button
               onClick={() => setFacilityFilter('none')}
               className={`px-2 py-1 rounded transition ${
-                facilityFilter === 'none' ? 'bg-slate-700 text-slate-200' : 'text-slate-400 hover:text-white'
+                facilityFilter === 'none' ? 'bg-slate-200 text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-800'
               }`}
               title="Hide all facility markers"
             >
@@ -404,9 +406,9 @@ export const LiveHeatMapPage: React.FC = () => {
       </div>
 
       {/* Active Layer One-Sentence Meaning — Instruction 6 Requirement */}
-      <div className="p-3 rounded-xl bg-[#0f172a] border border-[#1e293b] flex items-center justify-between text-xs text-slate-300 font-mono">
+      <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-between text-xs text-slate-700 font-mono">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" />
+          <span className="w-2 h-2 rounded-full bg-cyan-600 shrink-0" />
           <span>
             {activeLayer === 'htsi' && 'Heat exposure (HTSI): Shows composite human thermal strain factoring in solar load and nighttime warmth.'}
             {activeLayer === 'wbgt' && 'WBGT: Shows areas where direct solar radiation and humidity create occupational work stoppage conditions.'}

@@ -137,9 +137,19 @@ export const Sidebar: React.FC = () => {
                 <MapPin className="w-3 h-3 text-emerald-600" />
                 <span>Jurisdiction</span>
               </span>
-              <span className={`text-[9px] font-bold px-1 rounded ${isLiveGpsActive ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-200 text-slate-700'}`}>
-                {isLiveGpsActive ? 'Roaming' : cityProfile.region.split(' ')[0]}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`text-[9px] font-bold px-1 rounded ${isLiveGpsActive ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-200 text-slate-700'}`}>
+                  {isLiveGpsActive ? 'Roaming' : cityProfile.region.split(' ')[0]}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => logout()}
+                  title="Sign Out Session"
+                  className="p-0.5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                >
+                  <LogOut className="w-3 h-3" />
+                </button>
+              </div>
             </div>
             <p className="text-slate-900 font-bold truncate text-[11px]">{cityProfile.name}</p>
             <p className="text-[9px] text-slate-500 truncate">{cityProfile.corporation.split('(')[0].trim()}</p>
@@ -192,17 +202,25 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* User Session & Role Footer */}
-      <div className="p-2.5 border-t border-slate-200 bg-slate-50">
+      {/* User Session & Role Footer - Sign Out elevated and prominently visible */}
+      <div className="p-2.5 border-t border-slate-200 bg-slate-50 shrink-0">
         {!isCollapsed ? (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
+            <button
+              onClick={() => logout()}
+              className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-semibold border border-rose-200 hover:border-rose-300 transition shadow-2xs"
+            >
+              <LogOut className="w-3.5 h-3.5 text-rose-600" />
+              <span>Sign Out Session</span>
+            </button>
+
             <div className="p-2 rounded-xl bg-white border border-slate-200 text-[10px] shadow-xs">
-              <div className="flex items-center justify-between font-mono text-[9px] text-slate-500 mb-1">
+              <div className="flex items-center justify-between font-mono text-[9px] text-slate-500 mb-0.5">
                 <span className="text-emerald-600 font-bold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   AUTHENTICATED
                 </span>
-                <span className={`px-1.5 py-0.5 rounded font-bold ${
+                <span className={`px-1.5 py-0.2 rounded font-bold ${
                   isAdmin ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                   isCitizen ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                   'bg-blue-50 text-blue-700 border border-blue-200'
@@ -213,14 +231,6 @@ export const Sidebar: React.FC = () => {
               <p className="font-semibold text-slate-800 truncate">{user?.full_name || 'User Demo'}</p>
               <p className="text-[9px] text-slate-500 font-mono">{user?.city || 'Chennai'} · {user?.phone_masked || user?.username || 'user'}</p>
             </div>
-
-            <button
-              onClick={() => logout()}
-              className="w-full flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-lg bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 text-[11px] border border-slate-200 hover:border-rose-200 transition shadow-xs"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Sign Out Session</span>
-            </button>
           </div>
         ) : (
           <button

@@ -781,20 +781,20 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
       ref={containerRef}
       className={`relative w-full ${
         isFullscreen ? 'fixed inset-0 z-50 h-screen w-screen' : 'h-[780px]'
-      } bg-[#070c18] text-slate-200 flex flex-col font-sans select-none overflow-hidden rounded-xl border border-slate-800 shadow-2xl`}
+      } bg-white text-slate-900 flex flex-col font-sans select-none overflow-hidden rounded-xl border border-slate-200 shadow-xl`}
     >
       {/* ======================================================== */}
-      {/* 1. TOP MENU & TABS BAR (Modeled after AARTOS RTSA-Suite) */}
+      {/* 1. TOP MENU & TABS BAR (Light Theme matching SC 1)       */}
       {/* ======================================================== */}
-      <div className="bg-[#0b1326] border-b border-slate-800/90 px-3 py-1 flex items-center justify-between z-30 text-xs">
+      <div className="bg-white/95 backdrop-blur border-b border-slate-200 px-3 py-1.5 flex items-center justify-between z-30 text-xs shadow-2xs">
         {/* Left: Brand Logo & Navigation Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
             onClick={() => handleTabClick('3d_command')}
-            className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-900/60 hover:bg-blue-800/80 border border-blue-500/40 rounded text-blue-300 font-black tracking-wider text-[11px] transition"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded text-blue-700 font-black tracking-wider text-[11px] transition shadow-2xs"
             title="Reset to Tactical Overview"
           >
-            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <Radio className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
             <span>THERMOSAFE 3D</span>
           </button>
 
@@ -812,8 +812,8 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                 onClick={() => handleTabClick(tab.id)}
                 className={`px-3 py-1 text-[11px] font-bold rounded-t transition ${
                   activeTab === tab.id
-                    ? 'bg-[#1e293b] text-cyan-400 border-b-2 border-cyan-400 shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f172a]'
+                    ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
                 {tab.label}
@@ -825,7 +825,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
         {/* Right: Diurnal selector, Fullscreen, and Return button */}
         <div className="flex items-center gap-2">
           {/* Diurnal Selector */}
-          <div className="hidden sm:flex items-center bg-[#070e1e] border border-slate-700/60 rounded p-0.5">
+          <div className="hidden sm:flex items-center bg-slate-100 border border-slate-200 rounded p-0.5">
             {[
               { id: 'morning', label: 'Morning', icon: Sunrise },
               { id: 'afternoon', label: 'Afternoon', icon: Sun },
@@ -838,10 +838,10 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                   setTimeOfDay(id as TimeOfDay);
                   showToast(`Switched diurnal profile: ${label}`);
                 }}
-                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition ${
+                className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[10px] font-bold transition ${
                   timeOfDay === id
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Icon className="w-3 h-3" />
@@ -852,7 +852,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
 
           <button
             onClick={toggleFullscreen}
-            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded transition"
+            className="p-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded transition shadow-2xs"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Tactical View'}
           >
             {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -861,7 +861,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
           {onClose && (
             <button
               onClick={onClose}
-              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-orange-600 to-amber-600 hover:brightness-110 text-white rounded text-[11px] font-black transition shadow-md"
+              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-orange-600 to-amber-600 hover:brightness-110 text-white rounded text-[11px] font-black transition shadow-sm"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Return to 2D ThermoMap</span>
@@ -874,18 +874,18 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
       {/* 2. MAIN 3D WORKSPACE (Left Tree Panel + 3D Map Viewport)  */}
       {/* ======================================================== */}
       <div className="relative flex-1 w-full h-full flex overflow-hidden">
-        {/* LEFT COLLAPSIBLE TREE CONTROL PANEL (AARTOS 3D Spec) */}
-        <div className="w-80 bg-[#070e1c]/95 backdrop-blur border-r border-slate-800/80 flex flex-col z-20 overflow-y-auto scrollbar-thin text-xs text-slate-300 p-2.5 space-y-2">
+        {/* LEFT COLLAPSIBLE TREE CONTROL PANEL (Clean Light Theme) */}
+        <div className="w-80 bg-white/95 backdrop-blur border-r border-slate-200 flex flex-col z-20 overflow-y-auto scrollbar-thin text-xs text-slate-800 p-2.5 space-y-2.5 shadow-md">
           {/* Main Action Control Buttons */}
-          <div className="space-y-1 pb-2 border-b border-slate-800">
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>AARTOS 3D Command</span>
+          <div className="space-y-1.5 pb-2.5 border-b border-slate-200">
+            <div className="text-[10px] font-bold text-slate-600 uppercase tracking-wider flex items-center justify-between">
+              <span className="font-extrabold text-slate-800">AARTOS 3D Command</span>
               <span
-                className={`font-mono font-bold flex items-center gap-1 ${
-                  systemRunning ? 'text-emerald-400' : 'text-amber-400'
+                className={`font-mono font-bold flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] ${
+                  systemRunning ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
                 }`}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${systemRunning ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
+                <span className={`w-1.5 h-1.5 rounded-full ${systemRunning ? 'bg-emerald-500 animate-ping' : 'bg-amber-500'}`} />
                 {systemRunning ? 'ONLINE' : 'STANDBY'}
               </span>
             </div>
@@ -895,13 +895,13 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                   setSystemRunning(true);
                   showToast('3D System Activated: Plume & Telemetry Online');
                 }}
-                className={`py-1 px-2 rounded text-[10px] font-bold flex items-center justify-center gap-1 border transition ${
+                className={`py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 border transition shadow-2xs ${
                   systemRunning
-                    ? 'bg-blue-600 text-white border-blue-400 shadow-sm'
-                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                    ? 'bg-blue-600 text-white border-blue-500'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                <Play className="w-3 h-3 text-emerald-400" />
+                <Play className="w-3 h-3 text-emerald-500" />
                 <span>Start System</span>
               </button>
               <button
@@ -909,37 +909,37 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                   setSystemRunning(false);
                   showToast('3D System Standby: Plume Muted');
                 }}
-                className={`py-1 px-2 rounded text-[10px] font-bold flex items-center justify-center gap-1 border transition ${
+                className={`py-1.5 px-2 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 border transition shadow-2xs ${
                   !systemRunning
-                    ? 'bg-red-900/60 text-white border-red-500 shadow-sm'
-                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                    ? 'bg-rose-50 text-rose-700 border-rose-200 font-black'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700'
                 }`}
               >
-                <Square className="w-3 h-3 text-red-400" />
+                <Square className="w-3 h-3 text-red-500" />
                 <span>Stop System</span>
               </button>
             </div>
             <button
               onClick={() => setShowAddAreaModal(true)}
-              className="w-full py-1 px-2 bg-[#0b1a3a] hover:bg-[#122654] text-blue-300 border border-blue-600/40 rounded text-[10px] font-bold flex items-center justify-center gap-1 transition"
+              className="w-full py-1.5 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition shadow-2xs"
               title="Switch or deploy new Indian municipal monitored jurisdiction"
             >
-              <Plus className="w-3 h-3 text-blue-400" />
+              <Plus className="w-3 h-3 text-blue-600" />
               <span className="truncate">Add Monitored Area ({currentWard.split(' - ')[0]})</span>
             </button>
           </div>
 
           {/* Collapsible Section: Antenna Coverage Heatmap / Thermal Dispersion Plume */}
-          <div className="border border-slate-800/80 rounded bg-[#0b1326]/60 p-2 space-y-2">
+          <div className="border border-slate-200 rounded-2xl bg-slate-50/70 p-2.5 space-y-2.5 shadow-2xs">
             <button
               onClick={() => toggleSection('heatmap')}
-              className="w-full flex items-center justify-between text-[11px] font-bold text-slate-200"
+              className="w-full flex items-center justify-between text-[11px] font-bold text-slate-800"
             >
               <span className="flex items-center gap-1.5">
-                {sectionOpen.heatmap ? <ChevronDown className="w-3 h-3 text-blue-400" /> : <ChevronRight className="w-3 h-3 text-blue-400" />}
+                {sectionOpen.heatmap ? <ChevronDown className="w-3 h-3 text-blue-600" /> : <ChevronRight className="w-3 h-3 text-blue-600" />}
                 <span>Thermal Dispersion Plume</span>
               </span>
-              <span className="text-[9px] px-1 bg-blue-900/60 text-blue-300 rounded font-mono">
+              <span className="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-full font-mono font-bold">
                 {config.gridSize} MESH
               </span>
             </button>
@@ -948,16 +948,16 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
               <div className="space-y-2.5 pt-1 pl-1 text-[11px]">
                 {/* Display Status Toggle Button */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Display Status</span>
+                  <span className="text-slate-600 font-medium">Display Status</span>
                   <button
                     onClick={() => {
                       setIsPlumeVisible(prev => !prev);
                       showToast(isPlumeVisible ? 'Plume Layer Muted' : 'Plume Layer Visible');
                     }}
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition ${
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border transition shadow-2xs ${
                       isPlumeVisible && systemRunning
-                        ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/50'
-                        : 'bg-slate-900 text-slate-500 border-slate-700'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-slate-200 text-slate-600 border-slate-300'
                     }`}
                   >
                     {isPlumeVisible && systemRunning ? 'ACTIVE' : 'MUTED'}
@@ -966,7 +966,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
 
                 {/* Grid Size */}
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Grid Size</span>
+                  <span className="text-slate-600 font-medium">Grid Size</span>
                   <div className="flex items-center gap-1">
                     {([512, 1024, 2048] as const).map(size => (
                       <button
@@ -975,10 +975,10 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                           setConfig(prev => ({ ...prev, gridSize: size }));
                           showToast(`Wireframe resolution set to ${size} mesh`);
                         }}
-                        className={`px-1.5 py-0.5 text-[9px] font-mono font-bold rounded border transition ${
+                        className={`px-2 py-0.5 text-[9px] font-mono font-bold rounded-lg border transition ${
                           config.gridSize === size
-                            ? 'bg-blue-600 text-white border-blue-400 shadow-xs'
-                            : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                            ? 'bg-blue-600 text-white border-blue-500 shadow-2xs'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         {size}
@@ -989,7 +989,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
 
                 {/* Thermal Metric Selector */}
                 <div>
-                  <span className="text-[10px] text-slate-400 block mb-1">Thermal Metric</span>
+                  <span className="text-[10px] text-slate-500 font-bold block mb-1">Thermal Metric</span>
                   <div className="grid grid-cols-2 gap-1 text-[10px]">
                     {[
                       { id: 'air_temp', label: 'Air Temp (°C)' },
@@ -1003,10 +1003,10 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                           setActiveMetric(m.id as ThermalMetric);
                           showToast(`Active Thermal Metric: ${m.label}`);
                         }}
-                        className={`py-1 rounded font-bold border transition ${
+                        className={`py-1 rounded-lg font-bold border transition ${
                           activeMetric === m.id
-                            ? 'bg-blue-600 text-white border-blue-400 shadow-xs'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                            ? 'bg-blue-600 text-white border-blue-500 shadow-2xs'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         {m.label}
@@ -1016,17 +1016,17 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                 </div>
 
                 {/* Color Coding Sub-tree */}
-                <div className="space-y-2 border-t border-slate-800 pt-2">
-                  <div className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                    <Sliders className="w-3 h-3 text-blue-400" />
+                <div className="space-y-2 border-t border-slate-200 pt-2">
+                  <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                    <Sliders className="w-3 h-3 text-blue-600" />
                     <span>Color Coding</span>
                   </div>
 
                   {/* Opacity Slider */}
                   <div>
-                    <div className="flex justify-between text-[10px] text-slate-400 mb-0.5">
+                    <div className="flex justify-between text-[10px] text-slate-500 mb-0.5">
                       <span>Opacity</span>
-                      <span className="font-mono text-cyan-400">{Math.round(config.thermalOpacity * 100)}%</span>
+                      <span className="font-mono text-blue-600 font-bold">{Math.round(config.thermalOpacity * 100)}%</span>
                     </div>
                     <input
                       type="range"
@@ -1046,13 +1046,13 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                           }
                         }
                       }}
-                      className="w-full accent-blue-500 h-1 bg-slate-800 rounded appearance-none cursor-pointer"
+                      className="w-full accent-blue-600 h-1 bg-slate-200 rounded appearance-none cursor-pointer"
                     />
                   </div>
 
                   {/* Color Scheme Picker */}
                   <div>
-                    <span className="text-[10px] text-slate-400 block mb-1">Color Scheme</span>
+                    <span className="text-[10px] text-slate-500 font-bold block mb-1">Color Scheme</span>
                     <div className="grid grid-cols-2 gap-1 text-[10px]">
                       {(['rainbow', 'inferno'] as const).map(sch => (
                         <button
@@ -1061,10 +1061,10 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                             setConfig(prev => ({ ...prev, colorScheme: sch }));
                             showToast(`Color Palette: ${sch.toUpperCase()}`);
                           }}
-                          className={`py-1 rounded font-bold capitalize border transition ${
+                          className={`py-1 rounded-lg font-bold capitalize border transition ${
                             config.colorScheme === sch
-                              ? 'bg-blue-600 text-white border-blue-400 shadow-xs'
-                              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                              ? 'bg-blue-600 text-white border-blue-500 shadow-2xs'
+                              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                           }`}
                         >
                           {sch}
@@ -1074,18 +1074,18 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                   </div>
 
                   {/* Distance Bounds */}
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Near Distance:</span>
-                    <span className="font-mono text-slate-200">100 m</span>
+                  <div className="flex justify-between text-[10px] text-slate-600">
+                    <span>Near Distance:</span>
+                    <span className="font-mono font-bold text-slate-800">100 m</span>
                   </div>
-                  <div className="flex justify-between text-[10px]">
-                    <span className="text-slate-400">Far Distance:</span>
-                    <span className="font-mono text-slate-200">8.5 km</span>
+                  <div className="flex justify-between text-[10px] text-slate-600">
+                    <span>Far Distance:</span>
+                    <span className="font-mono font-bold text-slate-800">8.5 km</span>
                   </div>
 
                   {/* Toggles: Check Topography & Check Buildings */}
-                  <div className="pt-1.5 space-y-1.5 border-t border-slate-800">
-                    <label className="flex items-center gap-2 text-[10px] text-slate-200 cursor-pointer hover:text-cyan-300 transition">
+                  <div className="pt-1.5 space-y-1.5 border-t border-slate-200">
+                    <label className="flex items-center gap-2 text-[10px] text-slate-700 cursor-pointer hover:text-blue-700 transition">
                       <input
                         type="checkbox"
                         checked={config.showTopography}
@@ -1094,12 +1094,12 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                           setConfig(prev => ({ ...prev, showTopography: val }));
                           showToast(val ? '3D Topography Elevation Enabled' : 'Plume Flattened to 2D Surface');
                         }}
-                        className="accent-blue-500 rounded cursor-pointer"
+                        className="accent-blue-600 rounded cursor-pointer"
                       />
                       <span>Check Topography (3D Elevation)</span>
                     </label>
 
-                    <label className="flex items-center gap-2 text-[10px] text-slate-200 cursor-pointer hover:text-cyan-300 transition">
+                    <label className="flex items-center gap-2 text-[10px] text-slate-700 cursor-pointer hover:text-blue-700 transition">
                       <input
                         type="checkbox"
                         checked={config.showBuildings}
@@ -1108,12 +1108,12 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                           setConfig(prev => ({ ...prev, showBuildings: val }));
                           showToast(val ? '3D Building Extrusions Enabled' : '3D Buildings Hidden');
                         }}
-                        className="accent-blue-500 rounded cursor-pointer"
+                        className="accent-blue-600 rounded cursor-pointer"
                       />
                       <span>Check Buildings (3D Extrusions)</span>
                     </label>
 
-                    <label className="flex items-center gap-2 text-[10px] text-slate-200 cursor-pointer hover:text-cyan-300 transition">
+                    <label className="flex items-center gap-2 text-[10px] text-slate-700 cursor-pointer hover:text-blue-700 transition">
                       <input
                         type="checkbox"
                         checked={config.showSensors}
@@ -1122,7 +1122,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                           setConfig(prev => ({ ...prev, showSensors: val }));
                           showToast(val ? 'Radar Telemetry Nodes Visible' : 'Sensors Hidden');
                         }}
-                        className="accent-blue-500 rounded cursor-pointer"
+                        className="accent-blue-600 rounded cursor-pointer"
                       />
                       <span>Sensors & Radar Nodes</span>
                     </label>
@@ -1133,20 +1133,20 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
           </div>
 
           {/* Camera Perspective Controls */}
-          <div className="border border-slate-800/80 rounded bg-[#0b1326]/60 p-2 space-y-2">
-            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+          <div className="border border-slate-200 rounded-2xl bg-slate-50/70 p-2.5 space-y-2 shadow-2xs">
+            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
               Camera Viewport
             </span>
             <div className="grid grid-cols-2 gap-1.5 text-[10px]">
               <button
                 onClick={() => setCameraPerspective(66)}
-                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 rounded font-bold transition"
+                className="py-1.5 px-2 bg-white hover:bg-slate-100 text-blue-700 border border-slate-200 rounded-xl font-bold shadow-2xs transition"
               >
                 3D Perspective (66°)
               </button>
               <button
                 onClick={() => setCameraPerspective(0)}
-                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-bold transition"
+                className="py-1.5 px-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold shadow-2xs transition"
               >
                 2D Top-Down (0°)
               </button>
@@ -1154,13 +1154,13 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
             <div className="grid grid-cols-2 gap-1.5 text-[10px]">
               <button
                 onClick={() => rotateBearing(45)}
-                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-bold transition"
+                className="py-1.5 px-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold shadow-2xs transition"
               >
                 Orbit 45°
               </button>
               <button
                 onClick={resetNorth}
-                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-bold transition"
+                className="py-1.5 px-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold shadow-2xs transition"
               >
                 Reset North
               </button>
@@ -1174,59 +1174,59 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
 
           {/* Interactive Floating Toast Feedback */}
           {toastMsg && (
-            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 bg-[#070e1c]/95 border border-cyan-500/60 text-cyan-200 px-3 py-1.5 rounded-full text-xs font-mono shadow-2xl flex items-center gap-2 backdrop-blur animate-in fade-in slide-in-from-top duration-200">
-              <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{toastMsg}</span>
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 z-40 bg-white/95 border border-blue-200 text-slate-800 px-3.5 py-1.5 rounded-full text-xs font-mono shadow-xl flex items-center gap-2 backdrop-blur animate-in fade-in slide-in-from-top duration-200">
+              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+              <span className="font-bold">{toastMsg}</span>
             </div>
           )}
 
           {/* Selected Target / Sensor Modal */}
           {selectedTarget && (
-            <div className="absolute top-3 right-3 z-30 w-80 bg-[#070e1c]/95 backdrop-blur border border-cyan-500/60 rounded-xl p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
-                <span className="text-xs font-bold text-cyan-300 flex items-center gap-1">
-                  <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <div className="absolute top-3 right-3 z-30 w-80 bg-white/95 backdrop-blur border border-slate-200 rounded-2xl p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-2">
+                <span className="text-xs font-bold text-blue-700 flex items-center gap-1.5">
+                  <Radio className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
                   {selectedTarget.name}
                 </span>
                 <button
                   onClick={() => setSelectedTarget(null)}
-                  className="text-slate-400 hover:text-white text-sm px-1 py-0.5 rounded transition"
+                  className="text-slate-400 hover:text-slate-700 text-sm px-1 py-0.5 rounded transition"
                 >
                   ✕
                 </button>
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Crosshair className="w-3 h-3 text-slate-500" /> Node ID:
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Crosshair className="w-3 h-3 text-slate-400" /> Node ID:
                   </span>
-                  <span className="font-mono text-slate-200">{selectedTarget.id}</span>
+                  <span className="font-mono font-bold text-slate-800">{selectedTarget.id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Gauge className="w-3 h-3 text-orange-400" /> Recorded Temp:
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Gauge className="w-3 h-3 text-orange-500" /> Recorded Temp:
                   </span>
-                  <span className="font-mono font-bold text-orange-400">{selectedTarget.temp_c}°C</span>
+                  <span className="font-mono font-bold text-orange-600">{selectedTarget.temp_c}°C</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Wifi className="w-3 h-3 text-cyan-400" /> Signal / Freq:
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Wifi className="w-3 h-3 text-sky-500" /> Signal / Freq:
                   </span>
-                  <span className="font-mono text-slate-200">{selectedTarget.signal_dbm ?? -42} dBm ({selectedTarget.freq ?? '2.4 GHz'})</span>
+                  <span className="font-mono text-slate-700">{selectedTarget.signal_dbm ?? -42} dBm ({selectedTarget.freq ?? '2.4 GHz'})</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <BatteryCharging className="w-3 h-3 text-emerald-400" /> Battery:
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <BatteryCharging className="w-3 h-3 text-emerald-500" /> Battery:
                   </span>
-                  <span className="font-mono text-emerald-400">{selectedTarget.battery_pct ?? 98}%</span>
+                  <span className="font-mono font-bold text-emerald-600">{selectedTarget.battery_pct ?? 98}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Elevation:</span>
-                  <span className="font-mono text-slate-200">{selectedTarget.elevation_m}m AMSL</span>
+                  <span className="text-slate-500">Elevation:</span>
+                  <span className="font-mono text-slate-700">{selectedTarget.elevation_m}m AMSL</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Status:</span>
-                  <span className="text-emerald-400 font-bold font-mono">{selectedTarget.status}</span>
+                  <span className="text-slate-500">Status:</span>
+                  <span className="text-emerald-700 font-bold font-mono">{selectedTarget.status}</span>
                 </div>
                 <div className="pt-2 flex gap-1.5">
                   <button
@@ -1241,7 +1241,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                         showToast(`Focused on ${selectedTarget.name}`);
                       }
                     }}
-                    className="flex-1 py-1 bg-cyan-900/60 hover:bg-cyan-800 text-cyan-200 border border-cyan-500/40 rounded text-[10px] font-bold transition"
+                    className="flex-1 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold transition shadow-2xs"
                   >
                     Focus Node
                   </button>
@@ -1249,7 +1249,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                     onClick={() => {
                       showToast(`Node ${selectedTarget.id} calibrated. Transmission verified.`);
                     }}
-                    className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded text-[10px] font-bold transition"
+                    className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-[10px] font-bold transition shadow-2xs"
                   >
                     Calibrate
                   </button>
@@ -1260,40 +1260,36 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
 
           {/* Selected Dispersion Band Modal */}
           {selectedBand && (
-            <div className="absolute top-3 right-3 z-30 w-80 bg-[#070e1c]/95 backdrop-blur border border-amber-500/60 rounded-xl p-3 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
-                <span className="text-xs font-bold text-amber-300">
+            <div className="absolute top-3 right-3 z-30 w-80 bg-white/95 backdrop-blur border border-slate-200 rounded-2xl p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 text-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-2">
+                <span className="text-xs font-bold text-amber-700">
                   Thermal Dispersion Band {selectedBand.band}
                 </span>
                 <button
                   onClick={() => setSelectedBand(null)}
-                  className="text-slate-400 hover:text-white text-sm px-1 py-0.5 rounded transition"
+                  className="text-slate-400 hover:text-slate-700 text-sm px-1 py-0.5 rounded transition"
                 >
                   ✕
                 </button>
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Band Classification:</span>
-                  <span className="font-bold text-red-400">{selectedBand.risk_level}</span>
+                  <span className="text-slate-500">Estimated Air Temp:</span>
+                  <span className="font-mono font-bold text-orange-600">{selectedBand.air_temperature_c}°C</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Estimated Air Temp:</span>
-                  <span className="font-mono font-bold text-orange-400">{selectedBand.air_temperature_c}°C</span>
+                  <span className="text-slate-500">Land Surface Temp (LST):</span>
+                  <span className="font-mono font-bold text-amber-600">{selectedBand.surface_temp_c ?? selectedBand.land_surface_temp_c}°C</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Land Surface Temp (LST):</span>
-                  <span className="font-mono text-amber-400">{selectedBand.surface_temp_c ?? selectedBand.land_surface_temp_c}°C</span>
+                  <span className="text-slate-500">WBGT Heat Stress:</span>
+                  <span className="font-mono text-slate-700">{selectedBand.wbgt_c ?? 34.5}°C</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">WBGT Heat Stress:</span>
-                  <span className="font-mono text-slate-200">{selectedBand.wbgt_c ?? 34.5}°C</span>
+                  <span className="text-slate-500">Heat Dispersion:</span>
+                  <span className="font-mono text-slate-700">{selectedBand.dispersion_rate ?? '75%'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Heat Dispersion:</span>
-                  <span className="font-mono text-slate-300">{selectedBand.dispersion_rate ?? '75%'}</span>
-                </div>
-                <p className="text-[10px] text-slate-400 border-t border-slate-800 pt-1">
+                <p className="text-[10px] text-slate-500 border-t border-slate-200 pt-1 leading-relaxed">
                   {selectedBand.description || 'Active 3D thermal dispersion plume ring.'}
                 </p>
                 <div className="pt-1 flex gap-1.5">
@@ -1301,7 +1297,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                     onClick={() => {
                       showToast(`Advisory dispatched for ${selectedBand.risk_level} thermal zone.`);
                     }}
-                    className="flex-1 py-1 bg-amber-900/60 hover:bg-amber-800 text-amber-200 border border-amber-500/40 rounded text-[10px] font-bold transition"
+                    className="flex-1 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-[10px] font-bold transition shadow-2xs"
                   >
                     Issue Zone Advisory
                   </button>
@@ -1310,25 +1306,25 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
             </div>
           )}
 
-          {/* Add Monitored Area Tactical Modal */}
+          {/* Add Monitored Area Tactical Modal (Clean Light Theme) */}
           {showAddAreaModal && (
-            <div className="absolute inset-0 bg-[#070c18]/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="w-full max-w-lg bg-[#0a1122] border border-blue-500/50 rounded-xl p-4 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
-                    <MapPin className="w-4 h-4 text-cyan-400" />
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+              <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150 text-slate-800">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2 text-slate-900 font-extrabold text-sm">
+                    <MapPin className="w-4 h-4 text-blue-600" />
                     <span>Deploy 3D Monitored Municipal Area</span>
                   </div>
                   <button
                     onClick={() => setShowAddAreaModal(false)}
-                    className="text-slate-400 hover:text-white text-sm"
+                    className="text-slate-400 hover:text-slate-700 text-sm font-bold"
                   >
                     ✕
                   </button>
                 </div>
 
-                <div className="space-y-1">
-                  <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                     Select Indian Metropolitan Jurisdiction:
                   </span>
                   <div className="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto scrollbar-thin pr-1">
@@ -1336,17 +1332,17 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                       <button
                         key={area.ward}
                         onClick={() => handleSelectArea(area)}
-                        className={`text-left p-2 rounded border text-xs transition flex items-center justify-between ${
+                        className={`text-left p-2.5 rounded-xl border text-xs transition flex items-center justify-between ${
                           currentWard === area.ward
-                            ? 'bg-blue-900/60 border-cyan-400 text-cyan-200 shadow-xs'
-                            : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800'
+                            ? 'bg-blue-50 border-blue-500 text-blue-900 font-bold shadow-2xs'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         <div>
-                          <div className="font-bold text-slate-100">{area.name}</div>
-                          <div className="text-[10px] text-slate-400">{area.ward}</div>
+                          <div className="font-bold text-slate-900">{area.name}</div>
+                          <div className="text-[10px] text-slate-500">{area.ward}</div>
                         </div>
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-800 rounded text-cyan-400">
+                        <span className="text-[10px] font-mono px-2 py-0.5 bg-blue-100 rounded-md text-blue-800 font-bold">
                           {area.region}
                         </span>
                       </button>
@@ -1355,52 +1351,52 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
                 </div>
 
                 {/* Custom GPS Coordinates Deployment */}
-                <div className="border-t border-slate-800 pt-2 space-y-2">
-                  <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                <div className="border-t border-slate-100 pt-3 space-y-2.5">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                     Or Deploy Custom GPS Coordinates:
                   </span>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Latitude (°N)</label>
+                      <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">Latitude (°N)</label>
                       <input
                         type="text"
                         value={customLatInput}
                         onChange={(e) => setCustomLatInput(e.target.value)}
-                        className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 font-mono text-xs focus:border-cyan-400 outline-none"
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-mono text-xs focus:border-blue-500 focus:bg-white outline-none"
                         placeholder="e.g. 13.0827"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-slate-400 block mb-0.5">Longitude (°E)</label>
+                      <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">Longitude (°E)</label>
                       <input
                         type="text"
                         value={customLonInput}
                         onChange={(e) => setCustomLonInput(e.target.value)}
-                        className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 font-mono text-xs focus:border-cyan-400 outline-none"
+                        className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-mono text-xs focus:border-blue-500 focus:bg-white outline-none"
                         placeholder="e.g. 80.2707"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-400 block mb-0.5">Custom Sector / Ward Name</label>
+                    <label className="text-[10px] text-slate-500 font-semibold block mb-0.5">Custom Sector / Ward Name</label>
                     <input
                       type="text"
                       value={customWardInput}
                       onChange={(e) => setCustomWardInput(e.target.value)}
-                      className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 text-xs focus:border-cyan-400 outline-none"
+                      className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs focus:border-blue-500 focus:bg-white outline-none"
                       placeholder="e.g. Sector 4 - Heavy Industry Hub"
                     />
                   </div>
-                  <div className="flex justify-end gap-2 pt-1">
+                  <div className="flex justify-end gap-2 pt-2">
                     <button
                       onClick={() => setShowAddAreaModal(false)}
-                      className="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded text-xs"
+                      className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDeployCustomArea}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-xs shadow-md transition"
+                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-md transition"
                     >
                       Deploy 3D Monitor
                     </button>

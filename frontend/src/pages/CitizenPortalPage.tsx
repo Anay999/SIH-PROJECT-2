@@ -159,146 +159,154 @@ export const CitizenPortalPage: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#1c1917] flex flex-col lg:flex-row font-sans selection:bg-orange-500 selection:text-white">
+    <div className="h-screen max-h-screen overflow-hidden bg-[#faf9f6] text-[#1c1917] flex flex-col lg:flex-row font-sans selection:bg-orange-500 selection:text-white">
       {/* ======================================================== */}
-      {/* 1. CITIZEN USER SIDEBAR                                  */}
+      {/* 1. CITIZEN USER SIDEBAR (Fixed & Constant)               */}
       {/* ======================================================== */}
-      <aside className="w-full lg:w-64 bg-white border-b lg:border-b-0 lg:border-r border-[#ede7de] shrink-0 flex flex-col justify-between shadow-xs">
-        <div>
-          {/* Logo & Header */}
-          <div className="p-5 border-b border-[#ede7de] flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-sm font-black tracking-tight text-[#1c1917] uppercase block">
-                THERMOSAFE <span className="text-orange-600">AI</span>
-              </span>
-              <span className="text-[10px] font-bold text-[#78716c] uppercase tracking-wider block">
-                Public Safety Portal
-              </span>
-            </div>
+      <aside className="w-full lg:w-64 h-full bg-white border-b lg:border-b-0 lg:border-r border-[#ede7de] shrink-0 flex flex-col shadow-xs overflow-hidden">
+        {/* Logo & Header */}
+        <div className="p-4 border-b border-[#ede7de] flex items-center space-x-3 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+            <Shield className="w-5 h-5" />
           </div>
+          <div>
+            <span className="text-sm font-black tracking-tight text-[#1c1917] uppercase block">
+              THERMOSAFE <span className="text-orange-600">AI</span>
+            </span>
+            <span className="text-[10px] font-bold text-[#78716c] uppercase tracking-wider block">
+              Public Safety Portal
+            </span>
+          </div>
+        </div>
 
-          {/* User Profile Mini Badge */}
-          <div className="p-4 bg-[#faf9f6] border-b border-[#ede7de] space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#1c1917] truncate">{user?.full_name || 'Public Citizen'}</span>
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                CITIZEN
-              </span>
-            </div>
+        {/* User Profile Mini Badge */}
+        <div className="p-3 bg-[#faf9f6] border-b border-[#ede7de] space-y-2 shrink-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#1c1917] truncate">{user?.full_name || 'Public Citizen'}</span>
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              CITIZEN
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-1.5">
             <p className="text-[11px] text-[#57534e] flex items-center gap-1 truncate">
               <MapPin className="w-3 h-3 text-orange-600 shrink-0" />
               <span>{cityProfile.name} Jurisdiction</span>
             </p>
+            <button
+              onClick={() => logout()}
+              title="Sign Out Session"
+              className="py-1 px-2 rounded-lg bg-white hover:bg-red-50 text-red-700 hover:text-red-800 text-[11px] font-semibold transition flex items-center gap-1 border border-[#ede7de] shadow-2xs shrink-0"
+            >
+              <LogOut className="w-3 h-3 text-red-600" />
+              <span>Sign Out</span>
+            </button>
           </div>
-
-          {/* Navigation Links (Strictly 8 Views) */}
-          <nav className="p-3 space-y-1 text-xs font-semibold">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'overview'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <Activity className="w-4 h-4" />
-              <span>1. Overview</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('thermomap')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'thermomap'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>2. ThermoMap</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('forecast')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'forecast'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <Calendar className="w-4 h-4" />
-              <span>3. Heat Forecast</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('thermal_stress')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'thermal_stress'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <Thermometer className="w-4 h-4" />
-              <span>4. Thermal Stress</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('health_risk')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'health_risk'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <HeartPulse className="w-4 h-4" />
-              <span>5. Health Risk</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('nearby_help')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'nearby_help'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <LifeBuoy className="w-4 h-4" />
-              <span>6. Nearby Help</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('emergency')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'emergency'
-                  ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
-                  : 'text-red-700 hover:bg-red-50'
-              }`}
-            >
-              <Ambulance className="w-4 h-4" />
-              <span>7. Emergency</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
-                activeTab === 'profile'
-                  ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
-                  : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
-              }`}
-            >
-              <User className="w-4 h-4" />
-              <span>8. Profile</span>
-            </button>
-          </nav>
         </div>
 
-        {/* Sign Out Button */}
-        <div className="p-4 border-t border-[#ede7de]">
+        {/* Navigation Links (Strictly 8 Views - Scrollable if screen is compact) */}
+        <nav className="p-3 space-y-1 text-xs font-semibold flex-1 min-h-0 overflow-y-auto scrollbar-thin">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'overview'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            <span>1. Overview</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('thermomap')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'thermomap'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>2. ThermoMap</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('forecast')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'forecast'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>3. Heat Forecast</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('thermal_stress')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'thermal_stress'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <Thermometer className="w-4 h-4" />
+            <span>4. Thermal Stress</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('health_risk')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'health_risk'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <HeartPulse className="w-4 h-4" />
+            <span>5. Health Risk</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('nearby_help')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'nearby_help'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <LifeBuoy className="w-4 h-4" />
+            <span>6. Nearby Help</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('emergency')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'emergency'
+                ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                : 'text-red-700 hover:bg-red-50'
+            }`}
+          >
+            <Ambulance className="w-4 h-4" />
+            <span>7. Emergency</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl transition ${
+              activeTab === 'profile'
+                ? 'bg-orange-600 text-white shadow-md shadow-orange-600/20'
+                : 'text-[#57534e] hover:bg-[#f5f3ef] hover:text-[#1c1917]'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>8. Profile</span>
+          </button>
+        </nav>
+
+        {/* Sign Out Button - Cleanly visible at bottom of sidebar within viewport */}
+        <div className="p-3 border-t border-[#ede7de] shrink-0 bg-white">
           <button
             onClick={() => logout()}
-            className="w-full py-2 px-3 rounded-xl bg-[#f5f3ef] hover:bg-red-50 text-[#57534e] hover:text-red-700 text-xs font-semibold transition flex items-center justify-center space-x-2 border border-[#ede7de]"
+            className="w-full py-2 px-3 rounded-xl bg-[#f5f3ef] hover:bg-red-50 text-[#57534e] hover:text-red-700 text-xs font-semibold transition flex items-center justify-center space-x-2 border border-[#ede7de] shadow-2xs"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -307,9 +315,9 @@ export const CitizenPortalPage: React.FC = () => {
       </aside>
 
       {/* ======================================================== */}
-      {/* 2. MAIN DASHBOARD CONTENT AREA                           */}
+      {/* 2. MAIN DASHBOARD CONTENT AREA - ONLY THIS SCROLLS       */}
       {/* ======================================================== */}
-      <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <main className="flex-1 min-h-0 h-full overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 scrollbar-thin">
         
         {/* Global Context Bar (Current Location + Municipality + Heat Risk) */}
         <div className="bg-white border border-[#ede7de] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -509,7 +517,7 @@ export const CitizenPortalPage: React.FC = () => {
                 const matched = allFacilities.find(f => f.name === fac.name);
                 if (matched) setSelectedFacility(matched);
               }}
-              height="620px"
+              height="680px"
             />
           </div>
         )}

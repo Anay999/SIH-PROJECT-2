@@ -296,13 +296,13 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style: mapStyle,
-      center: [78.9629, 22.5937], // Pan-India Geographic Center
-      zoom: 4.8,
-      minZoom: 4.0,
+      center: [80.0, 21.2], // Pan-India Geographic Center balanced for viewports
+      zoom: 3.45,
+      minZoom: 2.2, // Allow user to zoom out freely to inspect the entire Indian subcontinent
       maxZoom: 18.0,
       maxBounds: [
-        [65.0, 6.0],  // Southwest extent (Indian Ocean / Lakshadweep margin)
-        [98.5, 37.5]  // Northeast extent (Ladakh / Arunachal Pradesh margin)
+        [50.0, 0.0],  // Generous southwest margin (Indian Ocean / Lakshadweep)
+        [108.0, 42.0] // Generous northeast margin (Ladakh / Arunachal Pradesh)
       ],
       attributionControl: false
     });
@@ -626,8 +626,8 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     setSelectedStreet(null);
     if (mapRef.current) {
       mapRef.current.flyTo({
-        center: [78.9629, 22.5937],
-        zoom: 4.8,
+        center: [80.0, 21.2],
+        zoom: 3.45,
         essential: true
       });
       loadIndiaGridData(timeOfDay);
