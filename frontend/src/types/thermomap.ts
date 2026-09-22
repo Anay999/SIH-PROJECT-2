@@ -223,6 +223,9 @@ export interface Thermal3DTelemetryTarget {
   temp_c: number;
   status: string;
   classification: string;
+  signal_dbm?: number;
+  battery_pct?: number;
+  freq?: string;
 }
 
 export interface Thermal3DCommandData {

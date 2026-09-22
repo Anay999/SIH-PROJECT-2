@@ -439,18 +439,32 @@ def generate_3d_thermal_terrain_data(
         b_air = round(base_air + band["temp_delta"], 1)
         b_lst = round(base_lst + (band["temp_delta"] * 1.3), 1)
 
+        elevation_offsets = [260, 190, 130, 80, 25]
+        elev = elevation_offsets[idx] if idx < len(elevation_offsets) else 30
+        disp_rates = ["94.2%", "81.6%", "65.4%", "44.1%", "22.8%"]
+        disp_rate = disp_rates[idx] if idx < len(disp_rates) else "30%"
+
         features.append({
             "type": "Feature",
-            "id": f"plume-band-{idx}",
+            "id": f"plume-band-{idx + 1}",
             "properties": {
+                "band": idx + 1,
                 "band_index": idx,
                 "band_name": band["name"],
                 "risk_level": band["level"],
                 "air_temperature_c": b_air,
+                "surface_temp_c": b_lst,
                 "land_surface_temp_c": b_lst,
+                "wbgt_c": round(profile_climate["wbgt_c"] + band["temp_delta"] * 0.7, 1),
+                "utci_c": round(profile_climate["utci_c"] + band["temp_delta"] * 0.9, 1),
+                "htsi_score": round(max(10, min(100, profile_climate["htsi_score"] + (4 - idx) * 8.0)), 1),
+                "risk_score": round(max(10, min(100, profile_climate["htsi_score"] + (4 - idx) * 8.0)), 1),
                 "color": band["color"],
                 "fill_opacity": band["opacity"],
-                "radius_km": round(radius_km * band["radius_factor"], 2)
+                "elevation_offset_m": elev,
+                "radius_km": round(radius_km * band["radius_factor"], 2),
+                "dispersion_rate": disp_rate,
+                "description": f"Concentric {band['name']} displaying {b_air}°C air temperature and {band['level']} heat dispersion."
             },
             "geometry": {
                 "type": "Polygon",
@@ -458,35 +472,99 @@ def generate_3d_thermal_terrain_data(
             }
         })
 
-    # 2. Add simulated thermal sensor / telemetry targets
-    targets = [
-        {"id": "SENSOR-TRX-01", "name": "Primary Weather Tower", "lat": latitude + 0.005, "lon": longitude - 0.004, "temp": base_air + 1.2, "status": "ONLINE"},
-        {"id": "SENSOR-TRX-02", "name": "Highway Heat Radiation Node", "lat": latitude - 0.006, "lon": longitude + 0.007, "temp": base_air + 3.1, "status": "ACTIVE"},
-        {"id": "SENSOR-TRX-03", "name": "Substation Thermal Monitor", "lat": latitude + 0.010, "lon": longitude + 0.005, "temp": base_air + 2.4, "status": "MONITORING"}
+    # 2. Add simulated thermal sensor / telemetry targets matching top tabs
+    sensor_nodes = [
+        {
+            "id": "isolog_1",
+            "name": "IsoLOG 1 - Directional RF/Heat Array",
+            "lat": round(latitude + 0.0052, 5),
+            "lon": round(longitude - 0.0041, 5),
+            "elevation_m": 42.0,
+            "temp_c": round(base_air + 1.2, 1),
+            "status": "ONLINE",
+            "classification": "Directional Radar Node",
+            "freq": "2.4 GHz / 5.8 GHz",
+            "signal_dbm": -42,
+            "battery_pct": 98
+        },
+        {
+            "id": "isolog_2",
+            "name": "IsoLOG 2 - Radiation Radar Array",
+            "lat": round(latitude - 0.0064, 5),
+            "lon": round(longitude + 0.0068, 5),
+            "elevation_m": 58.0,
+            "temp_c": round(base_air + 3.1, 1),
+            "status": "ACTIVE",
+            "classification": "Multi-Sector Thermal Array",
+            "freq": "9 kHz - 6 GHz",
+            "signal_dbm": -38,
+            "battery_pct": 95
+        },
+        {
+            "id": "isolog_3",
+            "name": "IsoLOG 3 - Substation Thermal Monitor",
+            "lat": round(latitude + 0.0098, 5),
+            "lon": round(longitude + 0.0051, 5),
+            "elevation_m": 28.0,
+            "temp_c": round(base_air + 2.4, 1),
+            "status": "MONITORING",
+            "classification": "Critical Substation Telemetry",
+            "freq": "433 MHz Telemetry",
+            "signal_dbm": -51,
+            "battery_pct": 91
+        },
+        {
+            "id": "spectran",
+            "name": "Spectran V5 - Thermal Spectrum Analyzer",
+            "lat": round(latitude - 0.0045, 5),
+            "lon": round(longitude - 0.0078, 5),
+            "elevation_m": 35.0,
+            "temp_c": round(base_air - 0.8, 1),
+            "status": "ONLINE",
+            "classification": "Real-Time Spectrum Sensor",
+            "freq": "I/Q 175MHz Stream",
+            "signal_dbm": -46,
+            "battery_pct": 100
+        },
+        {
+            "id": "drone_detect",
+            "name": "Thermal Sensor 3D - Drone Node",
+            "lat": round(latitude + 0.0022, 5),
+            "lon": round(longitude + 0.0089, 5),
+            "elevation_m": 120.0,
+            "temp_c": round(base_air + 0.4, 1),
+            "status": "ONLINE",
+            "classification": "Aerial UAV Sensor Pod",
+            "freq": "5.8 GHz Telemetry",
+            "signal_dbm": -55,
+            "battery_pct": 84
+        }
     ]
 
     target_features = []
-    for t in targets:
+    for t in sensor_nodes:
         target_features.append({
             "type": "Feature",
             "id": t["id"],
             "properties": {
                 "target_id": t["id"],
                 "name": t["name"],
-                "temperature_c": round(t["temp"], 1),
+                "temperature_c": t["temp_c"],
                 "status": t["status"],
-                "type": "sensor_node"
+                "type": "sensor_node",
+                "elevation_m": t["elevation_m"]
             },
             "geometry": {
                 "type": "Point",
-                "coordinates": [round(t["lon"], 5), round(t["lat"], 5)]
+                "coordinates": [t["lon"], t["lat"]]
             }
         })
 
     return {
         "type": "FeatureCollection",
         "features": features,
-        "targets": target_features,
+        "targets": sensor_nodes,
+        "target_features": target_features,
         "metadata": {
             "center": [round(longitude, 5), round(latitude, 5)],
             "city": profile_climate["nearest_city"],
