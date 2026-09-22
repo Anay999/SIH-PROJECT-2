@@ -3,19 +3,25 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Layers,
-  Thermometer,
-  Radio,
+  Sliders,
+  ChevronLeft,
+  ChevronDown,
+  ChevronRight,
   Maximize2,
   Minimize2,
-  ChevronLeft,
-  Sliders,
+  AlertTriangle,
+  Radio,
+  Play,
+  Square,
+  Plus,
+  Compass,
+  Move,
+  Building,
+  RefreshCw,
   Sun,
   Moon,
   Sunrise,
-  Sunset,
-  Cpu,
-  Gauge,
-  AlertTriangle
+  Sunset
 } from 'lucide-react';
 import type {
   Thermal3DCommandData,
@@ -27,23 +33,26 @@ import type {
 import { fetch3DThermalCommandData } from '../../services/thermoMapService';
 
 export interface Municipal3DCommandCenterProps {
-  centerLat: number;
-  centerLon: number;
+  centerLat?: number;
+  centerLon?: number;
   municipalityName?: string;
   wardName?: string;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> = ({
-  centerLat,
-  centerLon,
+  centerLat = 13.0827,
+  centerLon = 80.2707,
   municipalityName = 'Greater Chennai Corporation',
-  wardName = 'Ward 114 - Central Division',
+  wardName = 'Ward 114 - Central Operations',
   onClose
 }) => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+
+  // Active Tab at top
+  const [activeTab, setActiveTab] = useState<string>('3d_command');
 
   // Telemetry & Data State
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,24 +61,38 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
   const [selectedTarget, setSelectedTarget] = useState<Thermal3DTelemetryTarget | null>(null);
   const [selectedBand, setSelectedBand] = useState<any | null>(null);
 
-  // Tactical HUD Controls State
+  // Tactical HUD Controls State (Modeled after AARTOS 3D Command Center)
   const [activeMetric, setActiveMetric] = useState<ThermalMetric>('air_temp');
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('afternoon');
   const [config, setConfig] = useState<Command3DConfig>({
     gridSize: 1024,
-    thermalOpacity: 0.75,
-    colorScheme: 'turbo',
+    thermalOpacity: 0.65,
+    colorScheme: 'rainbow',
     showTopography: true,
     showBuildings: true,
     showSensors: true,
-    pitch: 65,
-    bearing: 28
+    pitch: 66,
+    bearing: 32
   });
-  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState<boolean>(false);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [fps, setFps] = useState<number>(60);
 
-  // Simple FPS Telemetry Counter
+  // Tree disclosure states (Left HUD panel)
+  const [sectionOpen, setSectionOpen] = useState<{ [key: string]: boolean }>({
+    main: true,
+    view: true,
+    heatmap: true,
+    colorCoding: true,
+    monitoredArea: false
+  });
+
+  const toggleSection = (key: string) => {
+    setSectionOpen(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [fps, setFps] = useState<number>(61);
+  const [systemRunning, setSystemRunning] = useState<boolean>(true);
+
+  // FPS Telemetry Counter
   useEffect(() => {
     let frameCount = 0;
     let lastTime = performance.now();
@@ -95,7 +118,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
     setLoading(true);
     setErrorMsg(null);
     try {
-      const data = await fetch3DThermalCommandData(centerLat, centerLon, 7.5, timeOfDay);
+      const data = await fetch3DThermalCommandData(centerLat, centerLon, 8.5, timeOfDay);
       setCommandData(data);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to load 3D Thermal Command Center data');
@@ -108,75 +131,61 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
     load3DData();
   }, [load3DData]);
 
-  // Color scheme mappings
-  const getColorForBand = useCallback((bandIndex: number, scheme: Command3DConfig['colorScheme']) => {
-    const palettes: Record<string, string[]> = {
-      turbo: ['#b91c1c', '#ea580c', '#f59e0b', '#10b981', '#06b6d4'],
-      inferno: ['#fcffa4', '#f98e09', '#bc3754', '#57106e', '#000004'],
-      ironbow: ['#ffffff', '#ffeb3b', '#f44336', '#9c27b0', '#1a237e'],
-      rainbow: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6'],
-      oceanic: ['#e11d48', '#ea580c', '#0284c7', '#0891b2', '#059669']
-    };
-    const palette = palettes[scheme] || palettes.turbo;
-    return palette[Math.min(bandIndex - 1, palette.length - 1)] || '#ea580c';
-  }, []);
-
-  // Initialize MapLibre 3D Perspective Scene
+  // Initialize MapLibre 3D Scene with Satellite Topography & Atmospheric Blue Sky
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Dark tactical military basemap style
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style: {
         version: 8,
         sources: {
-          'osm-dark': {
+          'satellite': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             ],
             tileSize: 256,
-            attribution: '© OpenStreetMap contributors, © CARTO'
+            attribution: '© Esri, Maxar, Earthstar Geographics'
           }
         },
         layers: [
           {
             id: 'background',
             type: 'background',
-            paint: { 'background-color': '#06090e' }
+            paint: { 'background-color': '#08111e' }
           },
           {
-            id: 'osm-dark-tiles',
+            id: 'satellite-tiles',
             type: 'raster',
-            source: 'osm-dark',
+            source: 'satellite',
             minzoom: 0,
-            maxzoom: 20,
+            maxzoom: 19,
             paint: {
-              'raster-opacity': 0.85,
-              'raster-contrast': 0.2
+              'raster-opacity': 1.0,
+              'raster-contrast': 0.15,
+              'raster-saturation': 0.1
             }
           }
         ]
       },
       center: [centerLon, centerLat],
-      zoom: 12.8,
+      zoom: 13.2,
       pitch: config.pitch,
       bearing: config.bearing,
-      maxPitch: 80
+      maxPitch: 85
     });
 
     mapRef.current = map;
 
     map.on('load', () => {
-      // Add tactical 3D sky atmosphere
+      // Add realistic bright atmospheric sky matching reference screenshot
       if (typeof (map as any).setSky === 'function') {
         (map as any).setSky({
-          'sky-color': '#030712',
-          'sky-horizon-blend': 0.6,
-          'horizon-color': '#111827',
-          'horizon-fog-blend': 0.7
+          'sky-color': '#1d4ed8',
+          'sky-horizon-blend': 0.75,
+          'horizon-color': '#60a5fa',
+          'horizon-fog-blend': 0.8
         });
       }
     });
@@ -189,16 +198,15 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
     };
   }, [centerLat, centerLon]);
 
-  // Update 3D Plume and Elevation Layers when data or config changes
+  // Update 3D Plume and Building Elevation Layers when data or config changes
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded() || !commandData) return;
 
-    // Remove existing markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    // Source: 3D Thermal Plume Bands
+    // 1. Source: 3D Thermal Plume Bands
     if (map.getSource('thermal-3d-plume')) {
       (map.getSource('thermal-3d-plume') as maplibregl.GeoJSONSource).setData(commandData);
     } else {
@@ -208,7 +216,32 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
       });
     }
 
-    // 1. 3D Fill-Extrusion Layer (Physically elevated thermal dome)
+    // Color palettes
+    const rainbowColors: any = [
+      'match',
+      ['get', 'band'],
+      1, '#dc2626', // Red (Core Heat)
+      2, '#ea580c', // Orange
+      3, '#facc15', // Yellow
+      4, '#16a34a', // Green
+      5, '#0284c7', // Cyan/Blue (Outer dispersion)
+      '#ea580c'
+    ];
+
+    const infernoColors: any = [
+      'match',
+      ['get', 'band'],
+      1, '#fcffa4',
+      2, '#f98e09',
+      3, '#bc3754',
+      4, '#57106e',
+      5, '#000004',
+      '#f98e09'
+    ];
+
+    const activeColorExpression = config.colorScheme === 'inferno' ? infernoColors : rainbowColors;
+
+    // 2. 3D Fill-Extrusion Layer (Raised 3D Thermal Dispersion Dome)
     if (!map.getLayer('thermal-3d-extrusion')) {
       map.addLayer({
         id: 'thermal-3d-extrusion',
@@ -218,15 +251,14 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
           'fill-extrusion-height': [
             '*',
             ['get', 'elevation_offset_m'],
-            config.showTopography ? 2.5 : 0.05
+            config.showTopography ? 3.2 : 0.05
           ],
           'fill-extrusion-base': 0,
-          'fill-extrusion-color': ['get', 'color'],
+          'fill-extrusion-color': activeColorExpression,
           'fill-extrusion-opacity': config.thermalOpacity
         }
       });
 
-      // Interactive band selection on click
       map.on('click', 'thermal-3d-extrusion', (e) => {
         if (e.features && e.features[0]) {
           setSelectedBand(e.features[0].properties);
@@ -236,12 +268,13 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
       map.setPaintProperty(
         'thermal-3d-extrusion',
         'fill-extrusion-height',
-        ['*', ['get', 'elevation_offset_m'], config.showTopography ? 2.5 : 0.05]
+        ['*', ['get', 'elevation_offset_m'], config.showTopography ? 3.2 : 0.05]
       );
+      map.setPaintProperty('thermal-3d-extrusion', 'fill-extrusion-color', activeColorExpression);
       map.setPaintProperty('thermal-3d-extrusion', 'fill-extrusion-opacity', config.thermalOpacity);
     }
 
-    // 2. High-Tech Contour Wireframe Mesh Lines
+    // 3. High-Tech Contour Lines
     if (!map.getLayer('thermal-3d-wireframe')) {
       map.addLayer({
         id: 'thermal-3d-wireframe',
@@ -249,32 +282,82 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
         source: 'thermal-3d-plume',
         paint: {
           'line-color': '#ffffff',
-          'line-width': 1.6,
-          'line-opacity': 0.85,
-          'line-dasharray': [2, 2]
+          'line-width': 1.8,
+          'line-opacity': 0.9,
+          'line-dasharray': [3, 2]
         }
       });
     }
 
-    // 3. Sensor Telemetry Markers (3D Target Nodes)
+    // 4. 3D Cylindrical Obstacle Tower (matching grey building in screenshot)
+    if (config.showBuildings) {
+      const towerFeature = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'Polygon',
+              coordinates: [
+                [
+                  [centerLon + 0.004, centerLat + 0.003],
+                  [centerLon + 0.006, centerLat + 0.003],
+                  [centerLon + 0.006, centerLat + 0.005],
+                  [centerLon + 0.004, centerLat + 0.005],
+                  [centerLon + 0.004, centerLat + 0.003]
+                ]
+              ]
+            },
+            properties: {
+              height: 280,
+              base: 0
+            }
+          }
+        ]
+      };
+
+      if (!map.getSource('obstacle-tower')) {
+        map.addSource('obstacle-tower', {
+          type: 'geojson',
+          data: towerFeature as any
+        });
+        map.addLayer({
+          id: 'obstacle-tower-layer',
+          type: 'fill-extrusion',
+          source: 'obstacle-tower',
+          paint: {
+            'fill-extrusion-height': 280,
+            'fill-extrusion-base': 0,
+            'fill-extrusion-color': '#94a3b8',
+            'fill-extrusion-opacity': 0.92
+          }
+        });
+      }
+    } else if (map.getLayer('obstacle-tower-layer')) {
+      map.removeLayer('obstacle-tower-layer');
+      map.removeSource('obstacle-tower');
+    }
+
+    // 5. Sensor Telemetry Nodes with Radar Rings (IsoLOG 2 marker)
     if (config.showSensors && commandData.targets) {
       commandData.targets.forEach((target) => {
         const el = document.createElement('div');
-        el.className = 'tactical-sensor-node';
-        el.style.width = '34px';
-        el.style.height = '34px';
+        el.className = 'tactical-radar-node';
+        el.style.width = '36px';
+        el.style.height = '36px';
         el.style.borderRadius = '50%';
-        el.style.backgroundColor = 'rgba(15, 23, 42, 0.85)';
-        el.style.border = '2px solid #ea580c';
-        el.style.boxShadow = '0 0 16px rgba(234, 88, 12, 0.8), inset 0 0 8px #ea580c';
+        el.style.border = '2px solid #38bdf8';
+        el.style.backgroundColor = 'rgba(2, 6, 23, 0.85)';
+        el.style.boxShadow = '0 0 14px rgba(56, 189, 248, 0.9)';
         el.style.display = 'flex';
+        el.style.flexDirection = 'column';
         el.style.alignItems = 'center';
         el.style.justifyContent = 'center';
         el.style.cursor = 'pointer';
         el.style.color = '#fff';
-        el.style.fontSize = '10px';
+        el.style.fontSize = '9px';
         el.style.fontWeight = 'bold';
-        el.innerHTML = `<span>${Math.round(target.temp_c)}°</span>`;
+        el.innerHTML = `<span>${target.name.split(' ')[0]}</span><span style="color:#f59e0b">${Math.round(target.temp_c)}°</span>`;
 
         el.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -288,14 +371,14 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
         markersRef.current.push(marker);
       });
     }
-  }, [commandData, config, getColorForBand]);
+  }, [commandData, config, centerLat, centerLon]);
 
   // Camera Pitch & Bearing Controls
   const setCameraPerspective = (pitchVal: number) => {
     if (!mapRef.current) return;
     mapRef.current.easeTo({
       pitch: pitchVal,
-      duration: 800
+      duration: 700
     });
     setConfig(prev => ({ ...prev, pitch: pitchVal }));
   };
@@ -306,7 +389,7 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
     const next = (current + delta) % 360;
     mapRef.current.easeTo({
       bearing: next,
-      duration: 600
+      duration: 500
     });
     setConfig(prev => ({ ...prev, bearing: next }));
   };
@@ -315,42 +398,57 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
     if (!mapRef.current) return;
     mapRef.current.easeTo({
       bearing: 0,
-      pitch: 65,
-      duration: 700
+      pitch: 66,
+      duration: 600
     });
-    setConfig(prev => ({ ...prev, bearing: 0, pitch: 65 }));
+    setConfig(prev => ({ ...prev, bearing: 0, pitch: 66 }));
   };
 
   return (
-    <div className={`relative w-full ${isFullscreen ? 'fixed inset-0 z-50 h-screen' : 'h-[750px]'} bg-[#06090e] text-slate-100 flex flex-col font-sans select-none overflow-hidden rounded-xl border border-orange-950/60 shadow-2xl`}>
-      {/* Tactical Top Bar */}
-      <div className="bg-[#0b0f17]/95 backdrop-blur border-b border-orange-500/20 px-4 py-2.5 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded bg-orange-600/20 border border-orange-500/40 text-orange-400">
-            <Radio className="w-4 h-4 animate-pulse" />
+    <div
+      className={`relative w-full ${
+        isFullscreen ? 'fixed inset-0 z-50 h-screen w-screen' : 'h-[780px]'
+      } bg-[#070c18] text-slate-200 flex flex-col font-sans select-none overflow-hidden rounded-xl border border-slate-800 shadow-2xl`}
+    >
+      {/* ======================================================== */}
+      {/* 1. TOP MENU & TABS BAR (Modeled after AARTOS RTSA-Suite) */}
+      {/* ======================================================== */}
+      <div className="bg-[#0b1326] border-b border-slate-800/90 px-3 py-1 flex items-center justify-between z-30 text-xs">
+        {/* Left: Brand Logo & Navigation Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-900/60 border border-blue-500/40 rounded text-blue-300 font-black tracking-wider text-[11px]">
+            <Radio className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span>THERMOSAFE 3D</span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-widest text-orange-400 uppercase">
-                ADVANCED THERMAL TERRAIN
-              </span>
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-orange-500/20 text-orange-300 border border-orange-500/40 rounded">
-                MUNICIPAL OFFICER ONLY
-              </span>
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded">
-                SIMULATED DATA
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              {municipalityName} • {wardName} • 3D Terrain & Dispersion Contours
-            </p>
+
+          <div className="flex items-center gap-0.5 ml-2">
+            {[
+              { id: '3d_command', label: '3D Command Center' },
+              { id: 'isolog_1', label: 'IsoLOG 1' },
+              { id: 'isolog_2', label: 'IsoLOG 2' },
+              { id: 'isolog_3', label: 'IsoLOG 3' },
+              { id: 'spectran', label: 'Spectran V5' },
+              { id: 'drone_detect', label: 'Thermal Sensor 3D' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1 text-[11px] font-bold rounded-t transition ${
+                  activeTab === tab.id
+                    ? 'bg-[#1e293b] text-cyan-400 border-b-2 border-cyan-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#0f172a]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Top Actions */}
+        {/* Right: Diurnal selector, Fullscreen, and Return button */}
         <div className="flex items-center gap-2">
           {/* Diurnal Selector */}
-          <div className="flex items-center bg-slate-900 border border-slate-800 rounded p-0.5">
+          <div className="hidden sm:flex items-center bg-[#070e1e] border border-slate-700/60 rounded p-0.5">
             {[
               { id: 'morning', label: 'Morning', icon: Sunrise },
               { id: 'afternoon', label: 'Afternoon', icon: Sun },
@@ -360,357 +458,411 @@ export const Municipal3DCommandCenter: React.FC<Municipal3DCommandCenterProps> =
               <button
                 key={id}
                 onClick={() => setTimeOfDay(id as TimeOfDay)}
-                className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition ${
+                className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold transition ${
                   timeOfDay === id
-                    ? 'bg-orange-600 text-white shadow-sm'
+                    ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
-                title={`Simulate ${label}`}
               >
                 <Icon className="w-3 h-3" />
-                <span className="hidden sm:inline">{label}</span>
+                <span>{label}</span>
               </button>
             ))}
           </div>
 
-          {/* Fullscreen Toggle */}
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded transition"
+            className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded transition"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Return to 2D Map */}
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-bold transition shadow-lg shadow-orange-900/30"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Return to 2D ThermoMap</span>
-          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-orange-600 to-amber-600 hover:brightness-110 text-white rounded text-[11px] font-black transition shadow-md"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Return to 2D ThermoMap</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Main Tactical Canvas Container */}
-      <div className="relative flex-1 w-full h-full overflow-hidden">
-        {/* MapLibre 3D Canvas */}
-        <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
-
-        {/* Left Side Tactical Control Drawer (Modeled after AARTOS HUD) */}
-        <div
-          className={`absolute top-3 left-3 z-30 transition-all duration-300 ${
-            isDrawerCollapsed ? 'w-10' : 'w-80'
-          }`}
-        >
-          {isDrawerCollapsed ? (
+      {/* ======================================================== */}
+      {/* 2. MAIN 3D WORKSPACE (Left Tree Panel + 3D Map Viewport)  */}
+      {/* ======================================================== */}
+      <div className="relative flex-1 w-full h-full flex overflow-hidden">
+        {/* LEFT COLLAPSIBLE TREE CONTROL PANEL (AARTOS 3D Spec) */}
+        <div className="w-80 bg-[#070e1c]/95 backdrop-blur border-r border-slate-800/80 flex flex-col z-20 overflow-y-auto scrollbar-thin text-xs text-slate-300 p-2.5 space-y-2">
+          {/* Main Action Control Buttons */}
+          <div className="space-y-1 pb-2 border-b border-slate-800">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <span>AARTOS 3D Command</span>
+              <span className="text-emerald-400 font-mono">ONLINE</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 pt-1">
+              <button
+                onClick={() => setSystemRunning(true)}
+                className={`py-1 px-2 rounded text-[10px] font-bold flex items-center justify-center gap-1 border transition ${
+                  systemRunning
+                    ? 'bg-blue-600 text-white border-blue-400 shadow-sm'
+                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                }`}
+              >
+                <Play className="w-3 h-3 text-emerald-400" />
+                <span>Start System</span>
+              </button>
+              <button
+                onClick={() => setSystemRunning(false)}
+                className={`py-1 px-2 rounded text-[10px] font-bold flex items-center justify-center gap-1 border transition ${
+                  !systemRunning
+                    ? 'bg-red-900/60 text-white border-red-500 shadow-sm'
+                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800'
+                }`}
+              >
+                <Square className="w-3 h-3 text-red-400" />
+                <span>Stop System</span>
+              </button>
+            </div>
             <button
-              onClick={() => setIsDrawerCollapsed(false)}
-              className="p-2.5 bg-slate-950/90 text-orange-400 border border-orange-500/30 rounded-lg shadow-xl hover:bg-slate-900"
-              title="Expand Tactical HUD"
+              onClick={() => alert(`Municipal Sector: ${municipalityName} (${wardName}) monitored active.`)}
+              className="w-full py-1 px-2 bg-[#0b1a3a] hover:bg-[#122654] text-blue-300 border border-blue-600/40 rounded text-[10px] font-bold flex items-center justify-center gap-1 transition"
             >
-              <Sliders className="w-5 h-5" />
+              <Plus className="w-3 h-3 text-blue-400" />
+              <span>Add Monitored Area ({wardName})</span>
             </button>
-          ) : (
-            <div className="bg-slate-950/95 backdrop-blur-md border border-orange-500/30 rounded-xl shadow-2xl p-4 flex flex-col gap-3.5 max-h-[calc(100vh-140px)] overflow-y-auto">
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-xs font-black tracking-wider text-slate-200 uppercase">
-                    3D Terrain Controls
-                  </span>
+          </div>
+
+          {/* Collapsible Section: Antenna Coverage Heatmap / Thermal Dispersion Plume */}
+          <div className="border border-slate-800/80 rounded bg-[#0b1326]/60 p-2 space-y-2">
+            <button
+              onClick={() => toggleSection('heatmap')}
+              className="w-full flex items-center justify-between text-[11px] font-bold text-slate-200"
+            >
+              <span className="flex items-center gap-1.5">
+                {sectionOpen.heatmap ? <ChevronDown className="w-3 h-3 text-blue-400" /> : <ChevronRight className="w-3 h-3 text-blue-400" />}
+                <span>Thermal Dispersion Plume</span>
+              </span>
+              <span className="text-[9px] px-1 bg-blue-900/60 text-blue-300 rounded font-mono">1024 MESH</span>
+            </button>
+
+            {sectionOpen.heatmap && (
+              <div className="space-y-2.5 pt-1 pl-1 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Display Status</span>
+                  <span className="text-emerald-400 font-bold font-mono">ACTIVE</span>
                 </div>
-                <button
-                  onClick={() => setIsDrawerCollapsed(true)}
-                  className="text-slate-400 hover:text-slate-200 text-xs px-1.5 py-0.5 rounded bg-slate-900"
-                >
-                  Collapse
+
+                {/* Grid Size */}
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Grid Size</span>
+                  <div className="flex items-center gap-1">
+                    {([512, 1024, 2048] as const).map(size => (
+                      <button
+                        key={size}
+                        onClick={() => setConfig(prev => ({ ...prev, gridSize: size }))}
+                        className={`px-1.5 py-0.5 text-[9px] font-mono font-bold rounded border ${
+                          config.gridSize === size
+                            ? 'bg-blue-600 text-white border-blue-400'
+                            : 'bg-slate-900 border-slate-700 text-slate-400'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Thermal Metric Selector */}
+                <div>
+                  <span className="text-[10px] text-slate-400 block mb-1">Thermal Metric</span>
+                  <div className="grid grid-cols-2 gap-1 text-[10px]">
+                    {[
+                      { id: 'air_temp', label: 'Air Temp (°C)' },
+                      { id: 'lst', label: 'Satellite LST' },
+                      { id: 'wbgt', label: 'WBGT Index' },
+                      { id: 'risk', label: 'Risk Rating' }
+                    ].map(m => (
+                      <button
+                        key={m.id}
+                        onClick={() => setActiveMetric(m.id as ThermalMetric)}
+                        className={`py-1 rounded font-bold border transition ${
+                          activeMetric === m.id
+                            ? 'bg-blue-600 text-white border-blue-400 shadow-xs'
+                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Color Coding Sub-tree */}
+                <div className="space-y-2 border-t border-slate-800 pt-2">
+                  <div className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                    <Sliders className="w-3 h-3 text-blue-400" />
+                    <span>Color Coding</span>
+                  </div>
+
+                  {/* Opacity Slider */}
+                  <div>
+                    <div className="flex justify-between text-[10px] text-slate-400 mb-0.5">
+                      <span>Opacity</span>
+                      <span className="font-mono text-cyan-400">{Math.round(config.thermalOpacity * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.0"
+                      step="0.05"
+                      value={config.thermalOpacity}
+                      onChange={(e) => setConfig(prev => ({ ...prev, thermalOpacity: parseFloat(e.target.value) }))}
+                      className="w-full accent-blue-500 h-1 bg-slate-800 rounded appearance-none cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Color Scheme Picker */}
+                  <div>
+                    <span className="text-[10px] text-slate-400 block mb-1">Color Scheme</span>
+                    <div className="grid grid-cols-2 gap-1 text-[10px]">
+                      {(['rainbow', 'inferno'] as const).map(sch => (
+                        <button
+                          key={sch}
+                          onClick={() => setConfig(prev => ({ ...prev, colorScheme: sch }))}
+                          className={`py-1 rounded font-bold capitalize border transition ${
+                            config.colorScheme === sch
+                              ? 'bg-blue-600 text-white border-blue-400 shadow-xs'
+                              : 'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}
+                        >
+                          {sch}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Distance Bounds */}
+                  <div className="flex justify-between text-[10px]">
+                    <span className="text-slate-400">Near Distance:</span>
+                    <span className="font-mono text-slate-200">100 m</span>
+                  </div>
+                  <div className="flex justify-between text-[10px]">
+                    <span className="text-slate-400">Far Distance:</span>
+                    <span className="font-mono text-slate-200">8.5 km</span>
+                  </div>
+
+                  {/* Toggles: Check Topography & Check Buildings */}
+                  <div className="pt-1.5 space-y-1.5 border-t border-slate-800">
+                    <label className="flex items-center gap-2 text-[10px] text-slate-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={config.showTopography}
+                        onChange={(e) => setConfig(prev => ({ ...prev, showTopography: e.target.checked }))}
+                        className="accent-blue-500 rounded"
+                      />
+                      <span>Check Topography (3D Elevation)</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-[10px] text-slate-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={config.showBuildings}
+                        onChange={(e) => setConfig(prev => ({ ...prev, showBuildings: e.target.checked }))}
+                        className="accent-blue-500 rounded"
+                      />
+                      <span>Check Buildings (3D Extrusions)</span>
+                    </label>
+
+                    <label className="flex items-center gap-2 text-[10px] text-slate-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={config.showSensors}
+                        onChange={(e) => setConfig(prev => ({ ...prev, showSensors: e.target.checked }))}
+                        className="accent-blue-500 rounded"
+                      />
+                      <span>Sensors & Radar Nodes</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Camera Perspective Controls */}
+          <div className="border border-slate-800/80 rounded bg-[#0b1326]/60 p-2 space-y-2">
+            <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">
+              Camera Viewport
+            </span>
+            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+              <button
+                onClick={() => setCameraPerspective(66)}
+                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 rounded font-bold"
+              >
+                3D Perspective (66°)
+              </button>
+              <button
+                onClick={() => setCameraPerspective(0)}
+                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-bold"
+              >
+                2D Top-Down (0°)
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+              <button
+                onClick={() => rotateBearing(45)}
+                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-bold"
+              >
+                Orbit 45°
+              </button>
+              <button
+                onClick={resetNorth}
+                className="py-1 px-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 rounded font-bold"
+              >
+                Reset North
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 3D MAP VIEWPORT CONTAINER */}
+        <div className="relative flex-1 h-full w-full">
+          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+
+          {/* Selected Target / Sensor Modal */}
+          {selectedTarget && (
+            <div className="absolute top-3 right-3 z-30 w-72 bg-[#070e1c]/95 backdrop-blur border border-cyan-500/50 rounded-xl p-3 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
+                <span className="text-xs font-bold text-cyan-300 flex items-center gap-1">
+                  <Radio className="w-3.5 h-3.5 text-cyan-400" />
+                  {selectedTarget.name}
+                </span>
+                <button onClick={() => setSelectedTarget(null)} className="text-slate-400 hover:text-white text-xs">
+                  ✕
                 </button>
               </div>
-
-              {/* Thermal Metric Selection */}
-              <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Thermal Metric
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    { id: 'air_temp', label: 'Air Temp (°C)' },
-                    { id: 'lst', label: 'Satellite LST' },
-                    { id: 'wbgt', label: 'WBGT Indoor/Out' },
-                    { id: 'utci', label: 'UTCI Stress' },
-                    { id: 'htsi', label: 'HTSI Index' },
-                    { id: 'risk', label: 'Risk Rating' }
-                  ].map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setActiveMetric(m.id as ThermalMetric)}
-                      className={`text-[11px] py-1 px-2 rounded font-medium text-left truncate transition ${
-                        activeMetric === m.id
-                          ? 'bg-orange-600 text-white font-bold'
-                          : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
-                      }`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Node ID:</span>
+                  <span className="font-mono text-slate-200">{selectedTarget.id}</span>
                 </div>
-              </div>
-
-              {/* Grid Size (Resolution) */}
-              <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Mesh Grid Size
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {([512, 1024, 2048] as const).map(size => (
-                    <button
-                      key={size}
-                      onClick={() => setConfig(prev => ({ ...prev, gridSize: size }))}
-                      className={`py-1 text-[11px] font-mono font-bold rounded transition ${
-                        config.gridSize === size
-                          ? 'bg-orange-600 text-white'
-                          : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Recorded Temp:</span>
+                  <span className="font-mono font-bold text-orange-400">{selectedTarget.temp_c}°C</span>
                 </div>
-              </div>
-
-              {/* Thermal Opacity Slider */}
-              <div>
-                <div className="flex items-center justify-between text-[11px] mb-1">
-                  <span className="font-semibold text-slate-400 uppercase tracking-wider">
-                    Plume Opacity
-                  </span>
-                  <span className="font-mono text-orange-400">
-                    {Math.round(config.thermalOpacity * 100)}%
-                  </span>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Elevation:</span>
+                  <span className="font-mono text-slate-200">{selectedTarget.elevation_m}m AMSL</span>
                 </div>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.0"
-                  step="0.05"
-                  value={config.thermalOpacity}
-                  onChange={(e) => setConfig(prev => ({ ...prev, thermalOpacity: parseFloat(e.target.value) }))}
-                  className="w-full accent-orange-500 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer"
-                />
-              </div>
-
-              {/* Color Scheme Picker */}
-              <div>
-                <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Color Scale
-                </label>
-                <div className="grid grid-cols-3 gap-1">
-                  {(['turbo', 'inferno', 'ironbow', 'rainbow', 'oceanic'] as const).map(scheme => (
-                    <button
-                      key={scheme}
-                      onClick={() => setConfig(prev => ({ ...prev, colorScheme: scheme }))}
-                      className={`py-1 px-2 text-[10px] uppercase font-bold rounded transition ${
-                        config.colorScheme === scheme
-                          ? 'bg-orange-600 text-white'
-                          : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
-                      }`}
-                    >
-                      {scheme}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Layer Checkboxes */}
-              <div className="border-t border-slate-800/80 pt-2.5 flex flex-col gap-2">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  3D Surface Layers
-                </span>
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={config.showTopography}
-                    onChange={(e) => setConfig(prev => ({ ...prev, showTopography: e.target.checked }))}
-                    className="accent-orange-500 rounded"
-                  />
-                  <span>3D Elevation Topography</span>
-                </label>
-
-                <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={config.showSensors}
-                    onChange={(e) => setConfig(prev => ({ ...prev, showSensors: e.target.checked }))}
-                    className="accent-orange-500 rounded"
-                  />
-                  <span>Thermal Sensor Nodes</span>
-                </label>
-              </div>
-
-              {/* Camera Perspective Quick Controls */}
-              <div className="border-t border-slate-800/80 pt-2.5 flex flex-col gap-1.5">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Camera Perspective
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => setCameraPerspective(65)}
-                    className="py-1 px-2 text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded font-medium"
-                  >
-                    3D Perspective (65°)
-                  </button>
-                  <button
-                    onClick={() => setCameraPerspective(0)}
-                    className="py-1 px-2 text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded font-medium"
-                  >
-                    2D Top-Down (0°)
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => rotateBearing(45)}
-                    className="py-1 px-2 text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded font-medium"
-                  >
-                    Orbit 45°
-                  </button>
-                  <button
-                    onClick={resetNorth}
-                    className="py-1 px-2 text-[11px] bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 rounded font-medium"
-                  >
-                    Reset North
-                  </button>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Status:</span>
+                  <span className="text-emerald-400 font-bold">{selectedTarget.status}</span>
                 </div>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Selected Sensor / Band Inspection Modal */}
-        {selectedTarget && (
-          <div className="absolute top-3 right-3 z-30 w-72 bg-slate-950/95 backdrop-blur border border-orange-500/40 rounded-xl p-3.5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-              <div className="flex items-center gap-1.5">
-                <Radio className="w-4 h-4 text-orange-400" />
-                <span className="text-xs font-bold text-slate-200">
-                  {selectedTarget.name}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedTarget(null)}
-                className="text-slate-400 hover:text-slate-100 text-xs"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Node ID:</span>
-                <span className="font-mono text-slate-200">{selectedTarget.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Recorded Temp:</span>
-                <span className="font-mono font-bold text-orange-400">{selectedTarget.temp_c}°C</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Elevation:</span>
-                <span className="font-mono text-slate-200">{selectedTarget.elevation_m}m AMSL</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Status:</span>
-                <span className="text-emerald-400 font-bold">{selectedTarget.status}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Classification:</span>
-                <span className="text-amber-400">{selectedTarget.classification}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {selectedBand && (
-          <div className="absolute top-3 right-3 z-30 w-72 bg-slate-950/95 backdrop-blur border border-orange-500/40 rounded-xl p-3.5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-              <div className="flex items-center gap-1.5">
-                <Thermometer className="w-4 h-4 text-orange-400" />
-                <span className="text-xs font-bold text-slate-200">
+          {/* Selected Dispersion Band Modal */}
+          {selectedBand && (
+            <div className="absolute top-3 right-3 z-30 w-72 bg-[#070e1c]/95 backdrop-blur border border-amber-500/50 rounded-xl p-3 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-2">
+                <span className="text-xs font-bold text-amber-300">
                   Thermal Dispersion Band {selectedBand.band}
                 </span>
+                <button onClick={() => setSelectedBand(null)} className="text-slate-400 hover:text-white text-xs">
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedBand(null)}
-                className="text-slate-400 hover:text-slate-100 text-xs"
-              >
-                ✕
-              </button>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Risk Level:</span>
+                  <span className="font-bold text-red-400">{selectedBand.risk_level}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Estimated Air Temp:</span>
+                  <span className="font-mono font-bold text-orange-400">{selectedBand.air_temperature_c}°C</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Heat Dispersion:</span>
+                  <span className="font-mono text-slate-300">{selectedBand.dispersion_rate}</span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Risk Level:</span>
-                <span className="font-bold text-red-400">{selectedBand.risk_level}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Est. Air Temp:</span>
-                <span className="font-mono font-bold text-orange-400">{selectedBand.air_temperature_c}°C</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Surface Temp:</span>
-                <span className="font-mono text-slate-200">{selectedBand.surface_temp_c}°C</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Heat Dispersion:</span>
-                <span className="font-mono text-slate-300">{selectedBand.dispersion_rate}</span>
-              </div>
-              <p className="text-[11px] text-slate-400 pt-1 border-t border-slate-800">
-                {selectedBand.description}
-              </p>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Loading Indicator */}
-        {loading && (
-          <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm z-40 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs font-bold text-orange-400 tracking-wider">
-                COMPUTING 3D TERRAIN & THERMAL DISPERSION...
-              </span>
+          {/* Loading Overlay */}
+          {loading && (
+            <div className="absolute inset-0 bg-[#070e1c]/75 backdrop-blur-xs z-40 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <RefreshCw className="w-7 h-7 text-cyan-400 animate-spin" />
+                <span className="text-xs font-bold text-cyan-300 tracking-wider">
+                  GENERATING 3D TOPOGRAPHICAL TERRAIN & PLUME...
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Error Notification */}
-        {errorMsg && (
-          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-red-950/90 border border-red-500/50 text-red-200 px-4 py-2 rounded-lg text-xs flex items-center gap-2 shadow-xl backdrop-blur">
-            <AlertTriangle className="w-4 h-4 text-red-400" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
+          {/* Error Banner */}
+          {errorMsg && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-red-950/90 border border-red-500/50 text-red-200 px-4 py-2 rounded text-xs flex items-center gap-2 shadow-xl backdrop-blur">
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
-        {/* Bottom Tactical Telemetry Bar */}
-        <div className="absolute bottom-3 left-3 right-3 z-30 bg-slate-950/90 backdrop-blur border border-slate-800 rounded-lg px-3 py-2 flex items-center justify-between text-[11px] text-slate-400">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-orange-400" />
-              <span>DSP LOAD: <strong className="text-slate-200">18.4%</strong></span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Gauge className="w-3.5 h-3.5 text-emerald-400" />
-              <span>FPS: <strong className="text-emerald-400">{fps}</strong></span>
-            </div>
-            <div className="hidden sm:flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-blue-400" />
-              <span>TERRAIN ELEVATION: <strong className="text-slate-200">{config.showTopography ? '3D Active' : 'Flat'}</strong></span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-orange-400 font-mono text-[10px]">
-              DATA STATUS: SIMULATED / PROTOTYPE
+          {/* Floating Bottom Control Dock (Move, Drag, Measure, Camera, Zones, Buildings) */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 bg-[#070e1c]/90 backdrop-blur border border-slate-700/80 rounded-lg px-3 py-1.5 flex items-center gap-3 text-[11px] text-slate-300 shadow-xl">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider pr-1 border-r border-slate-700">
+              Map Control
             </span>
+            <button
+              onClick={() => setCameraPerspective(66)}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800 hover:text-cyan-300"
+            >
+              <Move className="w-3.5 h-3.5" />
+              <span>Move</span>
+            </button>
+            <button
+              onClick={() => rotateBearing(30)}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800 hover:text-cyan-300"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Orbit</span>
+            </button>
+            <button
+              onClick={() => setConfig(prev => ({ ...prev, showBuildings: !prev.showBuildings }))}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition ${
+                config.showBuildings ? 'text-cyan-300 bg-blue-950/60' : 'hover:bg-slate-800'
+              }`}
+            >
+              <Building className="w-3.5 h-3.5" />
+              <span>Buildings</span>
+            </button>
+            <button
+              onClick={() => setConfig(prev => ({ ...prev, showTopography: !prev.showTopography }))}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition ${
+                config.showTopography ? 'text-cyan-300 bg-blue-950/60' : 'hover:bg-slate-800'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Terrain</span>
+            </button>
+          </div>
+
+          {/* Bottom Telemetry Bar (Matching exact footer of screenshot) */}
+          <div className="absolute bottom-0 left-0 right-0 z-30 bg-[#070e1c]/95 border-t border-slate-800 px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-400">ThermoSafe 3D Tactical Suite v2.0</span>
+              <span className="text-slate-600">|</span>
+              <span className="text-amber-400 text-[10px]">MUNICIPAL OFFICER ACCESS</span>
+            </div>
+            <div className="flex items-center gap-4 text-[10px]">
+              <span>FPS: <strong className="text-emerald-400">{fps}</strong></span>
+              <span>DSP Load: <strong className="text-slate-200">18.4%</strong></span>
+              <span>CPU Sat: <strong className="text-slate-200">0%</strong></span>
+            </div>
           </div>
         </div>
       </div>

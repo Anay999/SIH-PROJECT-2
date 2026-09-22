@@ -19,7 +19,11 @@ import {
   AlertTriangle,
   Info,
   RefreshCw,
+  Box,
+  Map as MapIcon
 } from 'lucide-react';
+import { ThermoMap } from '../components/thermomap/ThermoMap';
+import { Municipal3DCommandCenter } from '../components/thermomap/Municipal3DCommandCenter';
 
 import {
   resolveMapProvider,
@@ -99,6 +103,7 @@ export const LiveHeatMapPage: React.FC = () => {
   const [activeLayer, setActiveLayer] = useState<MetricLayer>('htsi');
   const [facilityFilter, setFacilityFilter] = useState<'all' | 'cooling' | 'hospitals' | 'none'>('all');
   const [selectedWardProps, setSelectedWardProps] = useState<any | null>(null);
+  const [activeViewMode, setActiveViewMode] = useState<'thermomap_2d' | 'thermal_terrain_3d' | 'legacy_choropleth'>('thermal_terrain_3d');
 
   // Map center: Greater Chennai
   const defaultCenter: [number, number] = [13.045, 80.225];
@@ -245,14 +250,77 @@ export const LiveHeatMapPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 font-sans">
-      {/* Top Header & Disclaimers */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-command-border pb-4">
-        <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-cyan-400" />
-              Priority Areas & Satellite Heat Stress Analysis
-            </h1>
+      {/* Primary Map View Mode Selector */}
+      <div className="bg-[#0b1326] p-2 rounded-2xl border border-slate-800 flex items-center justify-between gap-3 shadow-xl">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setActiveViewMode('thermal_terrain_3d')}
+            className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition ${
+              activeViewMode === 'thermal_terrain_3d'
+                ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg'
+                : 'text-cyan-400 hover:bg-blue-950/60 border border-cyan-500/40 bg-[#070e1c]'
+            }`}
+          >
+            <Box className="w-4 h-4 text-cyan-300 animate-pulse" />
+            <span>3D Thermal Terrain Command Center</span>
+            <span className="px-1.5 py-0.2 bg-blue-950 text-cyan-300 rounded text-[9px] border border-cyan-400/40">OFFICER 3D</span>
+          </button>
+
+          <button
+            onClick={() => setActiveViewMode('thermomap_2d')}
+            className={`px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition ${
+              activeViewMode === 'thermomap_2d'
+                ? 'bg-orange-600 text-white shadow-lg'
+                : 'text-slate-300 hover:text-white hover:bg-slate-800 bg-[#070e1c] border border-slate-800'
+            }`}
+          >
+            <MapIcon className="w-4 h-4 text-orange-400" />
+            <span>2D ThermoMap & Pan-India Grid</span>
+          </button>
+
+          <button
+            onClick={() => setActiveViewMode('legacy_choropleth')}
+            className={`px-3 py-2 rounded-xl font-medium text-xs transition ${
+              activeViewMode === 'legacy_choropleth'
+                ? 'bg-slate-800 text-white border border-slate-600'
+                : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            <span>Ward Choropleth (Legacy)</span>
+          </button>
+        </div>
+
+        <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-400 pr-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>GIS Operational Command</span>
+        </div>
+      </div>
+
+      {activeViewMode === 'thermal_terrain_3d' ? (
+        <Municipal3DCommandCenter
+          centerLat={13.0827}
+          centerLon={80.2707}
+          municipalityName="Greater Chennai Corporation"
+          wardName="Ward 114 - Central Operations"
+          onClose={() => setActiveViewMode('thermomap_2d')}
+        />
+      ) : activeViewMode === 'thermomap_2d' ? (
+        <ThermoMap
+          latitude={13.0827}
+          longitude={80.2707}
+          locationName="Greater Chennai Corporation"
+          height="750px"
+        />
+      ) : (
+        <>
+          {/* Top Header & Disclaimers */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-command-border pb-4">
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-cyan-400" />
+                  Priority Areas & Satellite Heat Stress Analysis
+                </h1>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30 font-semibold">
               SYNTHETIC DEMONSTRATION WARD BOUNDARIES
             </span>
@@ -749,6 +817,8 @@ export const LiveHeatMapPage: React.FC = () => {
           </table>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

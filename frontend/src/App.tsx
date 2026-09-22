@@ -27,6 +27,7 @@ import { VulnerabilityPage } from './pages/VulnerabilityPage';
 import { ThermalStressPage } from './pages/ThermalStressPage';
 import { HealthRiskPage } from './pages/HealthRiskPage';
 import { RegisteredUsersPage } from './pages/RegisteredUsersPage';
+import { Municipal3DCommandCenter } from './components/thermomap/Municipal3DCommandCenter';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -131,6 +132,8 @@ export const App: React.FC = () => {
 
                 {/* Secondary Supporting Tools */}
                 <Route path="map" element={<LiveHeatMapPage />} />
+                <Route path="thermal-terrain" element={<Municipal3DCommandCenter centerLat={13.0827} centerLon={80.2707} municipalityName="Greater Chennai Corporation" wardName="Ward 114 - Central Operations" onClose={() => window.history.back()} />} />
+                <Route path="3d-command" element={<Municipal3DCommandCenter centerLat={13.0827} centerLon={80.2707} municipalityName="Greater Chennai Corporation" wardName="Ward 114 - Central Operations" onClose={() => window.history.back()} />} />
                 <Route path="emergency-gis" element={<EmergencyGisPage />} />
                 <Route path="public-safety" element={<PublicSafetyPage />} />
                 <Route

@@ -21,7 +21,8 @@ import {
   UserPlus,
   FileText,
   AlertTriangle,
-  KeyRound
+  KeyRound,
+  Compass
 } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -55,30 +56,32 @@ export const Sidebar: React.FC = () => {
       title: 'Public Safety Portal',
       items: [
         { to: '/citizen', label: 'Citizen Heat Dashboard', icon: Shield, badge: 'Live', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
+        { to: '/thermal-terrain', label: '3D Terrain Demo', icon: Compass, badge: '3D Topo', badgeColor: 'bg-blue-600 text-white' },
       ]
     }
   ];
 
-  // 2. MUNICIPAL OFFICER: The 10 Specific Municipal Operation Workflows
+  // 2. MUNICIPAL OFFICER: The Specific Municipal Operation Workflows
   const OFFICER_SECTIONS: NavSection[] = [
     {
       title: 'Municipal Intelligence & Maps',
       items: [
         { to: '/overview', label: '1. Municipality Overview', icon: LayoutDashboard },
         { to: '/map', label: '2. ThermoMap', icon: Map, badge: '2D GIS', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
-        { to: '/vulnerability', label: '3. Ward Risk', icon: Activity },
-        { to: '/forecast', label: '4. Forecast', icon: Calendar },
-        { to: '/priority-areas', label: '5. Vulnerability', icon: AlertTriangle },
+        { to: '/thermal-terrain', label: '3. 3D Thermal Terrain', icon: Compass, badge: 'OFFICER 3D', badgeColor: 'bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold' },
+        { to: '/vulnerability', label: '4. Ward Risk', icon: Activity },
+        { to: '/forecast', label: '5. Forecast', icon: Calendar },
+        { to: '/priority-areas', label: '6. Vulnerability', icon: AlertTriangle },
       ]
     },
     {
       title: 'Facilities & Emergency Response',
       items: [
-        { to: '/cooling-centres', label: '6. Facilities', icon: Building2 },
-        { to: '/users', label: '7. Registered Users', icon: Users, badge: 'Citizens', badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300' },
-        { to: '/alerts', label: '8. Alert Management', icon: Bell, badge: 'SMS/WA', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
-        { to: '/heat-action-plan', label: '9. Heat Action Plan', icon: ClipboardList, badge: pendingActionsCount > 0 ? `${pendingActionsCount}` : undefined, badgeColor: 'bg-orange-600 text-white' },
-        { to: '/analytics', label: '10. Analytics', icon: BarChart3 },
+        { to: '/cooling-centres', label: '7. Facilities', icon: Building2 },
+        { to: '/users', label: '8. Registered Users', icon: Users, badge: 'Citizens', badgeColor: 'bg-emerald-100 text-emerald-800 border border-emerald-300' },
+        { to: '/alerts', label: '9. Alert Management', icon: Bell, badge: 'SMS/WA', badgeColor: 'bg-orange-100 text-orange-800 border border-orange-300' },
+        { to: '/heat-action-plan', label: '10. Heat Action Plan', icon: ClipboardList, badge: pendingActionsCount > 0 ? `${pendingActionsCount}` : undefined, badgeColor: 'bg-orange-600 text-white' },
+        { to: '/analytics', label: '11. Analytics', icon: BarChart3 },
       ]
     }
   ];
