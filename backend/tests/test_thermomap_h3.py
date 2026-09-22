@@ -67,16 +67,38 @@ def test_generate_thermomap_geojson():
     assert "htsi_score" in props
     assert "safe_exposure_minutes" in props
     assert "work_rest_guidance" in props
+    assert "air_temperature_c" in props
+    assert "land_surface_temp_c" in props
+    assert "street_name" in props
+    assert "confidence_pct" in props
+    assert props["land_surface_temp_c"] > props["air_temperature_c"]
 
 
 def test_api_thermomap_risk_endpoint():
-    res = client.get("/api/v1/thermomap/risk?latitude=13.0827&longitude=80.2707&radius_km=5.0&resolution=8")
+    res = client.get("/api/v1/thermomap/risk?latitude=13.0827&longitude=80.2707&radius_km=5.0&resolution=8&time_of_day=afternoon")
     assert res.status_code == 200
     data = res.json()
     assert data["type"] == "FeatureCollection"
     assert len(data["features"]) >= 7
     assert data["metadata"]["cell_count"] == len(data["features"])
+    assert data["metadata"]["time_of_day"] == "afternoon"
     assert data["metadata"]["data_quality"]["is_interpolated"] is True
+
+
+def test_api_thermomap_streets_endpoint():
+    res = client.get("/api/v1/thermomap/streets?latitude=13.0827&longitude=80.2707&radius_km=4.0&time_of_day=afternoon")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["type"] == "FeatureCollection"
+    assert len(data["features"]) >= 5
+
+    first_street = data["features"][0]
+    assert first_street["geometry"]["type"] == "LineString"
+    assert len(first_street["geometry"]["coordinates"]) >= 2
+    assert "street_name" in first_street["properties"]
+    assert "air_temperature_c" in first_street["properties"]
+    assert "land_surface_temp_c" in first_street["properties"]
+    assert "wbgt_c" in first_street["properties"]
 
 
 def test_api_thermomap_facilities_endpoint():
@@ -106,3 +128,4 @@ def test_api_thermomap_routing_endpoint():
     assert "duration_minutes" in data["properties"]
     assert data["geometry"]["type"] == "LineString"
     assert len(data["geometry"]["coordinates"]) >= 2
+

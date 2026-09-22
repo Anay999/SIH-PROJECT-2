@@ -1,19 +1,36 @@
 import type {
   H3RiskFeatureCollection,
   OsmFacilityFeatureCollection,
-  EmergencyRouteFeature
+  EmergencyRouteFeature,
+  StreetThermalFeatureCollection,
+  TimeOfDay
 } from '../types/thermomap';
 
 export async function fetchThermoMapRisk(
   latitude: number,
   longitude: number,
   radiusKm: number = 6.0,
-  resolution: number = 8
+  resolution: number = 8,
+  timeOfDay: TimeOfDay = 'afternoon'
 ): Promise<H3RiskFeatureCollection> {
-  const url = `/api/v1/thermomap/risk?latitude=${latitude}&longitude=${longitude}&radius_km=${radiusKm}&resolution=${resolution}`;
+  const url = `/api/v1/thermomap/risk?latitude=${latitude}&longitude=${longitude}&radius_km=${radiusKm}&resolution=${resolution}&time_of_day=${timeOfDay}`;
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {
     throw new Error(`Failed to load ThermoMap risk grid: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchStreetThermalData(
+  latitude: number,
+  longitude: number,
+  radiusKm: number = 4.0,
+  timeOfDay: TimeOfDay = 'afternoon'
+): Promise<StreetThermalFeatureCollection> {
+  const url = `/api/v1/thermomap/streets?latitude=${latitude}&longitude=${longitude}&radius_km=${radiusKm}&time_of_day=${timeOfDay}`;
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Failed to load street thermal data: ${res.statusText}`);
   }
   return res.json();
 }
@@ -44,3 +61,4 @@ export async function fetchEmergencyRoute(
   }
   return res.json();
 }
+

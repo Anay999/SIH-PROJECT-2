@@ -1,22 +1,39 @@
 export type RiskCategory = 'LOW' | 'MODERATE' | 'HIGH' | 'VERY HIGH' | 'EXTREME';
 
+export type TimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
+
+export type ThermalMetric = 'air_temp' | 'lst' | 'wbgt' | 'utci' | 'htsi' | 'risk';
+
+export type BasemapMode = 'streets' | 'satellite';
+
 export interface H3RiskProperties {
   h3_index: string;
   center_lat: number;
   center_lon: number;
-  risk_score: number;
-  risk_category: RiskCategory;
-  color: string;
-  temperature_c: number;
+  street_name?: string;
+  road_type?: string;
+  land_cover?: string;
+  air_temperature_c: number;
+  land_surface_temp_c: number;
+  temperature_c: number; // Backward-compatible alias to air_temperature_c
   feels_like_c: number;
   relative_humidity: number;
   wbgt_c: number;
   utci_c: number;
   heat_index_c: number;
   htsi_score: number;
+  risk_score: number;
+  risk_category: RiskCategory;
+  color: string;
+  temp_color?: string;
   safe_exposure_minutes: number;
   water_intake_lph: number;
   work_rest_guidance: string;
+  confidence_pct: number;
+  satellite_freshness: string;
+  weather_freshness: string;
+  data_source: string;
+  time_of_day: TimeOfDay | string;
   timestamp_utc: string;
 }
 
@@ -39,6 +56,8 @@ export interface H3RiskFeatureCollection {
     resolution: number;
     radius_km: number;
     cell_count: number;
+    time_of_day?: string;
+    time_label?: string;
     generated_at: string;
     data_quality: {
       source: string;
@@ -46,6 +65,41 @@ export interface H3RiskFeatureCollection {
       is_interpolated: boolean;
       disclaimer: string;
     };
+  };
+}
+
+export interface StreetThermalProperties {
+  street_name: string;
+  road_type: string;
+  air_temperature_c: number;
+  land_surface_temp_c: number;
+  relative_humidity: number;
+  wbgt_c: number;
+  utci_c: number;
+  heat_index_c: number;
+  risk_category: RiskCategory;
+  color: string;
+  confidence_pct: number;
+  data_source: string;
+}
+
+export interface StreetThermalFeature {
+  type: 'Feature';
+  id: string;
+  properties: StreetThermalProperties;
+  geometry: {
+    type: 'LineString';
+    coordinates: [number, number][];
+  };
+}
+
+export interface StreetThermalFeatureCollection {
+  type: 'FeatureCollection';
+  features: StreetThermalFeature[];
+  metadata: {
+    center: [number, number];
+    street_count: number;
+    time_of_day: string;
   };
 }
 

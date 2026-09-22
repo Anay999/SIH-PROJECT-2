@@ -7,7 +7,7 @@ from typing import Optional, Dict, Any
 from fastapi import APIRouter, Query, HTTPException, status
 import httpx
 
-from app.services.h3_service import generate_thermomap_geojson
+from app.services.h3_service import generate_thermomap_geojson, generate_street_thermal_geojson
 from app.services.overpass_service import fetch_osm_facilities
 
 router = APIRouter(prefix="/thermomap", tags=["ThermoMap 2D GIS"])
@@ -18,24 +18,50 @@ def get_thermomap_risk(
     latitude: float = Query(..., ge=-90.0, le=90.0, description="Center latitude"),
     longitude: float = Query(..., ge=-180.0, le=180.0, description="Center longitude"),
     radius_km: float = Query(6.0, gt=0.5, le=30.0, description="Grid radius in km"),
-    resolution: int = Query(8, ge=6, le=10, description="H3 hexagon resolution (recommended: 8)")
+    resolution: int = Query(8, ge=6, le=10, description="H3 hexagon resolution (recommended: 8)"),
+    time_of_day: str = Query("afternoon", pattern="^(morning|afternoon|evening|night)$", description="Diurnal time period")
 ) -> Dict[str, Any]:
     """
     Returns an H3 hexagonal grid FeatureCollection centered on coordinates.
-    Each hexagon feature contains real biometeorological metrics (WBGT, UTCI, HI, HTSI)
-    and ergonomic work-rest guidance.
+    Each hexagon feature contains real biometeorological metrics (WBGT, UTCI, HI, HTSI),
+    satellite LST vs AI-estimated air temperature, and ergonomic work-rest guidance.
     """
     try:
         return generate_thermomap_geojson(
             latitude=latitude,
             longitude=longitude,
             radius_km=radius_km,
-            resolution=resolution
+            resolution=resolution,
+            time_of_day=time_of_day
         )
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate H3 thermal grid: {str(exc)}"
+        )
+
+
+@router.get("/streets")
+def get_thermomap_streets(
+    latitude: float = Query(..., ge=-90.0, le=90.0, description="Center latitude"),
+    longitude: float = Query(..., ge=-180.0, le=180.0, description="Center longitude"),
+    radius_km: float = Query(4.0, gt=0.5, le=20.0, description="Radius in km"),
+    time_of_day: str = Query("afternoon", pattern="^(morning|afternoon|evening|night)$", description="Diurnal time period")
+) -> Dict[str, Any]:
+    """
+    Returns street road segments overlaid with localized thermal conditions (Air Temp, LST, WBGT).
+    """
+    try:
+        return generate_street_thermal_geojson(
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
+            time_of_day=time_of_day
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate street thermal data: {str(exc)}"
         )
 
 
