@@ -2,10 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { getFacilitiesForCity, type RealFacility } from '../data/realFacilities';
-import { fetchRoute, type RouteData } from '../services/emergencyService';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { ThermoMap } from '../components/thermomap/ThermoMap';
 import {
   ResponsiveContainer,
   LineChart,
@@ -38,70 +35,6 @@ import {
   LifeBuoy
 } from 'lucide-react';
 
-// Custom Map Auto-Bounds Component
-function MapAutoBounds({
-  center,
-  destination,
-  routeCoords
-}: {
-  center: [number, number];
-  destination?: [number, number] | null;
-  routeCoords?: [number, number][];
-}) {
-  const map = useMap();
-  useEffect(() => {
-    if (routeCoords && routeCoords.length > 1) {
-      const bounds = L.latLngBounds(routeCoords.map(c => L.latLng(c[0], c[1])));
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
-    } else if (destination) {
-      const bounds = L.latLngBounds([center, destination]);
-      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
-    } else {
-      map.setView(center, 13);
-    }
-  }, [center, destination, routeCoords, map]);
-  return null;
-}
-
-// Leaflet DivIcons for guaranteed visual rendering
-const userMarkerIcon = new L.DivIcon({
-  className: 'custom-user-marker',
-  html: `
-    <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-      <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background: rgba(234, 88, 12, 0.4); animation: ping 1.8s infinite;"></div>
-      <div style="width: 20px; height: 20px; border-radius: 50%; background: #ea580c; border: 3px solid #ffffff; box-shadow: 0 0 12px rgba(234,88,12,0.8); display: flex; align-items: center; justify-content: center; color: white; font-size: 9px; font-weight: 900;">
-        •
-      </div>
-    </div>
-  `,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
-});
-
-const hospitalIcon = new L.DivIcon({
-  className: 'custom-hosp-marker',
-  html: `
-    <div style="background: #dc2626; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-weight: 900; font-size: 14px; cursor: pointer;">
-      +
-    </div>
-  `,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -14],
-});
-
-const coolingIcon = new L.DivIcon({
-  className: 'custom-cooling-marker',
-  html: `
-    <div style="background: #0284c7; color: white; width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-weight: 900; font-size: 13px; cursor: pointer;">
-      ❄
-    </div>
-  `,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-  popupAnchor: [0, -14],
-});
-
 export const CitizenPortalPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { cityProfile, isLiveGpsActive, liveGpsCoords, toggleLiveGps } = useWorkspace();
@@ -121,19 +54,7 @@ export const CitizenPortalPage: React.FC = () => {
 
   // Map state
   const [selectedFacility, setSelectedFacility] = useState<RealFacility | null>(null);
-  const [routeData, setRouteData] = useState<RouteData | null>(null);
-  const [isRoutingLoading, setIsRoutingLoading] = useState<boolean>(false);
-  const [selectedRegionCell, setSelectedRegionCell] = useState<{
-    name: string;
-    temp: number;
-    humidity: number;
-    wbgt: number;
-    utci: number;
-    heatIndex: number;
-    htsi: number;
-    riskLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'VERY HIGH' | 'EXTREME';
-    forecastRisk: string;
-  } | null>(null);
+
 
   // Search filter for help
   const [facilitySearch, setFacilitySearch] = useState<string>('');
@@ -231,81 +152,11 @@ export const CitizenPortalPage: React.FC = () => {
   }, [allFacilities, facilitySearch, facilityTypeFilter]);
 
   // Handle route calculation directly on ThermoMap
-  const handleSelectFacilityAndRoute = async (facility: RealFacility) => {
+  const handleSelectFacilityAndRoute = (facility: RealFacility) => {
     setSelectedFacility(facility);
-    setIsRoutingLoading(true);
-    try {
-      const route = await fetchRoute(userCoords[0], userCoords[1], facility.latitude, facility.longitude);
-      setRouteData(route);
-      setActiveTab('thermomap'); // Ensure ThermoMap is visible
-    } catch (e) {
-      console.error('Routing failed:', e);
-    } finally {
-      setIsRoutingLoading(false);
-    }
+    setActiveTab('thermomap'); // Ensure ThermoMap is visible
   };
 
-  // Nearby thermal zones for click-inspection on ThermoMap
-  const surroundingZones = useMemo(() => {
-    return [
-      {
-        name: 'Zone A: High-Density Central Sector',
-        offset: [0.015, 0.012],
-        radius: 1200,
-        temp: 39.6,
-        humidity: 65,
-        wbgt: 32.4,
-        utci: 43.0,
-        heatIndex: 47.8,
-        htsi: 82.5,
-        riskLevel: 'VERY HIGH' as const,
-        color: '#ea580c',
-        forecastRisk: 'Peak danger between 12:00 PM – 3:30 PM'
-      },
-      {
-        name: 'Zone B: Residential Coastal Ward',
-        offset: [-0.012, 0.018],
-        radius: 1400,
-        temp: 36.8,
-        humidity: 74,
-        wbgt: 30.8,
-        utci: 40.5,
-        heatIndex: 44.2,
-        htsi: 76.0,
-        riskLevel: 'HIGH' as const,
-        color: '#f97316',
-        forecastRisk: 'Elevated humidity burden with moderate sea breeze'
-      },
-      {
-        name: 'Zone C: Commercial Transportation Hub',
-        offset: [0.018, -0.015],
-        radius: 1100,
-        temp: 40.2,
-        humidity: 62,
-        wbgt: 33.1,
-        utci: 44.5,
-        heatIndex: 48.9,
-        htsi: 89.2,
-        riskLevel: 'EXTREME' as const,
-        color: '#b91c1c',
-        forecastRisk: 'Extreme thermal stress: Avoid unshaded transit'
-      },
-      {
-        name: 'Zone D: Vegetated Park Sector',
-        offset: [-0.018, -0.012],
-        radius: 1300,
-        temp: 35.4,
-        humidity: 68,
-        wbgt: 28.9,
-        utci: 37.8,
-        heatIndex: 41.0,
-        htsi: 65.4,
-        riskLevel: 'MODERATE' as const,
-        color: '#eab308',
-        forecastRisk: 'Canopy cooling creates thermal shelter effect'
-      }
-    ];
-  }, [userCoords]);
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-[#1c1917] flex flex-col lg:flex-row font-sans selection:bg-orange-500 selection:text-white">
@@ -641,212 +492,25 @@ export const CitizenPortalPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-black text-[#1c1917] tracking-tight flex items-center gap-2">
                   <Layers className="w-5 h-5 text-orange-600" />
-                  <span>2D Geographic ThermoMap</span>
+                  <span>2D Geographic ThermoMap (MapLibre GL + Uber H3)</span>
                 </h3>
                 <p className="text-xs text-[#57534e]">
-                  Dynamic 2D thermal risk overlays, open facilities, and direct OSRM route navigation.
+                  Hardware-accelerated 2D GIS canvas, discrete Uber H3 hexagonal microclimates, Overpass emergency facilities, and in-map OSRM road routing.
                 </p>
               </div>
-
-              {/* Legend Badges */}
-              <div className="flex items-center gap-1.5 text-[10px] font-bold">
-                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">Low</span>
-                <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">Moderate</span>
-                <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-300">High</span>
-                <span className="px-2 py-0.5 rounded bg-red-100 text-red-800 border border-red-300">Very High</span>
-                <span className="px-2 py-0.5 rounded bg-rose-200 text-rose-950 border border-rose-400">Extreme</span>
-              </div>
             </div>
 
-            {/* In-Map Active Routing Banner */}
-            {routeData && selectedFacility && (
-              <div className="p-3.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-950 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
-                <div className="flex items-center gap-2.5">
-                  <Navigation className="w-4 h-4 text-orange-600 shrink-0" />
-                  <div>
-                    <span className="font-bold block">
-                      Direct In-Map Route to {selectedFacility.name}
-                    </span>
-                    <span className="text-[11px] text-[#57534e]">
-                      Distance: <strong className="text-orange-700">{routeData.distance_km.toFixed(1)} km</strong> · Estimated Travel Time: <strong className="text-orange-700">{routeData.duration_minutes} mins</strong> ({routeData.summary})
-                    </span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setRouteData(null)}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-[#ede7de] text-[#57534e] hover:text-[#1c1917] font-semibold"
-                >
-                  Clear Route
-                </button>
-              </div>
-            )}
-
-            {/* The 2D Leaflet ThermoMap Container */}
-            <div className="relative w-full h-[550px] rounded-2xl overflow-hidden border border-[#ede7de] shadow-md bg-stone-100">
-              {isRoutingLoading && (
-                <div className="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur px-3.5 py-2 rounded-xl border border-orange-200 text-xs font-bold text-orange-600 shadow-md flex items-center gap-2">
-                  <Navigation className="w-3.5 h-3.5 animate-spin text-orange-600" />
-                  <span>Calculating OSRM Road Route...</span>
-                </div>
-              )}
-              <MapContainer
-                center={userCoords}
-                zoom={13}
-                scrollWheelZoom={true}
-                className="w-full h-full"
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-
-                <MapAutoBounds
-                  center={userCoords}
-                  destination={selectedFacility ? [selectedFacility.latitude, selectedFacility.longitude] : null}
-                  routeCoords={routeData?.coordinates}
-                />
-
-                {/* User Current Location Marker */}
-                <Marker position={userCoords} icon={userMarkerIcon}>
-                  <Popup>
-                    <div className="text-xs space-y-1">
-                      <strong className="text-orange-700 block">Your Detected Location</strong>
-                      <span>{detectedLocationName}</span>
-                    </div>
-                  </Popup>
-                </Marker>
-
-                {/* Surrounding Thermal Risk Zone Polygons/Circles */}
-                {surroundingZones.map((zone, idx) => (
-                  <Circle
-                    key={idx}
-                    center={[userCoords[0] + zone.offset[0], userCoords[1] + zone.offset[1]]}
-                    radius={zone.radius}
-                    pathOptions={{
-                      color: zone.color,
-                      fillColor: zone.color,
-                      fillOpacity: 0.28,
-                      weight: 2
-                    }}
-                    eventHandlers={{
-                      click: () => {
-                        setSelectedRegionCell({
-                          name: zone.name,
-                          temp: zone.temp,
-                          humidity: zone.humidity,
-                          wbgt: zone.wbgt,
-                          utci: zone.utci,
-                          heatIndex: zone.heatIndex,
-                          htsi: zone.htsi,
-                          riskLevel: zone.riskLevel,
-                          forecastRisk: zone.forecastRisk
-                        });
-                      }
-                    }}
-                  >
-                    <Popup>
-                      <div className="text-xs space-y-1">
-                        <strong className="block text-[#1c1917] font-bold">{zone.name}</strong>
-                        <span className="block text-[10px] font-mono text-orange-600 font-bold">
-                          Risk Level: {zone.riskLevel} (HTSI: {zone.htsi})
-                        </span>
-                        <p className="text-[10px] text-[#57534e]">{zone.forecastRisk}</p>
-                      </div>
-                    </Popup>
-                  </Circle>
-                ))}
-
-                {/* Facility Markers on ThermoMap */}
-                {filteredFacilities.slice(0, 15).map((f) => (
-                  <Marker
-                    key={f.id}
-                    position={[f.latitude, f.longitude]}
-                    icon={f.type === 'HOSPITAL' || f.type === 'EMERGENCY_CENTRE' ? hospitalIcon : coolingIcon}
-                  >
-                    <Popup>
-                      <div className="text-xs space-y-2 p-1 max-w-xs">
-                        <div>
-                          <strong className="block text-[#1c1917] font-bold">{f.name}</strong>
-                          <span className="text-[10px] text-[#78716c] block">{f.address}</span>
-                          <span className="text-[10px] font-mono text-emerald-700 font-bold block mt-0.5">
-                            {f.type.replace('_', ' ')} · {f.distance_km} km away
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleSelectFacilityAndRoute(f)}
-                          className="w-full py-1.5 px-2.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] transition flex items-center justify-center space-x-1"
-                        >
-                          <Navigation className="w-3.5 h-3.5" />
-                          <span>View Direct Route</span>
-                        </button>
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
-
-                {/* In-Map Polyline for OSRM Route */}
-                {routeData && routeData.coordinates.length > 0 && (
-                  <Polyline
-                    positions={routeData.coordinates}
-                    pathOptions={{
-                      color: '#ea580c',
-                      weight: 5,
-                      opacity: 0.9,
-                      dashArray: '8, 8'
-                    }}
-                  />
-                )}
-              </MapContainer>
-
-              {/* Compact Region Information Panel Overlay (On Clicking Any Region) */}
-              {selectedRegionCell && (
-                <div className="absolute top-3 right-3 z-[1000] max-w-xs w-full bg-white/95 backdrop-blur-md border border-[#ede7de] rounded-2xl p-4 shadow-xl text-xs space-y-2.5">
-                  <div className="flex items-center justify-between border-b border-[#ede7de] pb-2">
-                    <strong className="font-bold text-[#1c1917]">{selectedRegionCell.name}</strong>
-                    <button
-                      onClick={() => setSelectedRegionCell(null)}
-                      className="text-[#78716c] hover:text-[#1c1917] font-bold"
-                    >
-                      ✕
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    <div>
-                      <span className="text-[#78716c] block">Temperature</span>
-                      <strong className="text-[#1c1917]">{selectedRegionCell.temp}°C</strong>
-                    </div>
-                    <div>
-                      <span className="text-[#78716c] block">Humidity</span>
-                      <strong className="text-[#1c1917]">{selectedRegionCell.humidity}%</strong>
-                    </div>
-                    <div>
-                      <span className="text-[#78716c] block">WBGT</span>
-                      <strong className="text-orange-600">{selectedRegionCell.wbgt}°C</strong>
-                    </div>
-                    <div>
-                      <span className="text-[#78716c] block">UTCI</span>
-                      <strong className="text-orange-600">{selectedRegionCell.utci}°C</strong>
-                    </div>
-                    <div>
-                      <span className="text-[#78716c] block">Heat Index</span>
-                      <strong className="text-red-600">{selectedRegionCell.heatIndex}°C</strong>
-                    </div>
-                    <div>
-                      <span className="text-[#78716c] block">HTSI Score</span>
-                      <strong className="text-red-600">{selectedRegionCell.htsi}/100</strong>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded-lg bg-orange-50 border border-orange-200">
-                    <span className="text-[10px] text-orange-800 font-bold uppercase block">
-                      Risk Level: {selectedRegionCell.riskLevel}
-                    </span>
-                    <p className="text-[10px] text-[#57534e] mt-0.5">{selectedRegionCell.forecastRisk}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ThermoMap
+              latitude={userCoords[0]}
+              longitude={userCoords[1]}
+              locationName={detectedLocationName}
+              selectedFacility={selectedFacility}
+              onSelectFacility={(fac) => {
+                const matched = allFacilities.find(f => f.name === fac.name);
+                if (matched) setSelectedFacility(matched);
+              }}
+              height="620px"
+            />
           </div>
         )}
 

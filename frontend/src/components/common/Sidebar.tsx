@@ -157,7 +157,7 @@ export const Sidebar: React.FC = () => {
                   const Icon = item.icon;
                   return (
                     <NavLink
-                      key={item.to}
+                      key={`${item.to}-${item.label}`}
                       to={item.to}
                       end={item.to === '/'}
                       title={isCollapsed ? item.label : undefined}

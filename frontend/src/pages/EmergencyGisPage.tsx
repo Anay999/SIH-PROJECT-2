@@ -13,7 +13,8 @@ import {
   MessageSquare,
   LocateFixed,
   Car,
-  ArrowLeft
+  ArrowLeft,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
@@ -25,6 +26,7 @@ import {
   type Facility,
   type RouteData
 } from '../services/emergencyService';
+import { ThermoMap } from '../components/thermomap/ThermoMap';
 
 // Custom Map Centering & Auto-Bounding Hook
 function MapAutoBounds({
@@ -164,6 +166,7 @@ export const EmergencyGisPage: React.FC = () => {
   const [activePreset, setActivePreset] = useState<string>('Chennai');
   // Basemap mode - SATELLITE DEFAULT
   const [basemapMode, setBasemapMode] = useState<'satellite' | 'street'>('satellite');
+  const [gisViewMode, setGisViewMode] = useState<'dispatcher' | 'thermomap'>('thermomap');
 
   // Automatic permission check on mount
   useEffect(() => {
@@ -419,11 +422,36 @@ export const EmergencyGisPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Live GPS Trigger Button with Pulsing Radar Ring */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* View Mode & GPS Controls */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              onClick={() => setGisViewMode('thermomap')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                gisViewMode === 'thermomap'
+                  ? 'bg-orange-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>ThermoMap H3 Grid</span>
+            </button>
+            <button
+              onClick={() => setGisViewMode('dispatcher')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                gisViewMode === 'dispatcher'
+                  ? 'bg-orange-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              <span>OSRM Dispatcher</span>
+            </button>
+          </div>
+
           <button
             onClick={handleDetectGPS}
-            className={`px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-xs ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-xs ${
               isGpsActive
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -435,8 +463,31 @@ export const EmergencyGisPage: React.FC = () => {
         </div>
       </div>
 
-      {/* TWO PRIMARY 1-CLICK EMERGENCY ACTION CARDS - Sleek Dark Action Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {gisViewMode === 'thermomap' ? (
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-2xl bg-orange-50/90 border border-orange-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-orange-950">
+              <Layers className="w-4 h-4 text-orange-600 shrink-0" />
+              <span>
+                <strong>2D ThermoMap GIS Canvas:</strong> Real-time Uber H3 hexagonal microclimates (Res 8 / Res 7), biometeorological indices (WBGT, UTCI, Heat Index, HTSI), Overpass emergency facilities, and in-map OSRM road routing.
+              </span>
+            </div>
+            <span className="px-2.5 py-1 rounded-lg bg-white border border-orange-200 font-mono text-[11px] text-orange-800 font-bold">
+              GPS: {userLocation[0].toFixed(4)}°N, {userLocation[1].toFixed(4)}°E
+            </span>
+          </div>
+
+          <ThermoMap
+            latitude={userLocation[0]}
+            longitude={userLocation[1]}
+            locationName={detectedLocation}
+            height="720px"
+          />
+        </div>
+      ) : (
+        <>
+          {/* TWO PRIMARY 1-CLICK EMERGENCY ACTION CARDS - Sleek Dark Action Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Button 1: Nearest Hospital */}
         <button
           onClick={handleSelectNearestHospital}
@@ -900,6 +951,8 @@ export const EmergencyGisPage: React.FC = () => {
           )}
         </div>
       </div>
+      </>
+    )}
     </div>
   );
 };
