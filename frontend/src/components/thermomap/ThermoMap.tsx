@@ -13,7 +13,8 @@ import {
   Sunrise,
   Sunset,
   Thermometer,
-  Satellite
+  Satellite,
+  Grid
 } from 'lucide-react';
 import type {
   H3RiskProperties,
@@ -58,9 +59,10 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('afternoon');
   const [basemapMode, setBasemapMode] = useState<BasemapMode>('streets');
   const [isAutoResolution, setIsAutoResolution] = useState<boolean>(true);
+  const [diurnalNotice, setDiurnalNotice] = useState<string | null>(null);
 
   // Layer Toggles
-  const [showH3Grid, setShowH3Grid] = useState<boolean>(true);
+  const [showLinedGrid, setShowLinedGrid] = useState<boolean>(true);
   const [showStreets, setShowStreets] = useState<boolean>(true);
   const [showFacilities, setShowFacilities] = useState<boolean>(true);
   const [showLayerPanel, setShowLayerPanel] = useState<boolean>(false);
@@ -73,7 +75,131 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
   const [isRouting, setIsRouting] = useState<boolean>(false);
   const [routeSummary, setRouteSummary] = useState<{ distance_km: number; duration_mins: number; summary: string } | null>(null);
 
-  // 1. Initialize MapLibre Canvas with Dual Basemap Sources (OSM + Satellite)
+  // Helper: Apply Dynamic Styling to Grid Fills, Grid Lines, and Street Lines
+  const applyDynamicStyling = (map: maplibregl.Map, metric: ThermalMetric, basemap: BasemapMode) => {
+    if (!map || !map.isStyleLoaded()) return;
+
+    // 1. Lined Thermal Grid Fills
+    if (map.getLayer('thermal-grid-fill')) {
+      if (metric === 'lst') {
+        map.setPaintProperty('thermal-grid-fill', 'fill-color', [
+          'interpolate',
+          ['linear'],
+          ['get', 'land_surface_temp_c'],
+          25, '#06b6d4',
+          30, '#10b981',
+          35, '#f59e0b',
+          40, '#f97316',
+          44, '#ea580c',
+          48, '#b91c1c'
+        ]);
+      } else if (metric === 'wbgt') {
+        map.setPaintProperty('thermal-grid-fill', 'fill-color', [
+          'interpolate',
+          ['linear'],
+          ['get', 'wbgt_c'],
+          23, '#06b6d4',
+          26, '#10b981',
+          28, '#f59e0b',
+          30, '#f97316',
+          32, '#ea580c',
+          34, '#b91c1c'
+        ]);
+      } else if (metric === 'risk') {
+        map.setPaintProperty('thermal-grid-fill', 'fill-color', [
+          'match',
+          ['get', 'risk_category'],
+          'LOW', '#10b981',
+          'MODERATE', '#f59e0b',
+          'HIGH', '#f97316',
+          'VERY HIGH', '#ea580c',
+          'EXTREME', '#b91c1c',
+          ['coalesce', ['get', 'color'], '#ea580c']
+        ]);
+      } else {
+        // air_temp
+        map.setPaintProperty('thermal-grid-fill', 'fill-color', [
+          'interpolate',
+          ['linear'],
+          ['get', 'air_temperature_c'],
+          25, '#06b6d4',
+          29, '#10b981',
+          33, '#f59e0b',
+          37, '#f97316',
+          40, '#ea580c',
+          43, '#b91c1c'
+        ]);
+      }
+    }
+
+    // 2. Crisp Thermal Grid Outline Mesh (Lines)
+    if (map.getLayer('thermal-grid-lines')) {
+      const gridLineColor = basemap === 'satellite' ? '#ffffff' : '#334155';
+      map.setPaintProperty('thermal-grid-lines', 'line-color', gridLineColor);
+      map.setPaintProperty('thermal-grid-lines', 'line-width', 1.4);
+      map.setPaintProperty('thermal-grid-lines', 'line-opacity', basemap === 'satellite' ? 0.75 : 0.6);
+    }
+
+    // 3. Street Thermal Core Lines (Synchronized with Active Metric)
+    if (map.getLayer('street-lines-core')) {
+      if (metric === 'lst') {
+        map.setPaintProperty('street-lines-core', 'line-color', [
+          'interpolate',
+          ['linear'],
+          ['get', 'land_surface_temp_c'],
+          25, '#06b6d4',
+          30, '#10b981',
+          35, '#f59e0b',
+          40, '#f97316',
+          44, '#ea580c',
+          48, '#b91c1c'
+        ]);
+      } else if (metric === 'wbgt') {
+        map.setPaintProperty('street-lines-core', 'line-color', [
+          'interpolate',
+          ['linear'],
+          ['get', 'wbgt_c'],
+          23, '#06b6d4',
+          26, '#10b981',
+          28, '#f59e0b',
+          30, '#f97316',
+          32, '#ea580c',
+          34, '#b91c1c'
+        ]);
+      } else if (metric === 'risk') {
+        map.setPaintProperty('street-lines-core', 'line-color', [
+          'match',
+          ['get', 'risk_category'],
+          'LOW', '#10b981',
+          'MODERATE', '#f59e0b',
+          'HIGH', '#f97316',
+          'VERY HIGH', '#ea580c',
+          'EXTREME', '#b91c1c',
+          ['coalesce', ['get', 'color'], '#ea580c']
+        ]);
+      } else {
+        // air_temp
+        map.setPaintProperty('street-lines-core', 'line-color', [
+          'interpolate',
+          ['linear'],
+          ['get', 'air_temperature_c'],
+          25, '#06b6d4',
+          29, '#10b981',
+          33, '#f59e0b',
+          37, '#f97316',
+          40, '#ea580c',
+          43, '#b91c1c'
+        ]);
+      }
+    }
+
+    // 4. Street Casing Line Contrast
+    if (map.getLayer('street-lines-casing')) {
+      map.setPaintProperty('street-lines-casing', 'line-color', basemap === 'satellite' ? '#020617' : '#ffffff');
+    }
+  };
+
+  // 1. Initialize MapLibre Canvas with Dual Basemap Sources (OSM Light + Satellite)
   useEffect(() => {
     if (!mapContainer.current || mapRef.current) return;
 
@@ -147,34 +273,34 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     userMarkerRef.current = userMarker;
 
     map.on('load', () => {
-      // 1. H3 Thermal Risk Sources & Layers
-      map.addSource('thermal-risk', {
+      // 1. Lined Thermal Grid Source & Layers
+      map.addSource('thermal-grid', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
       });
 
       map.addLayer({
-        id: 'thermal-risk-fill',
+        id: 'thermal-grid-fill',
         type: 'fill',
-        source: 'thermal-risk',
+        source: 'thermal-grid',
         paint: {
-          'fill-color': ['coalesce', ['get', 'temp_color'], ['get', 'color'], '#ea580c'],
+          'fill-color': '#ea580c',
           'fill-opacity': 0.45
         }
       });
 
       map.addLayer({
-        id: 'thermal-risk-outline',
+        id: 'thermal-grid-lines',
         type: 'line',
-        source: 'thermal-risk',
+        source: 'thermal-grid',
         paint: {
-          'line-color': '#ffffff',
+          'line-color': '#334155',
           'line-width': 1.4,
-          'line-opacity': 0.75
+          'line-opacity': 0.65
         }
       });
 
-      // 2. Street Thermal Road Geometry Layer
+      // 2. Street Thermal Road Geometry Layers
       map.addSource('street-thermal-lines', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] }
@@ -190,7 +316,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         },
         paint: {
           'line-color': '#ffffff',
-          'line-width': 7,
+          'line-width': 7.5,
           'line-opacity': 0.95
         }
       });
@@ -204,7 +330,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
           'line-cap': 'round'
         },
         paint: {
-          'line-color': ['coalesce', ['get', 'color'], '#ea580c'],
+          'line-color': '#ea580c',
           'line-width': 4.5,
           'line-opacity': 1.0
         }
@@ -275,18 +401,18 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         }
       });
 
-      // Interactive Events: H3 Hexagon Cell Click
-      map.on('click', 'thermal-risk-fill', (e: any) => {
+      // Interactive Events: Lined Thermal Grid Cell Click
+      map.on('click', 'thermal-grid-fill', (e: any) => {
         if (!e.features || e.features.length === 0) return;
         const props = e.features[0].properties as unknown as H3RiskProperties;
         setSelectedCell(props);
         setSelectedStreet(null);
       });
 
-      map.on('mouseenter', 'thermal-risk-fill', () => {
+      map.on('mouseenter', 'thermal-grid-fill', () => {
         map.getCanvas().style.cursor = 'pointer';
       });
-      map.on('mouseleave', 'thermal-risk-fill', () => {
+      map.on('mouseleave', 'thermal-grid-fill', () => {
         map.getCanvas().style.cursor = '';
       });
 
@@ -330,7 +456,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         if (isAutoResolution) {
           let targetRes = 8;
           if (currentZoom >= 13.8) {
-            targetRes = 9; // High zoom -> street-level grid
+            targetRes = 9; // High zoom -> dense street-level grid
           } else if (currentZoom <= 11.5) {
             targetRes = 7; // Low zoom -> regional district grid
           } else {
@@ -346,7 +472,8 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         }
       });
 
-      // Initial Data Ingestion
+      // Apply initial styling and ingest initial data
+      applyDynamicStyling(map, activeMetric, basemapMode);
       loadThermoMapData(latitude, longitude, resolution, timeOfDay);
     });
 
@@ -358,21 +485,21 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     };
   }, []);
 
-  // 2. Load / Refresh H3 Risk Grid, Streets, and Facilities
+  // 2. Load / Refresh Lined Thermal Grid, Streets, and Facilities
   const loadThermoMapData = async (lat: number, lon: number, res: number, tod: TimeOfDay) => {
     setIsLoadingRisk(true);
     try {
       const [riskGeoJson, facilitiesGeoJson, streetsGeoJson] = await Promise.all([
-        fetchThermoMapRisk(lat, lon, res === 9 ? 3.5 : 6.0, res, tod),
+        fetchThermoMapRisk(lat, lon, res === 9 ? 4.0 : 6.5, res, tod),
         fetchThermoMapFacilities(lat, lon, 8.0),
-        fetchStreetThermalData(lat, lon, 4.0, tod)
+        fetchStreetThermalData(lat, lon, 4.5, tod)
       ]);
 
       const applyData = () => {
         const map = mapRef.current;
         if (!map) return;
 
-        const riskSource = map.getSource('thermal-risk') as maplibregl.GeoJSONSource | undefined;
+        const riskSource = map.getSource('thermal-grid') as maplibregl.GeoJSONSource | undefined;
         if (riskSource) {
           riskSource.setData(riskGeoJson as any);
         }
@@ -386,6 +513,25 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         if (streetSource) {
           streetSource.setData(streetsGeoJson as any);
         }
+
+        applyDynamicStyling(map, activeMetric, basemapMode);
+
+        // Update selected items if currently inspecting
+        if (selectedStreet) {
+          const matchingStreet = streetsGeoJson.features.find(
+            f => f.properties.street_name === selectedStreet.street_name
+          );
+          if (matchingStreet) {
+            setSelectedStreet(matchingStreet.properties);
+          }
+        } else if (selectedCell) {
+          const matchingCell = riskGeoJson.features.find(
+            f => f.properties.grid_id === (selectedCell as any).grid_id || f.properties.h3_index === selectedCell.h3_index
+          );
+          if (matchingCell) {
+            setSelectedCell(matchingCell.properties);
+          }
+        }
       };
 
       if (mapRef.current && mapRef.current.isStyleLoaded()) {
@@ -394,13 +540,13 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         mapRef.current.once('load', applyData);
       }
     } catch (err) {
-      console.error('Street-Level ThermoMap data load failed:', err);
+      console.error('Lined Thermal Grid data load failed:', err);
     } finally {
       setIsLoadingRisk(false);
     }
   };
 
-  // 3. Move camera & update marker when coordinates change
+  // 3. Camera pan and marker sync on coordinate change
   useEffect(() => {
     if (!mapRef.current) return;
     mapRef.current.flyTo({
@@ -416,10 +562,30 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     loadThermoMapData(latitude, longitude, resolution, timeOfDay);
   }, [latitude, longitude]);
 
-  // 4. Update data on time-of-day or resolution change
+  // 4. Handle Time-of-Day Diurnal Change
   const handleTimeOfDayChange = (tod: TimeOfDay) => {
     setTimeOfDay(tod);
+    const notices: Record<TimeOfDay, string> = {
+      morning: '🌅 Morning Model (08:00 AM) • Base Air: 29.5°C • Base LST: 31.2°C',
+      afternoon: '☀️ Peak Afternoon Model (02:00 PM) • Base Air: 39.5°C • Base LST: 47.8°C',
+      evening: '🌇 Evening Model (06:30 PM) • Base Air: 34.0°C • Base LST: 36.8°C',
+      night: '🌙 Night Model (10:00 PM) • Base Air: 27.5°C • Base LST: 25.8°C'
+    };
+    setDiurnalNotice(notices[tod]);
     loadThermoMapData(latitude, longitude, resolution, tod);
+
+    // Auto-clear notice after 4.5 seconds
+    setTimeout(() => {
+      setDiurnalNotice(null);
+    }, 4500);
+  };
+
+  // 5. Handle Metric Mode Change
+  const handleMetricChange = (metric: ThermalMetric) => {
+    setActiveMetric(metric);
+    if (mapRef.current) {
+      applyDynamicStyling(mapRef.current, metric, basemapMode);
+    }
   };
 
   const handleManualResolutionChange = (res: number) => {
@@ -428,7 +594,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     loadThermoMapData(latitude, longitude, res, timeOfDay);
   };
 
-  // 5. Update Map Layer Visibility & Basemap Mode
+  // 6. Update Map Layer Visibility & Basemap Mode
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
@@ -442,10 +608,10 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
       map.setLayoutProperty('osm-raster-layer', 'visibility', 'visible');
     }
 
-    // Grid layers
-    const gridVis = showH3Grid ? 'visible' : 'none';
-    if (map.getLayer('thermal-risk-fill')) map.setLayoutProperty('thermal-risk-fill', 'visibility', gridVis);
-    if (map.getLayer('thermal-risk-outline')) map.setLayoutProperty('thermal-risk-outline', 'visibility', gridVis);
+    // Lined Grid layers
+    const gridVis = showLinedGrid ? 'visible' : 'none';
+    if (map.getLayer('thermal-grid-fill')) map.setLayoutProperty('thermal-grid-fill', 'visibility', gridVis);
+    if (map.getLayer('thermal-grid-lines')) map.setLayoutProperty('thermal-grid-lines', 'visibility', gridVis);
 
     // Streets layer
     const streetVis = showStreets ? 'visible' : 'none';
@@ -456,49 +622,11 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     const facVis = showFacilities ? 'visible' : 'none';
     if (map.getLayer('facilities-points')) map.setLayoutProperty('facilities-points', 'visibility', facVis);
 
-    // Update fill color expression based on active metric
-    if (map.getLayer('thermal-risk-fill')) {
-      if (activeMetric === 'lst') {
-        map.setPaintProperty('thermal-risk-fill', 'fill-color', [
-          'interpolate',
-          ['linear'],
-          ['get', 'land_surface_temp_c'],
-          30, '#10b981',
-          35, '#f59e0b',
-          40, '#f97316',
-          44, '#ea580c',
-          48, '#b91c1c'
-        ]);
-      } else if (activeMetric === 'wbgt') {
-        map.setPaintProperty('thermal-risk-fill', 'fill-color', [
-          'interpolate',
-          ['linear'],
-          ['get', 'wbgt_c'],
-          26, '#10b981',
-          29, '#f59e0b',
-          31, '#f97316',
-          33, '#b91c1c'
-        ]);
-      } else if (activeMetric === 'utci') {
-        map.setPaintProperty('thermal-risk-fill', 'fill-color', [
-          'interpolate',
-          ['linear'],
-          ['get', 'utci_c'],
-          32, '#10b981',
-          38, '#f59e0b',
-          42, '#f97316',
-          46, '#b91c1c'
-        ]);
-      } else if (activeMetric === 'risk') {
-        map.setPaintProperty('thermal-risk-fill', 'fill-color', ['get', 'color']);
-      } else {
-        // air_temp default
-        map.setPaintProperty('thermal-risk-fill', 'fill-color', ['coalesce', ['get', 'temp_color'], ['get', 'color']]);
-      }
-    }
-  }, [basemapMode, showH3Grid, showStreets, showFacilities, activeMetric]);
+    // Reapply dynamic styles with contrast
+    applyDynamicStyling(map, activeMetric, basemapMode);
+  }, [basemapMode, showLinedGrid, showStreets, showFacilities, activeMetric]);
 
-  // 6. Auto-route when selectedFacility prop changes from parent
+  // 7. Auto-route when selectedFacility prop changes from parent
   useEffect(() => {
     if (selectedFacility) {
       const destLat = (selectedFacility as any).latitude ?? (selectedFacility as any).coordinates?.[1];
@@ -509,7 +637,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     }
   }, [selectedFacility]);
 
-  // 7. In-Map OSRM Routing Trigger
+  // 8. In-Map OSRM Routing Trigger
   const triggerRoutingToCoords = async (destLat: number, destLon: number, facName: string) => {
     setIsRouting(true);
     try {
@@ -599,11 +727,18 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         </div>
       )}
 
+      {/* Diurnal Model Feedback Toast */}
+      {diurnalNotice && (
+        <div className="absolute top-14 left-1/2 -translate-x-1/2 z-20 bg-[#1c1917]/90 text-white backdrop-blur px-3.5 py-1 rounded-full border border-white/20 text-[11px] font-bold shadow-xl flex items-center space-x-2 animate-in fade-in slide-in-from-top-2 duration-150">
+          <span>{diurnalNotice}</span>
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {isLoadingRisk && (
         <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur px-3.5 py-1.5 rounded-xl border border-[#ede7de] text-xs font-bold text-orange-700 shadow-md flex items-center space-x-2">
           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-          <span>Generating Street-Level Thermal Grid (Res {resolution})...</span>
+          <span>Refreshing Thermal Grid & Streets ({timeOfDay.toUpperCase()})...</span>
         </div>
       )}
 
@@ -618,44 +753,52 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
       {/* ======================================================== */}
       {/* 2. TOP-LEFT FLOATING CONTROL DOCK: METRICS & LAYERS      */}
       {/* ======================================================== */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 max-w-sm">
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 max-w-sm">
         {/* Metric Selector Bar */}
         <div className="bg-white/95 backdrop-blur border border-[#ede7de] p-1.5 rounded-2xl shadow-md flex items-center gap-1 text-[11px] font-bold">
           <span className="text-[10px] text-[#78716c] uppercase px-1 flex items-center gap-1">
             <Thermometer className="w-3 h-3 text-orange-600" />
-            <span>Mode:</span>
+            <span>MODE:</span>
           </span>
           <button
-            onClick={() => setActiveMetric('air_temp')}
-            className={`px-2 py-1 rounded-lg transition ${
-              activeMetric === 'air_temp' ? 'bg-orange-600 text-white shadow-xs' : 'text-[#57534e] hover:bg-[#faf9f6]'
+            onClick={() => handleMetricChange('air_temp')}
+            className={`px-2.5 py-1 rounded-lg transition ${
+              activeMetric === 'air_temp'
+                ? 'bg-orange-600 text-white shadow-xs font-black'
+                : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
-            title="AI-Estimated Near-Surface Air Temperature"
+            title="AI-Estimated Near-Surface Air Temperature (2m Ground)"
           >
             Air Temp
           </button>
           <button
-            onClick={() => setActiveMetric('lst')}
-            className={`px-2 py-1 rounded-lg transition ${
-              activeMetric === 'lst' ? 'bg-orange-600 text-white shadow-xs' : 'text-[#57534e] hover:bg-[#faf9f6]'
+            onClick={() => handleMetricChange('lst')}
+            className={`px-2.5 py-1 rounded-lg transition ${
+              activeMetric === 'lst'
+                ? 'bg-orange-600 text-white shadow-xs font-black'
+                : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
-            title="Satellite Land Surface Temperature (LST)"
+            title="Satellite Land Surface Temperature (LST Skin Temp)"
           >
             Satellite LST
           </button>
           <button
-            onClick={() => setActiveMetric('wbgt')}
-            className={`px-2 py-1 rounded-lg transition ${
-              activeMetric === 'wbgt' ? 'bg-orange-600 text-white shadow-xs' : 'text-[#57534e] hover:bg-[#faf9f6]'
+            onClick={() => handleMetricChange('wbgt')}
+            className={`px-2.5 py-1 rounded-lg transition ${
+              activeMetric === 'wbgt'
+                ? 'bg-orange-600 text-white shadow-xs font-black'
+                : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
-            title="Wet Bulb Globe Temperature (ISO 7243)"
+            title="Wet Bulb Globe Temperature (ISO 7243 Occupational)"
           >
             WBGT
           </button>
           <button
-            onClick={() => setActiveMetric('risk')}
-            className={`px-2 py-1 rounded-lg transition ${
-              activeMetric === 'risk' ? 'bg-orange-600 text-white shadow-xs' : 'text-[#57534e] hover:bg-[#faf9f6]'
+            onClick={() => handleMetricChange('risk')}
+            className={`px-2.5 py-1 rounded-lg transition ${
+              activeMetric === 'risk'
+                ? 'bg-orange-600 text-white shadow-xs font-black'
+                : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
             title="Composite Heat Health Risk"
           >
@@ -666,12 +809,40 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
           <button
             onClick={() => setShowLayerPanel(!showLayerPanel)}
             className={`p-1.5 rounded-lg border transition ml-1 ${
-              showLayerPanel ? 'bg-orange-100 border-orange-300 text-orange-800' : 'bg-[#faf9f6] border-[#ede7de] text-[#57534e]'
+              showLayerPanel
+                ? 'bg-orange-100 border-orange-300 text-orange-800'
+                : 'bg-[#faf9f6] border-[#ede7de] text-[#57534e]'
             }`}
             title="Toggle Map Layers & Basemap"
           >
             <Layers className="w-3.5 h-3.5" />
           </button>
+        </div>
+
+        {/* Active Mode Pill */}
+        <div className="bg-white/90 backdrop-blur border border-[#ede7de] px-2.5 py-0.5 rounded-xl shadow-xs self-start flex items-center gap-1.5 text-[10px] font-semibold text-[#57534e]">
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{
+              backgroundColor:
+                activeMetric === 'lst'
+                  ? '#ea580c'
+                  : activeMetric === 'wbgt'
+                  ? '#0284c7'
+                  : activeMetric === 'risk'
+                  ? '#b91c1c'
+                  : '#10b981'
+            }}
+          />
+          <span>
+            {activeMetric === 'lst'
+              ? 'Viewing: Satellite LST (Surface Skin Temp)'
+              : activeMetric === 'wbgt'
+              ? 'Viewing: WBGT Occupational Heat Stress'
+              : activeMetric === 'risk'
+              ? 'Viewing: Composite Heat Health Risk'
+              : 'Viewing: AI-Estimated Air Temp (2m Ground)'}
+          </span>
         </div>
 
         {/* Collapsible Layer Customizer Panel */}
@@ -690,7 +861,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
               </button>
             </div>
 
-            {/* Basemap Switcher */}
+            {/* Basemap Switcher (OSM Light vs Satellite) */}
             <div>
               <span className="text-[10px] text-[#78716c] uppercase font-bold block mb-1">Basemap Style</span>
               <div className="grid grid-cols-2 gap-1.5">
@@ -718,15 +889,18 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
               </div>
             </div>
 
-            {/* Layer Toggles */}
+            {/* Layer Toggles (Thermal Lined Grid, Streets, Facilities) */}
             <div className="space-y-1.5 pt-1 border-t border-[#ede7de]">
               <span className="text-[10px] text-[#78716c] uppercase font-bold block">Overlays</span>
               <label className="flex items-center justify-between cursor-pointer py-0.5">
-                <span className="text-[11px] text-[#1c1917] font-medium">H3 Hexagonal Grid</span>
+                <span className="text-[11px] text-[#1c1917] font-medium flex items-center gap-1.5">
+                  <Grid className="w-3 h-3 text-orange-600" />
+                  <span>Thermal Lined Grid</span>
+                </span>
                 <input
                   type="checkbox"
-                  checked={showH3Grid}
-                  onChange={(e) => setShowH3Grid(e.target.checked)}
+                  checked={showLinedGrid}
+                  onChange={(e) => setShowLinedGrid(e.target.checked)}
                   className="rounded text-orange-600 focus:ring-orange-500 w-3.5 h-3.5"
                 />
               </label>
@@ -764,42 +938,42 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
       <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 bg-white/95 backdrop-blur border border-[#ede7de] px-2 py-1 rounded-2xl shadow-md flex items-center gap-1 text-[11px] font-bold">
         <button
           onClick={() => handleTimeOfDayChange('morning')}
-          className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-            timeOfDay === 'morning' ? 'bg-amber-500 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
+          className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 ${
+            timeOfDay === 'morning' ? 'bg-amber-500 text-white font-black' : 'text-[#57534e] hover:bg-[#faf9f6]'
           }`}
-          title="08:00 AM Morning Rise"
+          title="08:00 AM Morning Solar Escalation"
         >
-          <Sunrise className="w-3 h-3" />
+          <Sunrise className="w-3.5 h-3.5" />
           <span>Morning</span>
         </button>
         <button
           onClick={() => handleTimeOfDayChange('afternoon')}
-          className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-            timeOfDay === 'afternoon' ? 'bg-orange-600 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
+          className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 ${
+            timeOfDay === 'afternoon' ? 'bg-orange-600 text-white font-black' : 'text-[#57534e] hover:bg-[#faf9f6]'
           }`}
-          title="02:00 PM Peak Insolation"
+          title="02:00 PM Peak Insolation & Max Surface Absorption"
         >
-          <Sun className="w-3 h-3" />
+          <Sun className="w-3.5 h-3.5" />
           <span>Peak Afternoon</span>
         </button>
         <button
           onClick={() => handleTimeOfDayChange('evening')}
-          className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-            timeOfDay === 'evening' ? 'bg-amber-600 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
+          className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 ${
+            timeOfDay === 'evening' ? 'bg-amber-600 text-white font-black' : 'text-[#57534e] hover:bg-[#faf9f6]'
           }`}
-          title="06:30 PM Evening Dissipation"
+          title="06:30 PM Evening Thermal Dissipation"
         >
-          <Sunset className="w-3 h-3" />
+          <Sunset className="w-3.5 h-3.5" />
           <span>Evening</span>
         </button>
         <button
           onClick={() => handleTimeOfDayChange('night')}
-          className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-            timeOfDay === 'night' ? 'bg-indigo-700 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
+          className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 ${
+            timeOfDay === 'night' ? 'bg-indigo-700 text-white font-black' : 'text-[#57534e] hover:bg-[#faf9f6]'
           }`}
           title="10:00 PM Nocturnal Urban Heat Retention"
         >
-          <Moon className="w-3 h-3" />
+          <Moon className="w-3.5 h-3.5" />
           <span>Night</span>
         </button>
       </div>
@@ -813,36 +987,132 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
             {activeMetric === 'lst'
               ? 'Satellite Land Surface Temp (LST)'
               : activeMetric === 'wbgt'
-              ? 'WBGT Occupational Index'
-              : 'Street-Level Thermal Grid'}
+              ? 'WBGT Occupational Index (ISO 7243)'
+              : activeMetric === 'risk'
+              ? 'Composite Heat-Health Risk'
+              : 'Air Temperature (2m Ground Level)'}
           </strong>
           <span className="text-[9px] text-[#78716c] font-medium truncate max-w-[140px]">{locationName}</span>
         </div>
+
+        {/* Dynamic Metric Scale Thresholds */}
         <div className="flex items-center gap-1.5 font-bold">
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
-            <span className="text-[#57534e]">{activeMetric === 'air_temp' ? '<30°C' : 'Low'}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
-            <span className="text-[#57534e]">{activeMetric === 'air_temp' ? '30-34°C' : 'Moderate'}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-orange-500"></span>
-            <span className="text-[#57534e]">{activeMetric === 'air_temp' ? '34-38°C' : 'Warm'}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#ea580c]"></span>
-            <span className="text-[#57534e]">{activeMetric === 'air_temp' ? '38-42°C' : 'High'}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-sm bg-red-700"></span>
-            <span className="text-[#57534e]">{activeMetric === 'air_temp' ? '>42°C' : 'Extreme'}</span>
-          </span>
+          {activeMetric === 'air_temp' && (
+            <>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#06b6d4]"></span>
+                <span className="text-[#57534e]">&lt;28°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#10b981]"></span>
+                <span className="text-[#57534e]">28-32°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b]"></span>
+                <span className="text-[#57534e]">32-35°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f97316]"></span>
+                <span className="text-[#57534e]">35-38°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#ea580c]"></span>
+                <span className="text-[#57534e]">38-41°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#b91c1c]"></span>
+                <span className="text-[#57534e]">&gt;41°C</span>
+              </span>
+            </>
+          )}
+
+          {activeMetric === 'lst' && (
+            <>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#06b6d4]"></span>
+                <span className="text-[#57534e]">&lt;30°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#10b981]"></span>
+                <span className="text-[#57534e]">30-35°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b]"></span>
+                <span className="text-[#57534e]">35-40°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f97316]"></span>
+                <span className="text-[#57534e]">40-44°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#ea580c]"></span>
+                <span className="text-[#57534e]">44-48°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#b91c1c]"></span>
+                <span className="text-[#57534e]">&gt;48°C</span>
+              </span>
+            </>
+          )}
+
+          {activeMetric === 'wbgt' && (
+            <>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#06b6d4]"></span>
+                <span className="text-[#57534e]">&lt;24°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#10b981]"></span>
+                <span className="text-[#57534e]">24-26°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b]"></span>
+                <span className="text-[#57534e]">26-28°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f97316]"></span>
+                <span className="text-[#57534e]">28-30°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#ea580c]"></span>
+                <span className="text-[#57534e]">30-32°C</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#b91c1c]"></span>
+                <span className="text-[#57534e]">&gt;32°C</span>
+              </span>
+            </>
+          )}
+
+          {activeMetric === 'risk' && (
+            <>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#10b981]"></span>
+                <span className="text-[#57534e]">Low</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f59e0b]"></span>
+                <span className="text-[#57534e]">Moderate</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#f97316]"></span>
+                <span className="text-[#57534e]">High</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#ea580c]"></span>
+                <span className="text-[#57534e]">Very High</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#b91c1c]"></span>
+                <span className="text-[#57534e]">Extreme</span>
+              </span>
+            </>
+          )}
         </div>
+
         <div className="pt-1 border-t border-[#ede7de] text-[9px] text-[#78716c] flex items-center justify-between">
-          <span>Observed: <strong>Landsat/MODIS + Weather API</strong></span>
-          <span className="font-mono text-emerald-700 font-bold">Verified 2D GIS</span>
+          <span>Diurnal: <strong className="text-orange-700 font-bold">{timeOfDay.toUpperCase()}</strong></span>
+          <span className="font-mono text-emerald-700 font-bold">Lined Grid Mesh</span>
         </div>
       </div>
 
@@ -851,33 +1121,33 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
       {/* ======================================================== */}
       <div className="absolute bottom-3 right-3 z-10 flex items-center space-x-2">
         <div className="bg-white/95 backdrop-blur border border-[#ede7de] px-2 py-1 rounded-xl shadow-md flex items-center space-x-1.5 text-[11px] font-bold text-[#1c1917]">
-          <span className="text-[10px] text-[#78716c] uppercase">H3 Res:</span>
+          <span className="text-[10px] text-[#78716c] uppercase">Mesh:</span>
           <button
             onClick={() => handleManualResolutionChange(7)}
             className={`px-1.5 py-0.5 rounded text-[10px] ${
               resolution === 7 ? 'bg-orange-600 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
-            title="District (~1.2km)"
+            title="District Mesh (10x10)"
           >
-            Res 7
+            10x10
           </button>
           <button
             onClick={() => handleManualResolutionChange(8)}
             className={`px-1.5 py-0.5 rounded text-[10px] ${
               resolution === 8 ? 'bg-orange-600 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
-            title="Ward (~460m)"
+            title="Neighborhood Mesh (14x14)"
           >
-            Res 8
+            14x14
           </button>
           <button
             onClick={() => handleManualResolutionChange(9)}
             className={`px-1.5 py-0.5 rounded text-[10px] ${
               resolution === 9 ? 'bg-orange-600 text-white' : 'text-[#57534e] hover:bg-[#faf9f6]'
             }`}
-            title="Street-Level (~170m)"
+            title="Street-Level Mesh (20x20)"
           >
-            Res 9 (Street)
+            20x20
           </button>
         </div>
 
@@ -891,7 +1161,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
       </div>
 
       {/* ======================================================== */}
-      {/* 7. INTERACTIVE STREET & H3 CELL INSPECTION CARD          */}
+      {/* 7. INTERACTIVE STREET & GRID CELL INSPECTION CARD        */}
       {/* ======================================================== */}
       {(selectedCell || selectedStreet) && (
         <div className="absolute top-3 right-3 z-30 w-80 bg-white/98 backdrop-blur border border-orange-200 rounded-3xl p-4 shadow-xl text-xs space-y-3 animate-in fade-in zoom-in-95 duration-150">
@@ -899,10 +1169,10 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
           <div className="flex items-start justify-between border-b border-[#ede7de] pb-2.5">
             <div>
               <span className="text-[9px] font-mono text-[#78716c] uppercase font-bold block">
-                {selectedStreet ? 'Street Road Segment' : `H3 Cell: ${selectedCell?.h3_index.slice(0, 10)}...`}
+                {selectedStreet ? 'Street Road Segment' : `Lined Grid Sector: ${(selectedCell as any)?.grid_id || selectedCell?.h3_index.slice(0, 10)}`}
               </span>
               <h4 className="text-sm font-black text-[#1c1917] leading-snug mt-0.5">
-                {selectedStreet ? selectedStreet.street_name : selectedCell?.street_name || 'Localized Grid Cell'}
+                {selectedStreet ? selectedStreet.street_name : selectedCell?.street_name || 'Localized Thermal Grid Cell'}
               </h4>
               <div className="flex items-center gap-1.5 mt-1">
                 <span
@@ -929,7 +1199,13 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
 
           {/* Scientific Dual Temperature Breakdown (Air Temp vs Satellite LST) */}
           <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="bg-[#faf9f6] p-2.5 rounded-xl border border-orange-200 space-y-0.5">
+            <div
+              className={`p-2.5 rounded-xl border space-y-0.5 transition ${
+                activeMetric === 'air_temp'
+                  ? 'bg-orange-50/70 border-orange-400 ring-1 ring-orange-400'
+                  : 'bg-[#faf9f6] border-orange-200'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-semibold text-[#78716c]">Air Temperature</span>
                 <span className="text-[8px] font-bold px-1 rounded bg-orange-100 text-orange-800">AI-ESTIMATED</span>
@@ -940,7 +1216,13 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
               <span className="text-[9px] text-[#78716c]">Ground 2m Level</span>
             </div>
 
-            <div className="bg-[#faf9f6] p-2.5 rounded-xl border border-amber-200 space-y-0.5">
+            <div
+              className={`p-2.5 rounded-xl border space-y-0.5 transition ${
+                activeMetric === 'lst'
+                  ? 'bg-amber-50/70 border-amber-400 ring-1 ring-amber-400'
+                  : 'bg-[#faf9f6] border-amber-200'
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-semibold text-[#78716c]">Land Surface Temp</span>
                 <span className="text-[8px] font-bold px-1 rounded bg-amber-100 text-amber-800">SATELLITE LST</span>
@@ -949,17 +1231,20 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
                 {(selectedStreet || selectedCell)?.land_surface_temp_c}°C
               </strong>
               <span className="text-[9px] text-amber-800 font-semibold">
-                +{(
-                  ((selectedStreet || selectedCell)?.land_surface_temp_c || 0) -
-                  ((selectedStreet || selectedCell)?.air_temperature_c || 0)
-                ).toFixed(1)}°C surface retention
+                {(((selectedStreet || selectedCell)?.land_surface_temp_c || 0) >= ((selectedStreet || selectedCell)?.air_temperature_c || 0))
+                  ? `+${(((selectedStreet || selectedCell)?.land_surface_temp_c || 0) - ((selectedStreet || selectedCell)?.air_temperature_c || 0)).toFixed(1)}°C surface retention`
+                  : `${(((selectedStreet || selectedCell)?.land_surface_temp_c || 0) - ((selectedStreet || selectedCell)?.air_temperature_c || 0)).toFixed(1)}°C surface dissipation`}
               </span>
             </div>
           </div>
 
           {/* Secondary Physical Indices */}
           <div className="grid grid-cols-3 gap-1.5 text-[10px] text-center">
-            <div className="bg-[#faf9f6] p-1.5 rounded-xl border border-[#ede7de]">
+            <div
+              className={`p-1.5 rounded-xl border ${
+                activeMetric === 'wbgt' ? 'bg-sky-50 border-sky-400 ring-1 ring-sky-300' : 'bg-[#faf9f6] border-[#ede7de]'
+              }`}
+            >
               <span className="text-[#78716c] block text-[9px]">WBGT (ISO)</span>
               <strong className="text-xs font-bold text-[#1c1917]">{(selectedStreet || selectedCell)?.wbgt_c}°C</strong>
             </div>
@@ -973,7 +1258,7 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
             </div>
           </div>
 
-          {/* Ergonomic Guidance (for cells) */}
+          {/* Ergonomic Guidance */}
           {selectedCell && (
             <div className="p-2.5 rounded-xl bg-orange-50 border border-orange-200 text-[10px] text-orange-950 space-y-1">
               <div className="flex items-center space-x-1.5 font-bold">
@@ -994,8 +1279,12 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
               <span>Calibration Confidence:</span>
               <strong className="text-emerald-700 font-bold">{(selectedStreet || selectedCell)?.confidence_pct}%</strong>
             </div>
+            <div className="flex items-center justify-between text-[8px]">
+              <span>Active Diurnal Step:</span>
+              <strong className="text-orange-700 uppercase font-mono">{timeOfDay}</strong>
+            </div>
             <p className="text-[8px] text-[#a8a29e] leading-tight">
-              Satellite LST from thermal radiometric downscaling fused with live ground-level weather observations.
+              Satellite LST skin temperature from radiometric downscaling fused with live ground-level weather observations.
             </p>
           </div>
         </div>
@@ -1003,4 +1292,3 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     </div>
   );
 };
-

@@ -8,6 +8,7 @@ export type BasemapMode = 'streets' | 'satellite';
 
 export interface H3RiskProperties {
   h3_index: string;
+  grid_id?: string;
   center_lat: number;
   center_lon: number;
   street_name?: string;
@@ -52,9 +53,10 @@ export interface H3RiskFeatureCollection {
   features: H3RiskFeature[];
   metadata: {
     center: [number, number];
-    center_h3: string;
+    center_h3?: string;
     resolution: number;
     radius_km: number;
+    grid_dimensions?: string;
     cell_count: number;
     time_of_day?: string;
     time_label?: string;

@@ -492,10 +492,10 @@ export const CitizenPortalPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-black text-[#1c1917] tracking-tight flex items-center gap-2">
                   <Layers className="w-5 h-5 text-orange-600" />
-                  <span>2D Geographic ThermoMap (MapLibre GL + Uber H3)</span>
+                  <span>2D Geographic ThermoMap (Street-Level Lined Thermal Grid)</span>
                 </h3>
                 <p className="text-xs text-[#57534e]">
-                  Hardware-accelerated 2D GIS canvas, discrete Uber H3 hexagonal microclimates, Overpass emergency facilities, and in-map OSRM road routing.
+                  Hardware-accelerated 2D GIS canvas, high-resolution lined thermal grid mesh, localized street thermal intelligence, and in-map OSRM road routing.
                 </p>
               </div>
             </div>
