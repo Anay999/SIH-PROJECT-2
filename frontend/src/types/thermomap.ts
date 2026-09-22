@@ -151,3 +151,111 @@ export interface EmergencyRouteFeature {
     coordinates: [number, number][];
   };
 }
+
+export interface IndiaGridCellProperties {
+  cell_id: string;
+  center_lat: number;
+  center_lon: number;
+  air_temperature_c: number;
+  land_surface_temp_c: number;
+  temperature_c: number;
+  feels_like_c: number;
+  relative_humidity: number;
+  wind_speed_kmh: number;
+  wbgt_c: number;
+  utci_c: number;
+  heat_index_c: number;
+  htsi_score: number;
+  risk_score: number;
+  risk_category: RiskCategory;
+  color: string;
+  temp_color: string;
+  state_name: string;
+  district_name: string;
+  climate_region: string;
+  data_status: string;
+  updated_at: string;
+}
+
+export interface IndiaGridFeature {
+  type: 'Feature';
+  id: string;
+  properties: IndiaGridCellProperties;
+  geometry: {
+    type: 'Polygon';
+    coordinates: number[][][];
+  };
+}
+
+export interface IndiaGridFeatureCollection {
+  type: 'FeatureCollection';
+  features: IndiaGridFeature[];
+  metadata: {
+    country: string;
+    bbox: number[];
+    zoom: number;
+    step_deg: number;
+    cell_count: number;
+    time_of_day: string;
+    data_status: string;
+    generated_at: string;
+    provider: string;
+  };
+}
+
+export interface Thermal3DPlumeProperties {
+  band: number;
+  air_temperature_c: number;
+  surface_temp_c: number;
+  color: string;
+  elevation_offset_m: number;
+  risk_level: string;
+  dispersion_rate: string;
+  description: string;
+}
+
+export interface Thermal3DTelemetryTarget {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  elevation_m: number;
+  temp_c: number;
+  status: string;
+  classification: string;
+}
+
+export interface Thermal3DCommandData {
+  type: 'FeatureCollection';
+  features: Array<{
+    type: 'Feature';
+    properties: Thermal3DPlumeProperties;
+    geometry: {
+      type: 'Polygon';
+      coordinates: number[][][];
+    };
+  }>;
+  targets: Thermal3DTelemetryTarget[];
+  metadata: {
+    center: [number, number];
+    radius_km: number;
+    time_of_day: string;
+    command_center: string;
+    terrain_mode: string;
+    base_air_temp: number;
+    base_lst_temp: number;
+    data_status: string;
+  };
+}
+
+export interface Command3DConfig {
+  gridSize: 512 | 1024 | 2048;
+  thermalOpacity: number;
+  colorScheme: 'rainbow' | 'inferno' | 'ironbow' | 'turbo' | 'oceanic';
+  showTopography: boolean;
+  showBuildings: boolean;
+  showSensors: boolean;
+  pitch: number;
+  bearing: number;
+}
+

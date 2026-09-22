@@ -4,11 +4,13 @@ Provides GeoJSON FeatureCollections for H3 hexagonal risk grid,
 OSM emergency facilities, and in-map OSRM routing.
 """
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, Query, HTTPException, status
+from fastapi import APIRouter, Query, HTTPException, status, Depends
 import httpx
 
 from app.services.h3_service import generate_thermomap_geojson, generate_street_thermal_geojson
+from app.services.india_grid_service import generate_india_grid_geojson, generate_3d_thermal_terrain_data
 from app.services.overpass_service import fetch_osm_facilities
+from app.core.auth import get_current_actor, require_roles, CurrentActor, UserRole
 
 router = APIRouter(prefix="/thermomap", tags=["ThermoMap 2D GIS"])
 
@@ -155,3 +157,62 @@ async def get_emergency_route(
             ]
         }
     }
+
+
+@router.get("/india-grid")
+def get_india_thermal_grid(
+    min_lat: float = Query(8.0, ge=5.0, le=40.0, description="Minimum latitude"),
+    min_lon: float = Query(68.0, ge=65.0, le=100.0, description="Minimum longitude"),
+    max_lat: float = Query(37.2, ge=5.0, le=40.0, description="Maximum latitude"),
+    max_lon: float = Query(97.5, ge=65.0, le=100.0, description="Maximum longitude"),
+    zoom: float = Query(5.0, ge=1.0, le=19.0, description="Map viewport zoom level"),
+    time_of_day: str = Query("afternoon", pattern="^(morning|afternoon|evening|night)$", description="Diurnal period")
+) -> Dict[str, Any]:
+    """
+    Returns an auto-aligned nationwide or regional thermal grid covering India.
+    Each cell contains simulated regional temperatures (in proper degrees °C)
+    ready to plug into live IMD/Open-Meteo API keys.
+    """
+    try:
+        return generate_india_grid_geojson(
+            min_lat=min_lat,
+            min_lon=min_lon,
+            max_lat=max_lat,
+            max_lon=max_lon,
+            zoom=zoom,
+            time_of_day=time_of_day
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate India thermal grid: {str(exc)}"
+        )
+
+
+@router.get("/3d-command")
+def get_3d_thermal_command_data(
+    latitude: float = Query(..., ge=-90.0, le=90.0, description="Center latitude"),
+    longitude: float = Query(..., ge=-180.0, le=180.0, description="Center longitude"),
+    radius_km: float = Query(8.0, gt=0.5, le=30.0, description="Plume radius in km"),
+    time_of_day: str = Query("afternoon", pattern="^(morning|afternoon|evening|night)$", description="Diurnal period"),
+    actor: CurrentActor = Depends(require_roles([UserRole.MUNICIPAL_OFFICER, UserRole.ADMIN]))
+) -> Dict[str, Any]:
+    """
+    Returns 3D thermal dispersion plume geometries and sensor telemetry
+    modeled for the Municipal Officer 3D Topographical Thermal Command Center.
+    Strictly restricted to Municipal Officers and Administrators.
+    """
+    try:
+        return generate_3d_thermal_terrain_data(
+            latitude=latitude,
+            longitude=longitude,
+            radius_km=radius_km,
+            time_of_day=time_of_day
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate 3D thermal command data: {str(exc)}"
+        )
+
+
