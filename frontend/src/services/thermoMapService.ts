@@ -90,6 +90,15 @@ export async function fetchIndiaGridData(
   return res.json();
 }
 
+export async function fetchIndiaBoundaryGeoJson(): Promise<any> {
+  const url = `/api/v1/thermomap/india-boundary`;
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    throw new Error(`Failed to load India boundary: ${res.statusText}`);
+  }
+  return res.json();
+}
+
 export async function fetch3DThermalCommandData(
   latitude: number,
   longitude: number,

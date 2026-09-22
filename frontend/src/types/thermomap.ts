@@ -177,29 +177,55 @@ export interface IndiaGridCellProperties {
   updated_at: string;
 }
 
+export interface IndiaGridOverview {
+  average_temperature_c: number;
+  apparent_temperature_c: number;
+  relative_humidity: number;
+  wind_speed_kmh: number;
+  wbgt_c: number;
+  utci_c: number;
+  htsi_score: number;
+  risk_category: string;
+  total_states: number;
+  total_uts: number;
+  total_districts: number;
+  high_risk_states: Array<{ state: string; htsi: number }>;
+  last_updated: string;
+}
+
 export interface IndiaGridFeature {
   type: 'Feature';
   id: string;
   properties: IndiaGridCellProperties;
   geometry: {
-    type: 'Polygon';
-    coordinates: number[][][];
+    type: string;
+    coordinates: any;
   };
 }
 
 export interface IndiaGridFeatureCollection {
   type: 'FeatureCollection';
   features: IndiaGridFeature[];
+  wave_contours?: {
+    type: 'FeatureCollection';
+    features: any[];
+  };
+  overview?: IndiaGridOverview;
   metadata: {
     country: string;
     bbox: number[];
     zoom: number;
-    step_deg: number;
+    step_deg?: number;
+    step_degrees?: number;
     cell_count: number;
     time_of_day: string;
     data_status: string;
     generated_at: string;
-    provider: string;
+    provider?: string;
+    last_updated?: string;
+    data_source?: string;
+    data_quality?: string;
+    confidence?: string;
   };
 }
 

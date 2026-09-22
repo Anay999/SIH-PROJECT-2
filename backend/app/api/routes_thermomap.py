@@ -189,6 +189,28 @@ def get_india_thermal_grid(
         )
 
 
+@router.get("/india-boundary")
+def get_india_boundary() -> Dict[str, Any]:
+    """
+    Returns simplified India national border GeoJSON FeatureCollection
+    for subtle, clean state and international boundary rendering in 2D ThermoMap.
+    """
+    import os, json
+    possible_paths = [
+        os.path.join(r"c:\Users\anayp\sih 2nd project", "data", "geojson", "india_boundary_simplified.geojson"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "..", "data", "geojson", "india_boundary_simplified.geojson"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "geojson", "india_boundary_simplified.geojson"),
+        os.path.join(os.getcwd(), "data", "geojson", "india_boundary_simplified.geojson"),
+        os.path.join(os.path.dirname(os.getcwd()), "data", "geojson", "india_boundary_simplified.geojson"),
+    ]
+    for p in possible_paths:
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return json.load(f)
+
+    return {"type": "FeatureCollection", "features": []}
+
+
 @router.get("/3d-command")
 def get_3d_thermal_command_data(
     latitude: float = Query(..., ge=-90.0, le=90.0, description="Center latitude"),
