@@ -389,7 +389,7 @@ export const CitizenPortalPage: React.FC = () => {
 
   // Handle route calculation directly on ThermoMap
   const handleSelectFacilityAndRoute = (facility: RealFacility) => {
-    setSelectedFacility(facility);
+    setSelectedFacility({ ...facility });
     setActiveTab('thermomap'); // Ensure ThermoMap is visible
   };
 
@@ -912,14 +912,22 @@ export const CitizenPortalPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => setActiveTab('nearby_help')}
-                    className="px-2.5 py-1.5 rounded-lg bg-white border border-red-300 hover:bg-red-50 text-red-800 text-[11px] font-bold transition flex items-center gap-1"
+                    onClick={() => {
+                      const nearestCooling = allFacilities.find(f => f.type === 'COOLING_CENTRE') || allFacilities[0];
+                      if (nearestCooling) handleSelectFacilityAndRoute(nearestCooling);
+                      else setActiveTab('nearby_help');
+                    }}
+                    className="px-2.5 py-1.5 rounded-lg bg-white border border-red-300 hover:bg-red-50 text-red-800 text-[11px] font-bold transition flex items-center gap-1 shadow-2xs"
                   >
                     <LifeBuoy className="w-3 h-3 text-emerald-600" />
                     <span>Nearby Shelters</span>
                   </button>
                   <button
-                    onClick={() => setActiveTab('emergency')}
+                    onClick={() => {
+                      const nearestHosp = allFacilities.find(f => f.type === 'HOSPITAL' || f.type === 'EMERGENCY_CENTRE') || allFacilities[0];
+                      if (nearestHosp) handleSelectFacilityAndRoute(nearestHosp);
+                      else setActiveTab('emergency');
+                    }}
                     className="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold transition flex items-center gap-1 shadow-xs"
                   >
                     <Ambulance className="w-3 h-3" />
@@ -1312,14 +1320,22 @@ export const CitizenPortalPage: React.FC = () => {
 
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-red-200">
                     <button
-                      onClick={() => setActiveTab('nearby_help')}
+                      onClick={() => {
+                        const nearestCooling = allFacilities.find(f => f.type === 'COOLING_CENTRE') || allFacilities[0];
+                        if (nearestCooling) handleSelectFacilityAndRoute(nearestCooling);
+                        else setActiveTab('nearby_help');
+                      }}
                       className="px-3 py-2 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
                     >
                       <LifeBuoy className="w-4 h-4 text-emerald-600" />
                       <span>Route to Nearest Cooling Shelter</span>
                     </button>
                     <button
-                      onClick={() => setActiveTab('emergency')}
+                      onClick={() => {
+                        const nearestHosp = allFacilities.find(f => f.type === 'HOSPITAL' || f.type === 'EMERGENCY_CENTRE') || allFacilities[0];
+                        if (nearestHosp) handleSelectFacilityAndRoute(nearestHosp);
+                        else setActiveTab('emergency');
+                      }}
                       className="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
                     >
                       <Ambulance className="w-4 h-4" />
@@ -1734,6 +1750,44 @@ export const CitizenPortalPage: React.FC = () => {
                 <div className="p-3 bg-red-100 rounded-xl border border-red-300 text-red-950 text-[11px]">
                   <strong>Action:</strong> Dial 108 immediately. Immerse in cold water or apply ice packs to armpits/neck.
                 </div>
+              </div>
+            </div>
+
+            {/* Quick Emergency Hospital Navigation on ThermoMap */}
+            <div className="bg-white border border-[#ede7de] rounded-2xl p-5 space-y-3">
+              <span className="text-xs font-bold text-[#1c1917] uppercase tracking-wider block">
+                Nearest Emergency Hospitals with 24/7 Heat Resuscitation
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {allFacilities
+                  .filter(f => f.type === 'HOSPITAL' || f.type === 'EMERGENCY_CENTRE')
+                  .slice(0, 2)
+                  .map(facility => (
+                    <div
+                      key={facility.id}
+                      className="bg-[#faf9f6] border border-[#ede7de] rounded-xl p-3.5 space-y-2 flex flex-col justify-between"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-800">
+                            {facility.type}
+                          </span>
+                          <span className="text-xs font-mono font-bold text-orange-600">
+                            {facility.distance_km} km away
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-[#1c1917]">{facility.name}</h4>
+                        <p className="text-[11px] text-[#57534e]">{facility.address}</p>
+                      </div>
+                      <button
+                        onClick={() => handleSelectFacilityAndRoute(facility)}
+                        className="w-full py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-xs"
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        <span>View & Route on ThermoMap</span>
+                      </button>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>

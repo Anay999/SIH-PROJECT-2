@@ -66,12 +66,10 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
   selectedFacility,
   height = '640px'
 }) => {
-  // Silence unused prop if not needed
-  void selectedFacility;
-
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const destMarkerRef = useRef<maplibregl.Marker | null>(null);
 
   // Authentication & Role Check
   const { user } = useAuth();
@@ -142,7 +140,13 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
 
   // Routing State
   const [isRouting, setIsRouting] = useState<boolean>(false);
-  const [routeSummary, setRouteSummary] = useState<{ distance_km: number; duration_mins: number; summary: string } | null>(null);
+  const [routeSummary, setRouteSummary] = useState<{
+    distance_km: number;
+    duration_mins: number;
+    summary: string;
+    destCoords?: [number, number];
+    destType?: string;
+  } | null>(null);
 
   // Dynamic Date Formatting
   const currentDateFormatted = new Date().toLocaleDateString('en-US', {
@@ -320,8 +324,15 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     markerEl.style.boxShadow = '0 0 16px rgba(234, 88, 12, 0.9)';
     markerEl.style.cursor = 'pointer';
 
+    const userPopup = new maplibregl.Popup({ offset: 14, closeButton: false }).setHTML(
+      `<div style="font-family: sans-serif; font-size: 11px; font-weight: bold; color: #1c1917; padding: 4px 6px; text-align: center;">
+        📍 Starting Point (Your Initial Location)
+      </div>`
+    );
+
     const userMarker = new maplibregl.Marker({ element: markerEl })
       .setLngLat([longitude, latitude])
+      .setPopup(userPopup)
       .addTo(map);
 
     userMarkerRef.current = userMarker;
@@ -460,8 +471,8 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         source: 'emergency-route',
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': '#7f1d1d',
-          'line-width': 7.5,
+          'line-color': '#0f172a',
+          'line-width': 8.5,
           'line-opacity': 0.95
         }
       });
@@ -472,9 +483,22 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
         source: 'emergency-route',
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: {
-          'line-color': '#ea580c',
-          'line-width': 4.0,
+          'line-color': '#0284c7',
+          'line-width': 5.0,
           'line-opacity': 1.0
+        }
+      });
+
+      map.addLayer({
+        id: 'emergency-route-pulse',
+        type: 'line',
+        source: 'emergency-route',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2.0,
+          'line-opacity': 0.95,
+          'line-dasharray': [2, 2]
         }
       });
 
@@ -502,16 +526,38 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
           onSelectFacility(props);
         }
         const coords = (feat.geometry as any).coordinates as [number, number];
-        triggerRoutingToCoords(coords[1], coords[0], props.name);
+        triggerRoutingToCoords(coords[1], coords[0], props.name, props);
       });
 
-      // Initial Data Ingestion: Default is Pan-India Grid with auto-aligned borders
-      loadIndiaGridData(timeOfDay);
+      // Initial Data Ingestion: Check if selectedFacility was provided
+      if (selectedFacility) {
+        const destLat =
+          (selectedFacility as any).latitude ??
+          (selectedFacility as any).lat ??
+          ((selectedFacility as any).geometry?.coordinates ? (selectedFacility as any).geometry.coordinates[1] : undefined);
+        const destLon =
+          (selectedFacility as any).longitude ??
+          (selectedFacility as any).lon ??
+          ((selectedFacility as any).geometry?.coordinates ? (selectedFacility as any).geometry.coordinates[0] : undefined);
+        const destName = (selectedFacility as any).name || (selectedFacility as any).facility_name || 'Emergency Facility';
+
+        if (destLat !== undefined && destLon !== undefined) {
+          triggerRoutingToCoords(destLat, destLon, destName, selectedFacility);
+        } else {
+          loadIndiaGridData(timeOfDay);
+        }
+      } else {
+        loadIndiaGridData(timeOfDay);
+      }
     });
 
     mapRef.current = map;
 
     return () => {
+      if (destMarkerRef.current) {
+        destMarkerRef.current.remove();
+        destMarkerRef.current = null;
+      }
       map.remove();
       mapRef.current = null;
     };
@@ -581,22 +627,126 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     }
   };
 
+  // Zoom / Fit bounds to the active route from initial location
+  const zoomToActiveRoute = (routeCoords?: [number, number][], destLat?: number, destLon?: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.resize();
+
+    let minLon = longitude;
+    let maxLon = longitude;
+    let minLat = latitude;
+    let maxLat = latitude;
+
+    if (destLat !== undefined && destLon !== undefined) {
+      minLon = Math.min(minLon, destLon);
+      maxLon = Math.max(maxLon, destLon);
+      minLat = Math.min(minLat, destLat);
+      maxLat = Math.max(maxLat, destLat);
+    }
+
+    if (routeCoords && routeCoords.length > 0) {
+      for (const [rLon, rLat] of routeCoords) {
+        if (rLon < minLon) minLon = rLon;
+        if (rLon > maxLon) maxLon = rLon;
+        if (rLat < minLat) minLat = rLat;
+        if (rLat > maxLat) maxLat = rLat;
+      }
+    }
+
+    if (Math.abs(minLon - maxLon) < 0.001) {
+      minLon -= 0.006;
+      maxLon += 0.006;
+    }
+    if (Math.abs(minLat - maxLat) < 0.001) {
+      minLat -= 0.006;
+      maxLat += 0.006;
+    }
+
+    map.fitBounds(
+      [
+        [minLon, minLat],
+        [maxLon, maxLat]
+      ],
+      {
+        padding: { top: 110, bottom: 90, left: 90, right: 90 },
+        maxZoom: 16.0,
+        duration: 1200
+      }
+    );
+  };
+
   // Routing Trigger
-  const triggerRoutingToCoords = async (destLat: number, destLon: number, destName: string) => {
+  const triggerRoutingToCoords = async (
+    destLat: number,
+    destLon: number,
+    destName: string,
+    facilityData?: any
+  ) => {
     setIsRouting(true);
+    setIsIndiaGridMode(false);
     try {
       const routeData = await fetchEmergencyRoute(latitude, longitude, destLat, destLon);
       const map = mapRef.current;
       if (map) {
+        map.resize();
+
+        // 1. Update GeoJSON route source
         const routeSource = map.getSource('emergency-route') as maplibregl.GeoJSONSource | undefined;
         if (routeSource) {
           routeSource.setData(routeData as any);
         }
+
+        // 2. Add / Update destination marker
+        if (destMarkerRef.current) {
+          destMarkerRef.current.remove();
+          destMarkerRef.current = null;
+        }
+
+        const isHospital =
+          facilityData?.type === 'HOSPITAL' ||
+          facilityData?.type === 'EMERGENCY_CENTRE' ||
+          facilityData?.amenity === 'hospital' ||
+          destName.toLowerCase().includes('hospital');
+
+        const destEl = document.createElement('div');
+        destEl.className = 'thermo-dest-marker';
+        destEl.innerHTML = `
+          <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35));">
+            <div style="background: ${isHospital ? '#dc2626' : '#0284c7'}; color: white; padding: 5px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; border: 2.5px solid white; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+              <span>${isHospital ? '🏥' : '❄️'}</span>
+              <span style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${destName}</span>
+            </div>
+            <div style="width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid ${isHospital ? '#dc2626' : '#0284c7'};"></div>
+          </div>
+        `;
+
+        const destMarker = new maplibregl.Marker({ element: destEl, anchor: 'bottom' })
+          .setLngLat([destLon, destLat])
+          .addTo(map);
+
+        destMarkerRef.current = destMarker;
+
+        // 3. Ensure user initial location marker is updated
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setLngLat([longitude, latitude]);
+        }
+
+        // 4. Fit bounds to the route from initial location
+        const coords = (routeData.geometry && routeData.geometry.coordinates) || [];
+        zoomToActiveRoute(coords as [number, number][], destLat, destLon);
+
+        // 5. Load localized street/ward thermal grid in that vicinity
+        loadThermoMapData(latitude, longitude, 8, timeOfDay);
       }
+
       setRouteSummary({
         distance_km: routeData.properties.distance_km,
         duration_mins: routeData.properties.duration_minutes,
-        summary: destName
+        summary: destName,
+        destCoords: [destLat, destLon],
+        destType: facilityData?.type || (destName.toLowerCase().includes('hospital') ? 'HOSPITAL' : 'COOLING_CENTRE')
       });
     } catch (err) {
       console.error('Routing failed:', err);
@@ -604,6 +754,68 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
       setIsRouting(false);
     }
   };
+
+  const handleClearRoute = () => {
+    setRouteSummary(null);
+    if (destMarkerRef.current) {
+      destMarkerRef.current.remove();
+      destMarkerRef.current = null;
+    }
+    const map = mapRef.current;
+    if (map) {
+      const routeSource = map.getSource('emergency-route') as maplibregl.GeoJSONSource | undefined;
+      if (routeSource) {
+        routeSource.setData({
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'LineString', coordinates: [] }
+        });
+      }
+      map.flyTo({
+        center: [longitude, latitude],
+        zoom: 13.5,
+        essential: true
+      });
+    }
+    if (onSelectFacility) {
+      onSelectFacility(null as any);
+    }
+  };
+
+  // Watch selectedFacility prop changes dynamically
+  useEffect(() => {
+    if (!selectedFacility) {
+      if (routeSummary) {
+        handleClearRoute();
+      }
+      return;
+    }
+
+    const destLat =
+      (selectedFacility as any).latitude ??
+      (selectedFacility as any).lat ??
+      ((selectedFacility as any).geometry?.coordinates ? (selectedFacility as any).geometry.coordinates[1] : undefined);
+    const destLon =
+      (selectedFacility as any).longitude ??
+      (selectedFacility as any).lon ??
+      ((selectedFacility as any).geometry?.coordinates ? (selectedFacility as any).geometry.coordinates[0] : undefined);
+    const destName = (selectedFacility as any).name || (selectedFacility as any).facility_name || 'Emergency Facility';
+
+    if (destLat !== undefined && destLon !== undefined) {
+      const runRouting = () => {
+        triggerRoutingToCoords(destLat, destLon, destName, selectedFacility);
+      };
+
+      const map = mapRef.current;
+      if (map) {
+        if (map.isStyleLoaded()) {
+          runRouting();
+        } else {
+          map.once('load', runRouting);
+        }
+      }
+    }
+  }, [selectedFacility, latitude, longitude]);
 
   // Recenter / Location Navigation
   const handleRecenter = () => {
@@ -1346,6 +1558,59 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
               <span>Confidence:</span>
               <strong className="text-emerald-600 font-bold">High (Live Observation)</strong>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* 7. ACTIVE NAVIGATION ROUTE HUD BANNER                    */}
+      {/* ======================================================== */}
+      {routeSummary && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 w-[94%] sm:w-auto max-w-xl bg-slate-900/95 backdrop-blur-md text-white border border-orange-500/50 rounded-2xl p-3.5 shadow-2xl animate-in fade-in slide-in-from-top-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
+              routeSummary.destType === 'HOSPITAL'
+                ? 'bg-gradient-to-tr from-red-600 to-rose-500 shadow-red-600/30'
+                : 'bg-gradient-to-tr from-cyan-600 to-blue-500 shadow-cyan-600/30'
+            }`}>
+              <Navigation className="w-5 h-5 text-white animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] uppercase font-black tracking-wider text-orange-400 bg-orange-950/80 px-2 py-0.5 rounded border border-orange-500/30">
+                  Active Route from Initial Location
+                </span>
+                <span className="text-[10px] text-slate-300 font-mono font-bold">
+                  {routeSummary.distance_km} km • ~{routeSummary.duration_mins} mins
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-white truncate max-w-sm sm:max-w-md">
+                {routeSummary.summary}
+              </h4>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <button
+              onClick={() => {
+                if (routeSummary.destCoords) {
+                  zoomToActiveRoute([], routeSummary.destCoords[0], routeSummary.destCoords[1]);
+                }
+              }}
+              title="Fit map view to route"
+              className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-bold transition flex items-center gap-1 border border-white/10"
+            >
+              <Compass className="w-3.5 h-3.5 text-orange-400" />
+              <span>Fit Route</span>
+            </button>
+            <button
+              onClick={handleClearRoute}
+              title="Clear active route"
+              className="px-2.5 py-1.5 rounded-xl bg-red-600/20 hover:bg-red-600/40 text-red-300 hover:text-white text-xs font-bold transition flex items-center gap-1 border border-red-500/30"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Clear</span>
+            </button>
           </div>
         </div>
       )}
