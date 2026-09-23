@@ -66,32 +66,34 @@ export const AlertsPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans pb-12">
       {/* Top Header & Workflow Explanation */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-command-border pb-4">
+      <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-blue-400" />
-              Municipal Action Plan & Operational Workflow
+            <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center">
+              <ClipboardList className="w-5 h-5 text-orange-600" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              Municipal Heat Action Plan & Departmental Workflow
             </h1>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30 font-semibold">
-              DECISION WORKSPACE
+            <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-300 font-bold tracking-wide">
+              HAP DIRECTIVES & TRIAGE
             </span>
           </div>
-          <p className="text-xs text-command-muted mt-1 max-w-3xl leading-relaxed">
-            Authorized municipal action management. Heat recommendations follow a formal accountability lifecycle from <strong>Suggested → Under Review → Approved → In Progress → Completed</strong>. Every decision is audited.
+          <p className="text-xs text-slate-500 mt-1 max-w-3xl leading-relaxed">
+            Authorized municipal action management. Heat recommendations follow a formal accountability lifecycle from <strong>Suggested → Under Review → Approved → In Progress → Completed</strong>. Every departmental decision is audited.
           </p>
         </div>
 
         <div className="flex items-center gap-3 text-xs font-mono">
-          <div className="px-3 py-1.5 rounded-lg bg-command-card border border-command-border flex items-center gap-2">
-            <span className="text-command-muted">Pending Review:</span>
-            <strong className="text-amber-400">{pendingCount}</strong>
-            <span className="text-slate-600">|</span>
-            <span className="text-command-muted">Active:</span>
-            <strong className="text-blue-400">{approvedCount}</strong>
-            <span className="text-slate-600">|</span>
-            <span className="text-command-muted">Completed:</span>
-            <strong className="text-emerald-400">{completedCount}</strong>
+          <div className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-2">
+            <span className="text-slate-500">Pending Review:</span>
+            <strong className="text-amber-700 font-bold">{pendingCount}</strong>
+            <span className="text-slate-300">|</span>
+            <span className="text-slate-500">Active:</span>
+            <strong className="text-blue-700 font-bold">{approvedCount}</strong>
+            <span className="text-slate-300">|</span>
+            <span className="text-slate-500">Completed:</span>
+            <strong className="text-emerald-700 font-bold">{completedCount}</strong>
           </div>
           <DataStatus status="Synthetic demonstration data" />
         </div>

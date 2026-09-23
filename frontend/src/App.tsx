@@ -14,6 +14,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { LiveHeatMapPage } from './pages/LiveHeatMapPage';
 import { ForecastPage } from './pages/ForecastPage';
 import { AlertsPage } from './pages/AlertsPage';
+import { AlertManagementPage } from './pages/AlertManagementPage';
 import { CoolingCentersPage } from './pages/CoolingCentersPage';
 import { HospitalReadinessPage } from './pages/HospitalReadinessPage';
 import { SimulationPage } from './pages/SimulationPage';
@@ -92,10 +93,13 @@ export const App: React.FC = () => {
                 <Route path="priority-areas" element={<VulnerabilityPage />} />
                 <Route path="vulnerability" element={<VulnerabilityPage />} />
 
-                {/* 4. Action Plan */}
-                <Route path="action-plan" element={<AlertsPage />} />
-                <Route path="alerts" element={<AlertsPage />} />
+                {/* 4. Alert Management (Emergency Broadcasts & Warnings) */}
+                <Route path="alerts" element={<AlertManagementPage />} />
+                <Route path="alert-management" element={<AlertManagementPage />} />
+
+                {/* 5. Heat Action Plan (HAP Workflow & Departmental Directives) */}
                 <Route path="heat-action-plan" element={<AlertsPage />} />
+                <Route path="action-plan" element={<AlertsPage />} />
 
                 {/* 5. Cooling & Resources */}
                 <Route path="cooling-resources" element={<CoolingCentersPage />} />
