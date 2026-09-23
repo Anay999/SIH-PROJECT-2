@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.models.weather import WeatherObservation
 from app.models.city_ward import Ward
 from app.engines.forecast_provider import DeterministicDemoForecastProvider
+from app.services.open_meteo_service import OpenMeteoWeatherService
 
 router = APIRouter(tags=["Weather & Forecast"])
 
@@ -94,3 +95,24 @@ def get_forecast(
     forecast_data["ward_number"] = target_ward.ward_number if target_ward else ""
 
     return unified_response(forecast_data)
+
+
+@router.get("/weather/live")
+def get_live_weather(
+    lat: float = Query(13.0827, description="Device GPS latitude"),
+    lon: float = Query(80.2707, description="Device GPS longitude"),
+):
+    """
+    Retrieves validated live meteorological observations from Open-Meteo
+    for the exact coordinates of the device, computing physical thermal metrics
+    (WBGT, UTCI, Heat Index, HTSI) with real observation timestamps.
+    """
+    try:
+        live_data = OpenMeteoWeatherService.get_current_weather_sync(lat, lon)
+        return unified_response(live_data)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Live meteorological observation service temporarily unreachable: {str(exc)}"
+        )
+

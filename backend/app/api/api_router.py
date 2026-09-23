@@ -18,6 +18,7 @@ from app.api.routes_notifications import router as notifications_router
 from app.api.routes_system_monitor import router as system_monitor_router
 from app.api.routes_admin import router as admin_router
 from app.api.routes_thermomap import router as thermomap_router
+from app.api.routes_community import router as community_router
 
 api_router = APIRouter()
 
@@ -85,3 +86,5 @@ api_router.include_router(notifications_router)
 api_router.include_router(system_monitor_router)
 api_router.include_router(admin_router)
 api_router.include_router(thermomap_router)
+api_router.include_router(community_router)
+

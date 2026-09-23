@@ -16,7 +16,8 @@ import {
   Activity,
   ChevronRight,
   Layers,
-  Map as MapIcon
+  Map as MapIcon,
+  Megaphone
 } from 'lucide-react';
 import { useWorkspace, type MunicipalAction } from '../context/WorkspaceContext';
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +33,20 @@ const coolingCenterIcon = L.divIcon({
 const hospitalMarkerIcon = L.divIcon({
   className: 'custom-hospital-marker',
   html: `<div style="background-color: #dc2626; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(220,38,38,0.6); border: 2px solid white; font-weight: 900; font-size: 13px;">+</div>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
+
+const waterPointIcon = L.divIcon({
+  className: 'custom-water-marker',
+  html: `<div style="background-color: #0891b2; color: #ffffff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(8,145,178,0.6); border: 2px solid white; font-weight: 900; font-size: 11px;">💧</div>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
+
+const schoolIcon = L.divIcon({
+  className: 'custom-school-marker',
+  html: `<div style="background-color: #059669; color: #ffffff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(5,150,105,0.6); border: 2px solid white; font-weight: 900; font-size: 11px;">🏫</div>`,
   iconSize: [24, 24],
   iconAnchor: [12, 12]
 });
@@ -68,6 +83,11 @@ export const OverviewPage: React.FC = () => {
 
   const [geoJsonData, setGeoJsonData] = useState<GeoJsonObject | null>(null);
   const [facilities, setFacilities] = useState<any>({ cooling_centers: [], hospitals: [] });
+  const [waterPoints, setWaterPoints] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [communityReports, setCommunityReports] = useState<any[]>([]);
+  const [reportFilter, setReportFilter] = useState<string>('ALL');
+  const [updatingReportId, setUpdatingReportId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   // Map Basemap mode - SATELLITE DEFAULT
@@ -76,6 +96,12 @@ export const OverviewPage: React.FC = () => {
   // Single active dominant layer on Overview
   const [activeLayer, setActiveLayer] = useState<'heat' | 'priority' | 'cooling'>('heat');
 
+  // Facilities visibility toggles
+  const [showCooling, setShowCooling] = useState<boolean>(true);
+  const [showHospitals, setShowHospitals] = useState<boolean>(true);
+  const [showWater, setShowWater] = useState<boolean>(true);
+  const [showSchools, setShowSchools] = useState<boolean>(true);
+
   // Review Modal State
   const [reviewAction, setReviewAction] = useState<MunicipalAction | null>(null);
 
@@ -83,18 +109,33 @@ export const OverviewPage: React.FC = () => {
     const loadGis = async () => {
       try {
         setLoading(true);
-        const [wardsRes, facRes] = await Promise.all([
-          fetch('http://127.0.0.1:8000/api/gis/wards'),
-          fetch('http://127.0.0.1:8000/api/gis/facilities'),
+        const [wardsRes, facRes, wpRes, schRes, repRes] = await Promise.all([
+          fetch('http://127.0.0.1:8000/api/gis/wards').catch(() => null),
+          fetch('http://127.0.0.1:8000/api/gis/facilities').catch(() => null),
+          fetch('/api/community/water-points').catch(() => null),
+          fetch('/api/community/schools').catch(() => null),
+          fetch('/api/community/reports').catch(() => null),
         ]);
 
-        if (wardsRes.ok) {
+        if (wardsRes && wardsRes.ok) {
           const wData = await wardsRes.json();
           setGeoJsonData(wData);
         }
-        if (facRes.ok) {
+        if (facRes && facRes.ok) {
           const fData = await facRes.json();
           setFacilities(fData);
+        }
+        if (wpRes && wpRes.ok) {
+          const wpData = await wpRes.json();
+          setWaterPoints(wpData.data || []);
+        }
+        if (schRes && schRes.ok) {
+          const schData = await schRes.json();
+          setSchools(schData.data || []);
+        }
+        if (repRes && repRes.ok) {
+          const repData = await repRes.json();
+          setCommunityReports(repData.data || []);
         }
       } catch (err) {
         console.warn('Overview GIS load error, using default context', err);
@@ -104,6 +145,30 @@ export const OverviewPage: React.FC = () => {
     };
     loadGis();
   }, []);
+
+  const handleUpdateReportStatus = async (reportId: string, newStatus: string) => {
+    setUpdatingReportId(reportId);
+    try {
+      const res = await fetch(`/api/community/reports/${reportId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          notes: `Status updated to ${newStatus} by Municipal Health Officer at ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+        })
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setCommunityReports(prev =>
+          prev.map(r => r.id === reportId ? { ...r, status: newStatus, status_notes: json.data?.status_notes || r.status_notes } : r)
+        );
+      }
+    } catch (err) {
+      console.error('Failed to update report status:', err);
+    } finally {
+      setUpdatingReportId(null);
+    }
+  };
 
   const defaultCenter: [number, number] = [
     cityProfile?.coordinates?.lat || 13.045,
@@ -387,7 +452,7 @@ export const OverviewPage: React.FC = () => {
           </div>
 
           {/* Map Layer Controls */}
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             {/* Basemap Toggle - SATELLITE FIRST */}
             <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 shadow-xs">
               <button
@@ -427,6 +492,54 @@ export const OverviewPage: React.FC = () => {
                 <option value="cooling">Layer: Cooling Deficit</option>
               </select>
             </div>
+
+            {/* Facilities Visibility Toggles */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => setShowCooling(p => !p)}
+                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
+                  showCooling ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Toggle Cooling Centers"
+              >
+                <span>❄</span>
+                <span>Cooling</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowHospitals(p => !p)}
+                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
+                  showHospitals ? 'bg-red-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Toggle Hospitals"
+              >
+                <span>+</span>
+                <span>Hospitals</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowWater(p => !p)}
+                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
+                  showWater ? 'bg-cyan-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Toggle Public Water Points"
+              >
+                <span>💧</span>
+                <span>Water</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSchools(p => !p)}
+                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
+                  showSchools ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Toggle School Heat Safety"
+              >
+                <span>🏫</span>
+                <span>Schools</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -459,7 +572,7 @@ export const OverviewPage: React.FC = () => {
               )}
 
               {/* Cooling Centers Pins */}
-              {facilities.cooling_centers?.map((cc: any) => (
+              {showCooling && facilities.cooling_centers?.map((cc: any) => (
                 <Marker key={cc.id} position={[cc.latitude, cc.longitude]} icon={coolingCenterIcon}>
                   <Popup>
                     <div className="text-xs font-sans text-slate-900 p-1">
@@ -474,7 +587,7 @@ export const OverviewPage: React.FC = () => {
               ))}
 
               {/* Hospital Pins */}
-              {facilities.hospitals?.map((h: any) => (
+              {showHospitals && facilities.hospitals?.map((h: any) => (
                 <Marker key={h.id} position={[h.latitude, h.longitude]} icon={hospitalMarkerIcon}>
                   <Popup>
                     <div className="text-xs font-sans text-slate-900 p-1">
@@ -482,6 +595,52 @@ export const OverviewPage: React.FC = () => {
                       <p className="text-[11px] text-slate-600">{h.type}</p>
                       <p className="text-[10px] font-mono text-rose-700 mt-1 font-semibold">
                         ICU Beds: {h.icu_beds} | Total Beds: {h.total_beds}
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {/* Drinking Water Point Pins */}
+              {showWater && waterPoints.map((wp: any) => (
+                <Marker key={wp.id} position={[wp.latitude, wp.longitude]} icon={waterPointIcon}>
+                  <Popup>
+                    <div className="text-xs font-sans text-slate-900 p-1">
+                      <div className="flex items-center gap-1 text-cyan-700 font-bold">
+                        <span>💧</span>
+                        <strong>{wp.name}</strong>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5">{wp.address}</p>
+                      <p className="text-[10px] text-slate-500 font-mono">{wp.ward} · {wp.type?.replace(/_/g, ' ')}</p>
+                      <div className="mt-1 flex items-center justify-between gap-1 text-[10px] font-mono">
+                        <span className={`px-1.5 py-0.2 rounded font-bold ${
+                          wp.operational_status === 'OPERATIONAL' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {wp.operational_status}
+                        </span>
+                        <span className="text-cyan-700 font-bold">{wp.daily_capacity_liters}L/day</span>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+
+              {/* School Heat Safety Pins */}
+              {showSchools && schools.map((sch: any) => (
+                <Marker key={sch.id} position={[sch.latitude, sch.longitude]} icon={schoolIcon}>
+                  <Popup>
+                    <div className="text-xs font-sans text-slate-900 p-1">
+                      <div className="flex items-center gap-1 text-emerald-700 font-bold">
+                        <span>🏫</span>
+                        <strong>{sch.name}</strong>
+                      </div>
+                      <p className="text-[11px] text-slate-600 mt-0.5">{sch.address}</p>
+                      <p className="text-[10px] text-slate-500 font-mono">{sch.ward} · {sch.category}</p>
+                      <div className="mt-1.5 p-1 rounded bg-amber-50 border border-amber-200 text-[10px] text-amber-900">
+                        <strong>Heat Protocol:</strong> {sch.heat_action_protocol}
+                      </div>
+                      <p className="text-[10px] text-slate-600 mt-1 font-mono">
+                        Students: {sch.total_students} | AC: {sch.ac_classrooms ? 'Yes' : 'No'}
                       </p>
                     </div>
                   </Popup>
@@ -645,6 +804,157 @@ export const OverviewPage: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* SECTION 4.5: CITIZEN HEAT & INFRASTRUCTURE REPORTS           */}
+      {/* ============================================================ */}
+      <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-amber-600" />
+              <h2 className="text-base font-bold text-slate-900 tracking-tight font-sans">
+                Citizen Heat & Infrastructure Reports ({cityProfile.name})
+              </h2>
+              {communityReports.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  {communityReports.filter(r => r.status !== 'RESOLVED').length} Active
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              Field reports submitted by citizens regarding broken water kiosks, extreme unshaded work sites, and cooling shelter deficits.
+            </p>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {['ALL', 'PENDING', 'UNDER_REVIEW', 'ACTION_INITIATED', 'RESOLVED'].map(filterStatus => {
+              const count = filterStatus === 'ALL'
+                ? communityReports.length
+                : communityReports.filter(r => r.status === filterStatus).length;
+              const label = filterStatus === 'ALL' ? 'All'
+                : filterStatus === 'PENDING' ? 'Pending'
+                : filterStatus === 'UNDER_REVIEW' ? 'Verified'
+                : filterStatus === 'ACTION_INITIATED' ? 'Relief Dispatched'
+                : 'Resolved';
+              return (
+                <button
+                  key={filterStatus}
+                  onClick={() => setReportFilter(filterStatus)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                    reportFilter === filterStatus
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <span>{label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    reportFilter === filterStatus ? 'bg-white/30 text-white' : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Reports Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {communityReports
+            .filter(r => reportFilter === 'ALL' || r.status === reportFilter)
+            .map((report) => (
+              <div
+                key={report.id}
+                className="bg-[#faf9f6] border border-[#ede7de] hover:border-amber-400 rounded-2xl p-4.5 space-y-3 transition flex flex-col justify-between shadow-2xs"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-200">
+                      {report.category}
+                    </span>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                        report.severity === 'CRITICAL'
+                          ? 'bg-red-100 text-red-800 border border-red-200'
+                          : report.severity === 'HIGH'
+                          ? 'bg-orange-100 text-orange-800 border border-orange-200'
+                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
+                      }`}
+                    >
+                      {report.severity}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                    {report.description}
+                  </p>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-[#ede7de] text-[11px] space-y-1 text-slate-600">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 font-medium">Location:</span>
+                      <strong className="text-slate-800 font-semibold">{report.ward}</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500 font-medium">Reporter:</span>
+                      <span className="text-slate-700">{report.reporter_name}</span>
+                    </div>
+                    {report.status_notes && (
+                      <div className="pt-1 border-t border-slate-100 text-amber-900 font-medium text-[10px]">
+                        <strong>Officer Note:</strong> {report.status_notes}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Indicator & Action Buttons */}
+                <div className="pt-2 border-t border-slate-200/80 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[10px] font-mono text-slate-500">Status:</span>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                        report.status === 'RESOLVED'
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : report.status === 'ACTION_INITIATED'
+                          ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                          : report.status === 'UNDER_REVIEW'
+                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                          : 'bg-amber-100 text-amber-900 border border-amber-300'
+                      }`}
+                    >
+                      {report.status.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 text-[11px]">
+                    <button
+                      disabled={updatingReportId === report.id || report.status === 'UNDER_REVIEW'}
+                      onClick={() => handleUpdateReportStatus(report.id, 'UNDER_REVIEW')}
+                      className="px-2 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold border border-blue-200 transition disabled:opacity-40"
+                    >
+                      Verify
+                    </button>
+                    <button
+                      disabled={updatingReportId === report.id || report.status === 'ACTION_INITIATED'}
+                      onClick={() => handleUpdateReportStatus(report.id, 'ACTION_INITIATED')}
+                      className="px-2 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold border border-orange-200 transition disabled:opacity-40"
+                    >
+                      Dispatch
+                    </button>
+                    <button
+                      disabled={updatingReportId === report.id || report.status === 'RESOLVED'}
+                      onClick={() => handleUpdateReportStatus(report.id, 'RESOLVED')}
+                      className="px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 transition disabled:opacity-40"
+                    >
+                      Resolve
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
         </div>
       </section>
 
