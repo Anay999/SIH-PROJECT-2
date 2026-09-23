@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { getStoredSession, createEvaluatorDemoSession, logoutUser, type OtpVerifyResponse } from '../services/authApi';
 import { getCityProfile } from '../data/cities';
+import { findNearestMunicipality } from '../utils/geoMunicipality';
 
 export type TimeScrubberStep = 'PAST' | 'NOW' | 'FORECAST';
 export type MapBasemap = 'satellite' | 'dark' | 'street';
@@ -104,7 +105,11 @@ interface WorkspaceContextType {
   setActiveCity: (city: string) => void;
   isLiveGpsActive: boolean;
   liveGpsCoords: { lat: number; lon: number } | null;
+  setLiveGpsCoords: (coords: { lat: number; lon: number } | null) => void;
   toggleLiveGps: () => void;
+  assignMunicipalityFromGps: (lat: number, lon: number) => import('../data/cities').CityJurisdiction;
+  isGpsAutoAssigned: boolean;
+  setIsGpsAutoAssigned: (v: boolean) => void;
   cityProfile: import('../data/cities').CityJurisdiction;
 
   // Auth & Session
@@ -178,34 +183,54 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeCity, setActiveCityState] = useState<string>(() => localStorage.getItem('heatshield_active_city') || 'Chennai');
   const [isLiveGpsActive, setIsLiveGpsActive] = useState<boolean>(false);
   const [liveGpsCoords, setLiveGpsCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [isGpsAutoAssigned, setIsGpsAutoAssigned] = useState<boolean>(false);
 
   const cityProfile = getCityProfile(activeCity);
 
   const setActiveCity = useCallback((c: string) => {
     setActiveCityState(c);
+    setIsGpsAutoAssigned(false);
     localStorage.setItem('heatshield_active_city', c);
+  }, []);
+
+  const assignMunicipalityFromGps = useCallback((lat: number, lon: number) => {
+    const match = findNearestMunicipality(lat, lon);
+    setActiveCityState(match.city.name);
+    setIsGpsAutoAssigned(true);
+    localStorage.setItem('heatshield_active_city', match.city.name);
+    return match.city;
   }, []);
 
   const toggleLiveGps = useCallback(() => {
     if (isLiveGpsActive) {
       setIsLiveGpsActive(false);
       setLiveGpsCoords(null);
+      setIsGpsAutoAssigned(false);
     } else {
       if (typeof navigator !== 'undefined' && navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             setIsLiveGpsActive(true);
             setLiveGpsCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+            const match = findNearestMunicipality(pos.coords.latitude, pos.coords.longitude);
+            setActiveCityState(match.city.name);
+            setIsGpsAutoAssigned(true);
           },
           (err) => {
             console.warn('Live GPS fallback:', err);
             setIsLiveGpsActive(true);
             setLiveGpsCoords({ lat: 13.0827, lon: 80.2707 });
+            const match = findNearestMunicipality(13.0827, 80.2707);
+            setActiveCityState(match.city.name);
+            setIsGpsAutoAssigned(true);
           }
         );
       } else {
         setIsLiveGpsActive(true);
         setLiveGpsCoords({ lat: 13.0827, lon: 80.2707 });
+        const match = findNearestMunicipality(13.0827, 80.2707);
+        setActiveCityState(match.city.name);
+        setIsGpsAutoAssigned(true);
       }
     }
   }, [isLiveGpsActive]);
@@ -353,7 +378,11 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setActiveCity,
         isLiveGpsActive,
         liveGpsCoords,
+        setLiveGpsCoords,
         toggleLiveGps,
+        assignMunicipalityFromGps,
+        isGpsAutoAssigned,
+        setIsGpsAutoAssigned,
         cityProfile,
         authSession,
         setAuthSession,

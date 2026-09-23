@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useAuth } from '../../context/AuthContext';
+import { CITIES_REGISTRY } from '../../data/cities';
 
 interface TopHeaderProps {
   health?: any;
@@ -19,7 +20,10 @@ interface TopHeaderProps {
 export const TopHeader: React.FC<TopHeaderProps> = () => {
   const {
     activityFeed,
-    cityProfile
+    activeCity,
+    setActiveCity,
+    toggleLiveGps,
+    isLiveGpsActive
   } = useWorkspace();
   const { user, logout } = useAuth();
 
@@ -60,10 +64,34 @@ export const TopHeader: React.FC<TopHeaderProps> = () => {
             <span>Emergency Route</span>
           </Link>
 
-          {/* Location Indicator */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 font-medium">
+          {/* Officer Municipality Selector */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 text-xs shadow-2xs">
             <MapPin className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-            <span className="font-semibold text-slate-800">{cityProfile?.name || 'India Command'}</span>
+            <span className="font-bold text-[10px] text-slate-500 uppercase hidden sm:inline">Municipality:</span>
+            <select
+              value={activeCity}
+              onChange={(e) => setActiveCity(e.target.value)}
+              className="bg-transparent font-bold text-slate-800 text-xs focus:outline-none cursor-pointer pr-1"
+              title="Officer Manual Jurisdiction Selection"
+            >
+              {CITIES_REGISTRY.map((c) => (
+                <option key={c.id} value={c.name} className="text-slate-800 font-medium">
+                  {c.name} ({c.state})
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={toggleLiveGps}
+              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition ${
+                isLiveGpsActive
+                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                  : 'bg-white hover:bg-slate-200 text-slate-600 border border-slate-300'
+              }`}
+              title="Toggle Officer GPS Detection"
+            >
+              {isLiveGpsActive ? 'GPS ON' : 'GPS'}
+            </button>
           </div>
 
           {/* Activity Feed Toggle */}

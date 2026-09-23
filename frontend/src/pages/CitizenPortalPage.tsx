@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { getFacilitiesForCity, type RealFacility } from '../data/realFacilities';
+import { type RealFacility } from '../data/realFacilities';
+import {
+  getMunicipalityFacilities,
+  GPS_PLACE_PRESETS,
+  type PlacePreset,
+  type FacilityWithLiveDistance
+} from '../utils/geoMunicipality';
 import { ThermoMap } from '../components/thermomap/ThermoMap';
 import {
   ResponsiveContainer,
@@ -43,7 +49,9 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
-  Briefcase
+  Briefcase,
+  LocateFixed,
+  Radio
 } from 'lucide-react';
 
 export type CitizenUserType = 'citizen' | 'worker';
@@ -62,7 +70,14 @@ export interface HeatRecommendationItem {
 
 export const CitizenPortalPage: React.FC = () => {
   const { user, logout } = useAuth();
-  const { cityProfile, isLiveGpsActive, liveGpsCoords, toggleLiveGps } = useWorkspace();
+  const {
+    cityProfile,
+    isLiveGpsActive,
+    liveGpsCoords,
+    toggleLiveGps,
+    setLiveGpsCoords,
+    assignMunicipalityFromGps
+  } = useWorkspace();
 
   // Active navigation view (9 specific User Dashboard views)
   const [activeTab, setActiveTab] = useState<
@@ -85,17 +100,18 @@ export const CitizenPortalPage: React.FC = () => {
     setExpandedTriggerId(prev => prev === id ? null : id);
   };
 
-  // Real-time location state
-  const [detectedLocationName, setDetectedLocationName] = useState<string>('Gummidipoondi, Tamil Nadu');
+  // Real-time location & GPS state
+  const [detectedLocationName, setDetectedLocationName] = useState<string>('Chennai Metropolitan Area');
   const [userCoords, setUserCoords] = useState<[number, number]>([
     cityProfile?.coordinates?.lat || 13.0827,
     cityProfile?.coordinates?.lon || 80.2707
   ]);
   const [locationPermissionGranted, setLocationPermissionGranted] = useState<boolean>(false);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('chn-central');
+  const [gpsFeedbackText, setGpsFeedbackText] = useState<string>('Device GPS active · auto-assigning municipality');
 
   // Map state
   const [selectedFacility, setSelectedFacility] = useState<RealFacility | null>(null);
-
 
   // Search filter for help
   const [facilitySearch, setFacilitySearch] = useState<string>('');
@@ -111,17 +127,23 @@ export const CitizenPortalPage: React.FC = () => {
           setUserCoords([lat, lon]);
           setLocationPermissionGranted(true);
 
+          // 1. Analyze device GPS and assign strictly to that municipality only
+          const matched = assignMunicipalityFromGps(lat, lon);
+          setGpsFeedbackText(
+            `Device GPS (${lat.toFixed(3)}°N, ${lon.toFixed(3)}°E) → Strictly Assigned to ${matched.corporation}`
+          );
+
           try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
             if (res.ok) {
               const data = await res.json();
               const addr = data.address || {};
-              const place = addr.suburb || addr.neighbourhood || addr.city_district || addr.city || addr.town || addr.village || 'Detected Region';
-              const state = addr.state || 'India';
+              const place = addr.suburb || addr.neighbourhood || addr.city_district || addr.city || addr.town || addr.village || matched.name;
+              const state = addr.state || matched.state;
               setDetectedLocationName(`${place}, ${state}`);
             }
           } catch {
-            setDetectedLocationName(`Location (${lat.toFixed(3)}°N, ${lon.toFixed(3)}°E)`);
+            setDetectedLocationName(`${matched.name} (${lat.toFixed(3)}°N, ${lon.toFixed(3)}°E)`);
           }
         },
         () => {
@@ -134,15 +156,29 @@ export const CitizenPortalPage: React.FC = () => {
         }
       );
     }
-  }, [cityProfile]);
+  }, []);
 
   // Synchronize when roaming GPS toggle changes in WorkspaceContext
   useEffect(() => {
     if (isLiveGpsActive && liveGpsCoords) {
       setUserCoords([liveGpsCoords.lat, liveGpsCoords.lon]);
-      setDetectedLocationName(`Live GPS Roaming: ${liveGpsCoords.lat.toFixed(3)}°N, ${liveGpsCoords.lon.toFixed(3)}°E`);
+      const matched = assignMunicipalityFromGps(liveGpsCoords.lat, liveGpsCoords.lon);
+      setDetectedLocationName(`Live GPS: ${liveGpsCoords.lat.toFixed(3)}°N, ${liveGpsCoords.lon.toFixed(3)}°E`);
+      setGpsFeedbackText(`GPS Roaming Active → Assigned to ${matched.corporation}`);
     }
-  }, [isLiveGpsActive, liveGpsCoords]);
+  }, [isLiveGpsActive, liveGpsCoords, assignMunicipalityFromGps]);
+
+  // Handle place-to-place roaming simulation (testing GPS place changes)
+  const handleSimulatePlace = (preset: PlacePreset) => {
+    setSelectedPresetId(preset.id);
+    setUserCoords(preset.coordinates);
+    const matched = assignMunicipalityFromGps(preset.coordinates[0], preset.coordinates[1]);
+    setDetectedLocationName(`${preset.name}, ${preset.subArea}`);
+    setLiveGpsCoords({ lat: preset.coordinates[0], lon: preset.coordinates[1] });
+    setGpsFeedbackText(
+      `Device GPS Relocated to ${preset.name} (${preset.coordinates[0]}°N, ${preset.coordinates[1]}°E) → Auto-Assigned to ${matched.corporation}`
+    );
+  };
 
   // Current real-time biometeorological metrics
   const liveMetrics = useMemo(() => {
@@ -366,26 +402,32 @@ export const CitizenPortalPage: React.FC = () => {
     }
   }, [userType, liveMetrics]);
 
-  // Facilities in the user's active municipal jurisdiction
-  const allFacilities = useMemo(() => {
-    return getFacilitiesForCity(cityProfile.id || 'chennai');
-  }, [cityProfile.id]);
+  // Facilities strictly in the user's detected municipality with live GPS distance sorting
+  const municipalityFacilitiesResult = useMemo(() => {
+    return getMunicipalityFacilities(userCoords[0], userCoords[1], cityProfile.id);
+  }, [userCoords, cityProfile.id]);
+
+  const allFacilities = municipalityFacilitiesResult.allFacilities;
+  const coolingCentres = municipalityFacilitiesResult.coolingCentres;
+  const hospitals = municipalityFacilitiesResult.hospitals;
 
   const filteredFacilities = useMemo(() => {
-    return allFacilities.filter(f => {
-      const matchType =
-        facilityTypeFilter === 'all'
-          ? true
-          : facilityTypeFilter === 'hospital'
-          ? f.type === 'HOSPITAL' || f.type === 'EMERGENCY_CENTRE'
-          : f.type === 'COOLING_CENTRE';
-      const matchSearch =
-        f.name.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-        f.ward_name.toLowerCase().includes(facilitySearch.toLowerCase()) ||
-        f.address.toLowerCase().includes(facilitySearch.toLowerCase());
-      return matchType && matchSearch;
-    });
-  }, [allFacilities, facilitySearch, facilityTypeFilter]);
+    let baseList: FacilityWithLiveDistance[] = allFacilities;
+    if (facilityTypeFilter === 'hospital') {
+      baseList = hospitals;
+    } else if (facilityTypeFilter === 'cooling') {
+      baseList = coolingCentres;
+    }
+
+    if (!facilitySearch.trim()) return baseList;
+    const q = facilitySearch.toLowerCase().trim();
+    return baseList.filter(
+      f =>
+        f.name.toLowerCase().includes(q) ||
+        f.ward_name.toLowerCase().includes(q) ||
+        f.address.toLowerCase().includes(q)
+    );
+  }, [allFacilities, coolingCentres, hospitals, facilitySearch, facilityTypeFilter]);
 
   // Handle route calculation directly on ThermoMap
   const handleSelectFacilityAndRoute = (facility: RealFacility) => {
@@ -577,36 +619,79 @@ export const CitizenPortalPage: React.FC = () => {
       <main className="flex-1 min-h-0 h-full overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 scrollbar-thin">
         
         {/* Global Context Bar (Current Location + Municipality + Heat Risk) */}
-        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="text-[11px] font-bold text-orange-600 tracking-wider uppercase flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              Current Geographic Location
-            </span>
-            <h2 className="text-lg font-black text-[#1c1917] tracking-tight">
-              {detectedLocationName}
-            </h2>
-            <p className="text-xs text-[#57534e]">
-              Assigned Municipality: <strong className="text-[#1c1917]">{cityProfile.corporation}</strong>
-            </p>
+        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-orange-600 tracking-wider uppercase flex items-center gap-1.5">
+                  <LocateFixed className="w-3.5 h-3.5" />
+                  Device GPS Location
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Auto-Assigned Municipality
+                </span>
+              </div>
+              <h2 className="text-lg font-black text-[#1c1917] tracking-tight flex items-baseline flex-wrap gap-2">
+                <span>{detectedLocationName}</span>
+                <span className="text-xs font-mono text-[#78716c] font-normal">
+                  ({userCoords[0].toFixed(4)}°N, {userCoords[1].toFixed(4)}°E)
+                </span>
+              </h2>
+              <p className="text-xs text-[#57534e]">
+                Assigned Municipality: <strong className="text-orange-950 font-bold">{cityProfile.corporation}</strong>
+                <span className="text-[#78716c] ml-2">· Only displaying official cooling centers & hospitals within this jurisdiction</span>
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">
+                {liveMetrics.riskBadge}
+              </span>
+              <button
+                onClick={toggleLiveGps}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  isLiveGpsActive
+                    ? 'bg-cyan-100 text-cyan-800 border border-cyan-300'
+                    : 'bg-[#f5f3ef] hover:bg-[#ede7de] text-[#57534e]'
+                }`}
+                title="Toggle Real Device Geolocation Tracking"
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>{isLiveGpsActive ? 'Live GPS Active' : 'Detect GPS'}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <span className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">
-              {liveMetrics.riskBadge}
-            </span>
-            <button
-              onClick={toggleLiveGps}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                isLiveGpsActive
-                  ? 'bg-cyan-100 text-cyan-800 border border-cyan-300'
-                  : 'bg-[#f5f3ef] hover:bg-[#ede7de] text-[#57534e]'
-              }`}
-              title="Toggle Live GPS Detection"
-            >
-              <Compass className="w-3.5 h-3.5" />
-              <span>{isLiveGpsActive ? 'Live GPS Active' : 'Detect GPS'}</span>
-            </button>
+          {/* Place-to-Place Roaming GPS Simulation Control */}
+          <div className="bg-[#faf9f6] border border-[#ede7de] rounded-xl p-3 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-bold text-[#1c1917] flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5 text-orange-600 animate-pulse" />
+                <span>Simulate Travelling Place-to-Place (GPS Detection & Municipality Auto-Switch):</span>
+              </span>
+              <span className="text-[10px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono font-medium">
+                {gpsFeedbackText}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {GPS_PLACE_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleSimulatePlace(preset)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition flex items-center gap-1 ${
+                    selectedPresetId === preset.id
+                      ? 'bg-orange-600 text-white shadow-xs'
+                      : 'bg-white border border-[#ede7de] text-[#57534e] hover:border-orange-300 hover:text-[#1c1917]'
+                  }`}
+                  title={`Simulate GPS at ${preset.name} (${preset.coordinates[0]}, ${preset.coordinates[1]})`}
+                >
+                  <MapPin className="w-3 h-3 text-orange-500" />
+                  <span>{preset.name.split(' ')[0]} ({preset.cityName})</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1598,11 +1683,12 @@ export const CitizenPortalPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ede7de] pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#1c1917] tracking-tight">
-                  Nearby Emergency Facilities & Cooling Shelters
+                <h3 className="text-lg font-black text-[#1c1917] tracking-tight flex items-center gap-2">
+                  <LifeBuoy className="w-5 h-5 text-orange-600" />
+                  <span>Nearby Emergency Facilities & Cooling Shelters</span>
                 </h3>
                 <p className="text-xs text-[#57534e]">
-                  Official facilities in {cityProfile.corporation} with verified air conditioning, hydration, and emergency medical triage.
+                  Official verified facilities strictly in <strong>{cityProfile.corporation}</strong>, prioritized by real distance from your device's live GPS.
                 </p>
               </div>
 
@@ -1612,32 +1698,93 @@ export const CitizenPortalPage: React.FC = () => {
                   onClick={() => setFacilityTypeFilter('all')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                     facilityTypeFilter === 'all'
-                      ? 'bg-orange-600 text-white'
+                      ? 'bg-orange-600 text-white shadow-xs'
                       : 'bg-white border border-[#ede7de] text-[#57534e]'
                   }`}
                 >
                   All ({allFacilities.length})
                 </button>
                 <button
-                  onClick={() => setFacilityTypeFilter('hospital')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                    facilityTypeFilter === 'hospital'
-                      ? 'bg-red-600 text-white'
+                  onClick={() => setFacilityTypeFilter('cooling')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                    facilityTypeFilter === 'cooling'
+                      ? 'bg-sky-600 text-white shadow-xs'
                       : 'bg-white border border-[#ede7de] text-[#57534e]'
                   }`}
                 >
-                  Hospitals
+                  <span>❄️</span>
+                  <span>Cooling Shelters ({coolingCentres.length})</span>
                 </button>
                 <button
-                  onClick={() => setFacilityTypeFilter('cooling')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                    facilityTypeFilter === 'cooling'
-                      ? 'bg-sky-600 text-white'
+                  onClick={() => setFacilityTypeFilter('hospital')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                    facilityTypeFilter === 'hospital'
+                      ? 'bg-red-600 text-white shadow-xs'
                       : 'bg-white border border-[#ede7de] text-[#57534e]'
                   }`}
                 >
-                  Cooling Shelters
+                  <span>🏥</span>
+                  <span>Hospitals ({hospitals.length})</span>
                 </button>
+              </div>
+            </div>
+
+            {/* GPS Analysis & Municipality Boundary Card */}
+            <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-blue-50 border border-orange-200 rounded-2xl p-4 space-y-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-orange-600 text-white">
+                      <LocateFixed className="w-4 h-4" />
+                    </span>
+                    <span className="text-xs font-bold text-orange-950 uppercase tracking-wide">
+                      Device GPS Analyzed & Assigned Jurisdiction
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Strict Municipality Scope
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-black text-[#1c1917]">
+                    {detectedLocationName} · Coordinates: {userCoords[0].toFixed(4)}°N, {userCoords[1].toFixed(4)}°E
+                  </h4>
+                  <p className="text-xs text-[#57534e]">
+                    Assigned Municipality: <strong className="text-[#1c1917]">{cityProfile.corporation}</strong> ({cityProfile.state}). Facilities are dynamically sorted in real time based on Haversine distance from your device.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleLiveGps}
+                    className="px-3 py-1.5 rounded-xl bg-white border border-orange-300 hover:bg-orange-100 text-orange-800 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-orange-600" />
+                    <span>Refresh GPS</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Quick Place-to-Place Roaming Preset Buttons */}
+              <div className="pt-2 border-t border-orange-200/70 space-y-1.5">
+                <span className="text-[11px] font-bold text-orange-900 block flex items-center gap-1.5">
+                  <Radio className="w-3 h-3 text-orange-600" />
+                  Test Device Roaming Place-to-Place (Watch Municipality & Facilities Auto-Switch):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {GPS_PLACE_PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => handleSimulatePlace(p)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition flex items-center gap-1 ${
+                        selectedPresetId === p.id
+                          ? 'bg-orange-700 text-white shadow-xs'
+                          : 'bg-white/80 border border-orange-200 hover:bg-white text-stone-700'
+                      }`}
+                    >
+                      <MapPin className="w-2.5 h-2.5 text-orange-500" />
+                      <span>{p.name.split(' ')[0]} ({p.cityName})</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -1649,45 +1796,80 @@ export const CitizenPortalPage: React.FC = () => {
                 value={facilitySearch}
                 onChange={(e) => setFacilitySearch(e.target.value)}
                 placeholder="Search facility name, ward, or street..."
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#ede7de] text-xs text-[#1c1917] focus:outline-none focus:border-orange-500"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#ede7de] text-xs text-[#1c1917] focus:outline-none focus:border-orange-500 shadow-2xs"
               />
             </div>
 
-            {/* Facility List */}
+            {/* Facility List with Real Calculated Distances */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredFacilities.map((facility) => (
-                <div
-                  key={facility.id}
-                  className="bg-white border border-[#ede7de] hover:border-orange-300 rounded-2xl p-4 shadow-xs transition space-y-3 flex flex-col justify-between"
-                >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        facility.type === 'HOSPITAL'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-sky-100 text-sky-800'
-                      }`}>
-                        {facility.type.replace('_', ' ')}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-orange-600">
-                        {facility.distance_km} km away
-                      </span>
+              {filteredFacilities.map((facility) => {
+                const isHospital = facility.type === 'HOSPITAL' || facility.type === 'EMERGENCY_CENTRE';
+                return (
+                  <div
+                    key={facility.id}
+                    className="bg-white border border-[#ede7de] hover:border-orange-300 rounded-2xl p-5 shadow-xs transition space-y-3 flex flex-col justify-between"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                          isHospital
+                            ? 'bg-red-100 text-red-800 border border-red-200'
+                            : 'bg-sky-100 text-sky-800 border border-sky-200'
+                        }`}>
+                          <span>{isHospital ? '🏥' : '❄️'}</span>
+                          <span>{facility.type.replace('_', ' ')}</span>
+                        </span>
+                        
+                        {/* Live GPS Distance Badge */}
+                        <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-orange-50 text-orange-700 border border-orange-200 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-orange-600" />
+                          <span>{facility.live_distance_km} km away (~{facility.travel_time_minutes} min)</span>
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-black text-[#1c1917] leading-snug">{facility.name}</h4>
+                      <p className="text-xs text-[#57534e] flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-stone-400 shrink-0" />
+                        <span>{facility.address} ({facility.ward_name})</span>
+                      </p>
+                      
+                      <div className="p-2.5 bg-[#faf9f6] rounded-xl border border-[#ede7de] space-y-1 text-[11px] text-[#57534e]">
+                        <div className="flex items-center justify-between">
+                          <span><strong>Hours:</strong> {facility.open_hours}</span>
+                          <span className="text-emerald-700 font-semibold">{facility.capacity_status}</span>
+                        </div>
+                        {facility.total_beds && (
+                          <div><strong>Beds:</strong> {facility.total_beds} total ({facility.icu_beds} ICU beds)</div>
+                        )}
+                        <div><strong>Authority:</strong> {facility.authority}</div>
+                        <div><strong>Contact:</strong> <span className="font-mono font-semibold text-[#1c1917]">{facility.contact}</span></div>
+                      </div>
+
+                      {/* Amenities pills */}
+                      {facility.amenities && facility.amenities.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {facility.amenities.map((am, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded text-[10px] bg-stone-100 text-stone-700 border border-stone-200 font-medium"
+                            >
+                              {am}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    <h4 className="text-sm font-bold text-[#1c1917]">{facility.name}</h4>
-                    <p className="text-xs text-[#57534e]">{facility.address} ({facility.ward_name})</p>
-                    <p className="text-[11px] text-[#78716c]">Contact: {facility.contact}</p>
+                    <button
+                      onClick={() => handleSelectFacilityAndRoute(facility)}
+                      className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition flex items-center justify-center space-x-2 shadow-xs mt-2"
+                    >
+                      <Navigation className="w-4 h-4" />
+                      <span>Route on ThermoMap from Initial Location</span>
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => handleSelectFacilityAndRoute(facility)}
-                    className="w-full py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-xs"
-                  >
-                    <Navigation className="w-3.5 h-3.5" />
-                    <span>View & Route on ThermoMap</span>
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

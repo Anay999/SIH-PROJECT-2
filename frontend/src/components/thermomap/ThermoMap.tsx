@@ -817,6 +817,13 @@ export const ThermoMap: React.FC<ThermoMapProps> = ({
     }
   }, [selectedFacility, latitude, longitude]);
 
+  // Update starting location marker whenever GPS coordinates change
+  useEffect(() => {
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat([longitude, latitude]);
+    }
+  }, [latitude, longitude]);
+
   // Recenter / Location Navigation
   const handleRecenter = () => {
     setIsIndiaGridMode(false);
