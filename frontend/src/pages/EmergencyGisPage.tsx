@@ -491,30 +491,30 @@ export const EmergencyGisPage: React.FC = () => {
         {/* Button 1: Nearest Hospital */}
         <button
           onClick={handleSelectNearestHospital}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group shadow-lg ${
+          className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group shadow-xs ${
             selectedFacility?.type === 'HOSPITAL'
-              ? 'bg-[#0f172a] border-rose-500 ring-2 ring-rose-500/40'
-              : 'bg-[#0f172a] border-slate-800 hover:border-rose-500/70'
+              ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/40'
+              : 'bg-white border-slate-200 hover:border-rose-300'
           }`}
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-rose-950/80 border border-rose-800/80 text-rose-400 flex items-center justify-center font-black text-2xl group-hover:scale-110 transition-transform shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-rose-100 border border-rose-200 text-rose-600 flex items-center justify-center font-black text-2xl group-hover:scale-110 transition-transform shadow-xs">
               +
             </div>
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold block">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-rose-700 font-bold block">
                 Primary Heatstroke Emergency
               </span>
-              <span className="text-base font-bold text-white block">
+              <span className="text-base font-bold text-slate-900 block">
                 Nearest Hospital
               </span>
-              <span className="text-xs text-slate-300 font-medium line-clamp-1">
+              <span className="text-xs text-slate-500 font-medium line-clamp-1">
                 {nearestHospital ? `${nearestHospital.name} (${nearestHospital.distance_km} km)` : 'Locating closest hospital...'}
               </span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-600 text-white shadow-xs group-hover:bg-rose-500 transition">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-600 text-white shadow-xs group-hover:bg-rose-700 transition">
               Road Route →
             </span>
           </div>
@@ -523,30 +523,30 @@ export const EmergencyGisPage: React.FC = () => {
         {/* Button 2: Nearest Cooling Shelter */}
         <button
           onClick={handleSelectNearestCoolingShelter}
-          className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group shadow-lg ${
+          className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group shadow-xs ${
             selectedFacility?.type === 'COOLING_CENTRE'
-              ? 'bg-[#0f172a] border-cyan-500 ring-2 ring-cyan-500/40'
-              : 'bg-[#0f172a] border-slate-800 hover:border-cyan-500/70'
+              ? 'bg-cyan-50 border-cyan-400 ring-2 ring-cyan-400/40'
+              : 'bg-white border-slate-200 hover:border-cyan-300'
           }`}
         >
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-800/80 text-cyan-400 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-cyan-100 border border-cyan-200 text-cyan-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-xs">
               ❄️
             </div>
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-bold block">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-700 font-bold block">
                 Rapid Shaded Heat Relief & ORS
               </span>
-              <span className="text-base font-bold text-white block">
+              <span className="text-base font-bold text-slate-900 block">
                 Nearest Cooling Shelter
               </span>
-              <span className="text-xs text-slate-300 font-medium line-clamp-1">
+              <span className="text-xs text-slate-500 font-medium line-clamp-1">
                 {nearestShelter ? `${nearestShelter.name} (${nearestShelter.distance_km} km)` : 'Locating nearest shelter...'}
               </span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-cyan-600 text-white shadow-xs group-hover:bg-cyan-500 transition">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-cyan-600 text-white shadow-xs group-hover:bg-cyan-700 transition">
               Road Route →
             </span>
           </div>
@@ -828,10 +828,10 @@ export const EmergencyGisPage: React.FC = () => {
                   <div
                     key={fac.id}
                     onClick={() => setSelectedFacility(fac)}
-                    className={`p-3 rounded-xl border cursor-pointer transition-all shadow-md ${
+                    className={`p-3 rounded-xl border cursor-pointer transition-all shadow-xs ${
                       isSelected
-                        ? 'bg-[#131d38] border-cyan-500 ring-2 ring-cyan-500/30'
-                        : 'bg-[#0f172a] border-slate-800 hover:border-slate-700 hover:bg-slate-900/90'
+                        ? 'bg-cyan-50 border-cyan-400 ring-2 ring-cyan-400/30'
+                        : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -840,10 +840,10 @@ export const EmergencyGisPage: React.FC = () => {
                           <span
                             className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
                               fac.type === 'HOSPITAL'
-                                ? 'bg-rose-950/90 text-rose-300 border border-rose-800/80'
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
                                 : fac.type === 'COOLING_CENTRE'
-                                ? 'bg-cyan-950/90 text-cyan-300 border border-cyan-800/80'
-                                : 'bg-amber-950/90 text-amber-300 border border-amber-800/80'
+                                ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
                             }`}
                           >
                             {fac.type === 'HOSPITAL'
@@ -852,34 +852,34 @@ export const EmergencyGisPage: React.FC = () => {
                               ? 'COOLING SHELTER'
                               : 'EMERGENCY CLINIC'}
                           </span>
-                          <span className="text-[11px] text-slate-400 truncate max-w-[180px]">
+                          <span className="text-[11px] text-slate-500 truncate max-w-[180px]">
                             {fac.ward_name}
                           </span>
                         </div>
-                        <h4 className="text-xs font-bold text-white mt-1 leading-snug">{fac.name}</h4>
+                        <h4 className="text-xs font-bold text-slate-900 mt-1 leading-snug">{fac.name}</h4>
                         {fac.official_authority && (
-                          <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5 font-medium">
-                            <Award className="w-3 h-3 text-emerald-400" />
+                          <span className="text-[10px] text-emerald-700 flex items-center gap-1 mt-0.5 font-medium">
+                            <Award className="w-3 h-3 text-emerald-600" />
                             {fac.official_authority}
                           </span>
                         )}
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="text-xs font-bold text-amber-400 block">
+                        <span className="text-xs font-bold text-amber-700 block">
                           {fac.distance_km} km
                         </span>
-                        <span className="text-[10px] text-slate-400 block font-mono">
+                        <span className="text-[10px] text-slate-500 block font-mono">
                           ~{fac.travel_time_minutes} min drive
                         </span>
                       </div>
                     </div>
 
-                    <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-800">
-                      <span className="text-emerald-400 font-medium text-[10px] truncate max-w-[200px]">
+                    <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-100">
+                      <span className="text-emerald-700 font-medium text-[10px] truncate max-w-[200px]">
                         {fac.status_label}
                       </span>
-                      <span className="text-cyan-400 font-bold text-[10px]">
+                      <span className="text-cyan-700 font-bold text-[10px]">
                         {isSelected ? 'Route Active ✓' : 'Select Destination →'}
                       </span>
                     </div>
@@ -887,7 +887,7 @@ export const EmergencyGisPage: React.FC = () => {
                 );
               })
             ) : (
-              <div className="p-8 text-center text-xs text-slate-400 bg-[#0f172a] rounded-xl border border-slate-800">
+              <div className="p-8 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200">
                 No facilities matching this search in immediate range.
               </div>
             )}
@@ -895,17 +895,17 @@ export const EmergencyGisPage: React.FC = () => {
 
           {/* Turn-by-Turn Road Navigation Card (OSRM Driving Directions) */}
           {selectedFacility && routeData && (
-            <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-4 shadow-lg text-white flex flex-col justify-between">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs text-slate-800 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <Car className="w-3.5 h-3.5 text-cyan-400" />
-                      <span className="text-[10px] uppercase font-bold text-cyan-300 tracking-wide">
+                      <Car className="w-3.5 h-3.5 text-cyan-600" />
+                      <span className="text-[10px] uppercase font-bold text-cyan-800 tracking-wide">
                         Road Navigation (OSRM)
                       </span>
                     </div>
-                    <h4 className="text-xs font-bold text-white truncate max-w-[220px]">
+                    <h4 className="text-xs font-bold text-slate-900 truncate max-w-[220px]">
                       {selectedFacility.name}
                     </h4>
                   </div>
@@ -913,7 +913,7 @@ export const EmergencyGisPage: React.FC = () => {
                     href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation[0]},${userLocation[1]}&destination=${selectedFacility.latitude},${selectedFacility.longitude}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-cyan-300 hover:text-white flex items-center gap-1 font-bold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 shadow-xs hover:border-slate-600 transition"
+                    className="text-xs text-cyan-800 hover:text-cyan-950 flex items-center gap-1 font-bold px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 shadow-xs hover:border-slate-300 transition"
                   >
                     Google Maps
                     <ExternalLink className="w-3 h-3" />
@@ -923,13 +923,13 @@ export const EmergencyGisPage: React.FC = () => {
                 {/* Step-by-Step Maneuvers */}
                 <div className="space-y-1.5 max-h-[135px] overflow-y-auto pr-1 scrollbar-thin">
                   {routeData.steps.map((step, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-200">
-                      <span className="w-4 h-4 rounded-full bg-cyan-950 text-cyan-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5 border border-cyan-800">
+                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
+                      <span className="w-4 h-4 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5 border border-cyan-200">
                         {idx + 1}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] leading-snug text-slate-200">{step.instruction}</p>
-                        <span className="text-[9px] text-slate-400 font-mono">
+                        <p className="text-[11px] leading-snug text-slate-700">{step.instruction}</p>
+                        <span className="text-[9px] text-slate-500 font-mono">
                           {step.distance_meters}m • ~{Math.max(1, Math.ceil(step.duration_seconds / 60))} min
                         </span>
                       </div>
@@ -938,12 +938,12 @@ export const EmergencyGisPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2.5 border-t border-slate-800 mt-2 flex items-center justify-between text-xs text-slate-400">
+              <div className="pt-2.5 border-t border-slate-100 mt-2 flex items-center justify-between text-xs text-slate-500">
                 <div className="flex items-center gap-1 text-[11px]">
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Helpline: <strong className="text-emerald-300 font-bold">{selectedFacility.contact}</strong></span>
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Helpline: <strong className="text-emerald-700 font-bold">{selectedFacility.contact}</strong></span>
                 </div>
-                <span className="text-[10px] text-cyan-300 font-mono font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                <span className="text-[10px] text-cyan-800 font-mono font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
                   {routeData.distance_km} km • {routeData.duration_minutes} min
                 </span>
               </div>

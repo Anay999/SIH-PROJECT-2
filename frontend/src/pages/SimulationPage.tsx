@@ -196,8 +196,8 @@ export const SimulationPage: React.FC = () => {
       </div>
 
       {/* Simulation Policy Notice */}
-      <div className="p-3.5 rounded-xl bg-[#141f36] border border-purple-500/30 text-xs text-purple-200 font-sans flex items-center gap-2.5">
-        <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+      <div className="p-3.5 rounded-xl bg-purple-50 border border-purple-200 text-xs text-purple-900 font-sans flex items-center gap-2.5">
+        <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
         <span>
           <strong>Municipal Planning Notice:</strong> This is an illustrative planning simulation and does not represent a real-world forecast.
         </span>

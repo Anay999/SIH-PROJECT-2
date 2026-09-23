@@ -160,26 +160,26 @@ export const ForecastPage: React.FC = () => {
       </div>
 
       {/* Operational Outlook Statement — Prompt Requirement */}
-      <div className="p-4 rounded-xl bg-[#0f172a] border border-[#1e293b] flex items-start gap-3 text-xs text-slate-300 leading-relaxed shadow-sm">
-        <Info className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl bg-white border border-slate-200 flex items-start gap-3 text-xs text-slate-700 leading-relaxed shadow-xs">
+        <Info className="w-4 h-4 text-cyan-600 shrink-0 mt-0.5" />
         <div>
-          <strong className="text-white block font-mono text-[11px] uppercase">
+          <strong className="text-slate-900 block font-mono text-[11px] uppercase">
             Operational Heat Outlook:
           </strong>
-          <span className="text-slate-200">
+          <span className="text-slate-600">
             Heat conditions are expected to remain elevated across Chennai through Tuesday, with afternoon wet-bulb globe temperatures consistently exceeding 32°C and high nighttime retention (&gt;29°C) limiting biological recovery.
           </span>
         </div>
       </div>
 
       {/* Ward Selector & Time Horizon Strip */}
-      <div className="bg-command-card border border-command-border rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3">
-          <span className="text-xs font-mono uppercase text-command-muted">Ward Location:</span>
+          <span className="text-xs font-mono uppercase text-slate-500 font-semibold">Ward Location:</span>
           <select
             value={selectedWardId}
             onChange={(e) => setSelectedWardId(e.target.value)}
-            className="bg-command-panel text-white font-medium text-xs px-3 py-2 rounded-lg border border-command-border outline-none focus:border-cyan-500 min-w-[220px]"
+            className="bg-white text-slate-900 font-medium text-xs px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-cyan-500 min-w-[220px]"
           >
             {forecastData?.available_wards?.map((w) => (
               <option key={w.id} value={w.id}>
@@ -190,11 +190,11 @@ export const ForecastPage: React.FC = () => {
         </div>
 
         {/* View Tabs */}
-        <div className="flex items-center gap-1 bg-command-panel p-1 rounded-lg border border-command-border text-xs">
+        <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200 text-xs">
           <button
             onClick={() => setActiveTab('chart')}
             className={`px-3 py-1.5 rounded font-medium transition ${
-              activeTab === 'chart' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-command-muted hover:text-white'
+              activeTab === 'chart' ? 'bg-orange-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Multi-Variable Trajectory
@@ -202,7 +202,7 @@ export const ForecastPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('daily')}
             className={`px-3 py-1.5 rounded font-medium transition ${
-              activeTab === 'daily' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-command-muted hover:text-white'
+              activeTab === 'daily' ? 'bg-orange-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             5-Day Horizon Summary
@@ -210,7 +210,7 @@ export const ForecastPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('guidelines')}
             className={`px-3 py-1.5 rounded font-medium transition ${
-              activeTab === 'guidelines' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'text-command-muted hover:text-white'
+              activeTab === 'guidelines' ? 'bg-orange-600 text-white font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Indicative Work-Rest Guidelines
@@ -219,14 +219,14 @@ export const ForecastPage: React.FC = () => {
       </div>
 
       {isLoading && (
-        <div className="bg-command-card border border-command-border rounded-xl p-12 text-center">
-          <Activity className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-3" />
-          <p className="text-xs font-mono text-command-muted">Generating 5-day biometeorological hourly trajectory...</p>
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-xs">
+          <Activity className="w-8 h-8 text-cyan-600 animate-spin mx-auto mb-3" />
+          <p className="text-xs font-mono text-slate-500">Generating 5-day biometeorological hourly trajectory...</p>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-xs flex items-center gap-2">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 text-xs flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -239,58 +239,58 @@ export const ForecastPage: React.FC = () => {
             {forecastData.daily_forecast.map((day: DailyForecastCard) => (
               <div
                 key={day.date}
-                className={`p-4 rounded-xl border transition relative ${
+                className={`p-4 rounded-xl border transition relative shadow-xs ${
                   day.is_nocturnal_heat_trap
-                    ? 'bg-gradient-to-b from-risk-extreme/10 to-command-card border-red-500/40'
-                    : 'bg-command-card border-command-border'
+                    ? 'bg-red-50/40 border-red-200'
+                    : 'bg-white border-slate-200'
                 }`}
               >
                 <div className="flex items-center justify-between text-xs font-mono mb-2">
-                  <span className="text-white font-bold">{day.day_label.split(',')[0]}</span>
-                  <span className="text-command-subtle text-[11px]">{day.date.slice(5)}</span>
+                  <span className="text-slate-900 font-bold">{day.day_label.split(',')[0]}</span>
+                  <span className="text-slate-400 text-[11px]">{day.date.slice(5)}</span>
                 </div>
 
                 <div className="flex items-baseline justify-between mb-3">
                   <div>
-                    <span className="text-2xl font-black text-white">{day.max_temp_c}°</span>
-                    <span className="text-xs text-command-muted ml-1">/ {day.min_temp_c}°C</span>
+                    <span className="text-2xl font-black text-slate-900">{day.max_temp_c}°</span>
+                    <span className="text-xs text-slate-500 ml-1">/ {day.min_temp_c}°C</span>
                   </div>
                   <span
                     className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                       day.htsi_category === 'Extreme'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        ? 'bg-red-50 text-red-700 border border-red-200'
                         : day.htsi_category === 'Very High'
-                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}
                   >
                     {day.htsi_category}
                   </span>
                 </div>
 
-                <div className="space-y-1.5 text-[11px] border-t border-command-border/60 pt-2 font-mono">
+                <div className="space-y-1.5 text-[11px] border-t border-slate-100 pt-2 font-mono">
                   <div className="flex justify-between">
-                    <span className="text-command-muted">Peak WBGT:</span>
-                    <span className="text-amber-400 font-bold">{day.peak_wbgt_c}°C</span>
+                    <span className="text-slate-500">Peak WBGT:</span>
+                    <span className="text-amber-700 font-bold">{day.peak_wbgt_c}°C</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-command-muted">Peak HTSI:</span>
-                    <span className="text-cyan-400 font-bold">{day.peak_htsi_score} / 100</span>
+                    <span className="text-slate-500">Peak HTSI:</span>
+                    <span className="text-cyan-700 font-bold">{day.peak_htsi_score} / 100</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-command-muted flex items-center gap-1">
-                      <Moon className="w-3 h-3 text-indigo-400" />
+                    <span className="text-slate-500 flex items-center gap-1">
+                      <Moon className="w-3 h-3 text-indigo-500" />
                       Night Min:
                     </span>
-                    <span className={day.night_min_temp_c >= 28.0 ? 'text-red-400 font-bold' : 'text-command-muted'}>
+                    <span className={day.night_min_temp_c >= 28.0 ? 'text-red-600 font-bold' : 'text-slate-600'}>
                       {day.night_min_temp_c}°C
                     </span>
                   </div>
                 </div>
 
                 {day.is_nocturnal_heat_trap && (
-                  <div className="mt-2.5 px-2 py-1 rounded bg-red-500/15 border border-red-500/30 text-[10px] font-mono text-red-300 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0" />
+                  <div className="mt-2.5 px-2 py-1 rounded bg-red-100/70 border border-red-200 text-[10px] font-mono text-red-700 flex items-center gap-1 font-semibold">
+                    <AlertTriangle className="w-3 h-3 text-red-600 flex-shrink-0" />
                     <span>Night Heat Trap (≥28°C)</span>
                   </div>
                 )}
@@ -300,14 +300,14 @@ export const ForecastPage: React.FC = () => {
 
           {/* Tab 1: Multi-Variable Recharts Trajectory */}
           {activeTab === 'chart' && (
-            <div className="bg-command-card border border-command-border rounded-xl p-5 space-y-4">
+            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-cyan-600" />
                     Hourly Biometeorological Projections (5-Day Horizon)
                   </h3>
-                  <p className="text-[11px] text-command-muted mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Continuous diurnal trajectory displaying sensible heat, evaporative stress (WBGT), and whole-body thermoregulation (UTCI).
                   </p>
                 </div>
@@ -317,19 +317,19 @@ export const ForecastPage: React.FC = () => {
                     <span>Heat Index (°C)</span>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
                     <span>Air Temp (°C)</span>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                     <span>WBGT (°C)</span>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
                     <span>UTCI (°C)</span>
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-600"></span>
                     <span>RH (%)</span>
                   </span>
                 </div>
@@ -339,7 +339,7 @@ export const ForecastPage: React.FC = () => {
               <div className="h-[360px] w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={currentHourly} margin={{ top: 10, right: 20, left: -10, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis
                       dataKey="time_display_ist"
                       tick={{ fill: '#64748b', fontSize: 10 }}
@@ -363,11 +363,11 @@ export const ForecastPage: React.FC = () => {
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0f172a',
-                        borderColor: '#334155',
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
                         borderRadius: '8px',
                         fontSize: '11px',
-                        color: '#f8fafc'
+                        color: '#1e293b'
                       }}
                       formatter={(value: any, name?: any) => {
                         if (name === 'relative_humidity') return [`${value}%`, 'Relative Humidity'];
@@ -382,23 +382,23 @@ export const ForecastPage: React.FC = () => {
                     <Line yAxisId="left" type="monotone" dataKey="air_temp_c" stroke="#fb923c" strokeWidth={2} dot={false} name="Air Temp" />
                     <Line yAxisId="left" type="monotone" dataKey="wbgt_c" stroke="#f59e0b" strokeWidth={2} dot={false} name="WBGT" />
                     <Line yAxisId="left" type="monotone" dataKey="utci_c" stroke="#c084fc" strokeWidth={2} dot={false} name="UTCI" />
-                    <Line yAxisId="right" type="monotone" dataKey="relative_humidity" stroke="#38bdf8" strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="relative_humidity" />
+                    <Line yAxisId="right" type="monotone" dataKey="relative_humidity" stroke="#0ea5e9" strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="relative_humidity" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
 
               {/* Uncertainty Band Strip */}
-              <div className="p-3 bg-command-panel rounded-lg border border-command-border text-xs text-command-muted flex flex-wrap items-center justify-between gap-3 font-mono">
-                <div className="flex items-center gap-2 text-command-muted">
-                  <Info className="w-4 h-4 text-cyan-400" />
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-3 font-mono">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Info className="w-4 h-4 text-cyan-600" />
                   <span>Model Uncertainty Band:</span>
-                  <span className="text-white">±{forecastData.uncertainty_band.temperature_c}°C Temp</span>
+                  <span className="text-slate-900 font-bold">±{forecastData.uncertainty_band.temperature_c}°C Temp</span>
                   <span>•</span>
-                  <span className="text-white">±{forecastData.uncertainty_band.humidity_percent}% RH</span>
+                  <span className="text-slate-900 font-bold">±{forecastData.uncertainty_band.humidity_percent}% RH</span>
                   <span>•</span>
-                  <span className="text-white">±{forecastData.uncertainty_band.wbgt_c}°C WBGT</span>
+                  <span className="text-slate-900 font-bold">±{forecastData.uncertainty_band.wbgt_c}°C WBGT</span>
                 </div>
-                <div className="text-[11px] text-command-subtle">
+                <div className="text-[11px] text-slate-400">
                   Seed: {forecastData.deterministic_seed} • Engine: {forecastData.engine_version}
                 </div>
               </div>
@@ -407,14 +407,14 @@ export const ForecastPage: React.FC = () => {
 
           {/* Tab 2: Daily Forecast Table */}
           {activeTab === 'daily' && (
-            <div className="bg-command-card border border-command-border rounded-xl p-5 space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-cyan-400" />
+            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-cyan-600" />
                 Comprehensive 5-Day Horizon Breakdown
               </h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left text-command-muted">
-                  <thead className="bg-command-panel text-command-muted font-mono uppercase text-[10px] border-b border-command-border">
+                <table className="w-full text-xs text-left text-slate-600">
+                  <thead className="bg-slate-50 text-slate-600 font-mono uppercase text-[10px] border-b border-slate-200">
                     <tr>
                       <th className="py-2.5 px-3">Date</th>
                       <th className="py-2.5 px-3">Max Temp</th>
@@ -425,28 +425,28 @@ export const ForecastPage: React.FC = () => {
                       <th className="py-2.5 px-3">Operational Advisory</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-command-border/50 font-mono">
+                  <tbody className="divide-y divide-slate-100 font-mono">
                     {forecastData.daily_forecast.map((d: DailyForecastCard) => (
-                      <tr key={d.date} className="hover:bg-command-panel/60 transition">
-                        <td className="py-3 px-3 text-white font-bold">{d.day_label}</td>
-                        <td className="py-3 px-3 text-orange-400 font-bold">{d.max_temp_c}°C</td>
+                      <tr key={d.date} className="hover:bg-slate-50 transition">
+                        <td className="py-3 px-3 text-slate-900 font-bold">{d.day_label}</td>
+                        <td className="py-3 px-3 text-orange-600 font-bold">{d.max_temp_c}°C</td>
                         <td className="py-3 px-3">
-                          {d.min_temp_c}°C / <span className="text-indigo-300">{d.night_min_temp_c}°C</span>
+                          {d.min_temp_c}°C / <span className="text-indigo-600 font-medium">{d.night_min_temp_c}°C</span>
                         </td>
-                        <td className="py-3 px-3 text-amber-400 font-bold">{d.peak_wbgt_c}°C</td>
-                        <td className="py-3 px-3 text-cyan-400 font-bold">{d.peak_htsi_score} / 100</td>
+                        <td className="py-3 px-3 text-amber-700 font-bold">{d.peak_wbgt_c}°C</td>
+                        <td className="py-3 px-3 text-cyan-700 font-bold">{d.peak_htsi_score} / 100</td>
                         <td className="py-3 px-3">
                           {d.is_nocturnal_heat_trap ? (
-                            <span className="px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 text-[10px]">
+                            <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold">
                               DEFICIT: NO NIGHT RECOVERY
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px]">
+                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
                               PASSABLE NIGHT RECOVERY
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-3 text-slate-300">
+                        <td className="py-3 px-3 text-slate-700">
                           {d.peak_wbgt_c >= 32.0
                             ? 'Mandatory labor rest shifts (11:00-16:00 IST)'
                             : 'Standard hydration stations open'}
@@ -462,25 +462,25 @@ export const ForecastPage: React.FC = () => {
           {/* Tab 3: Indicative WBGT-Based Work-Rest Guidance */}
           {activeTab === 'guidelines' && (
             <div className="space-y-4">
-              <div className="bg-command-card border border-command-border rounded-xl p-6">
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-command-border pb-4 mb-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <HardHat className="w-5 h-5 text-amber-400" />
+                    <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <HardHat className="w-5 h-5 text-amber-600" />
                       Indicative WBGT-Based Work-Rest Guidance
                     </h3>
-                    <p className="text-xs text-command-muted mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       Adaptive occupational safety guidelines calibrated against projected WBGT conditions for field and outdoor workers.
                     </p>
                   </div>
-                  <div className="text-xs font-mono px-3 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <div className="text-xs font-mono px-3 py-1 rounded bg-amber-50 text-amber-800 border border-amber-300 font-bold">
                     DEMONSTRATION & PLANNING SUPPORT ONLY
                   </div>
                 </div>
 
                 {/* Important Disclaimer Alert */}
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 mb-6 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 mb-6 flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                   <p className="leading-relaxed">
                     <strong>Notice:</strong> For demonstration and planning support only. Verify applicable occupational safety standards, legal limits, and medical evaluations before operational or commercial use.
                   </p>
@@ -489,15 +489,15 @@ export const ForecastPage: React.FC = () => {
                 {/* Interactive Toggles */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   {/* Work Intensity */}
-                  <div className="p-3.5 rounded-lg bg-command-panel border border-command-border">
-                    <label className="text-[11px] font-mono uppercase text-command-muted block mb-2">Workload Intensity</label>
+                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold block mb-2">Workload Intensity</label>
                     <div className="grid grid-cols-3 gap-1 text-xs font-mono">
                       {(['light', 'moderate', 'heavy'] as const).map((w) => (
                         <button
                           key={w}
                           onClick={() => setWorkIntensity(w)}
-                          className={`py-1.5 rounded capitalize transition ${
-                            workIntensity === w ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                          className={`py-1.5 rounded capitalize transition font-bold ${
+                            workIntensity === w ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                           }`}
                         >
                           {w}
@@ -507,21 +507,21 @@ export const ForecastPage: React.FC = () => {
                   </div>
 
                   {/* Acclimatization */}
-                  <div className="p-3.5 rounded-lg bg-command-panel border border-command-border">
-                    <label className="text-[11px] font-mono uppercase text-command-muted block mb-2">Worker Acclimatization</label>
+                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold block mb-2">Worker Acclimatization</label>
                     <div className="grid grid-cols-2 gap-1 text-xs font-mono">
                       <button
                         onClick={() => setIsAcclimatized(true)}
-                        className={`py-1.5 rounded transition ${
-                          isAcclimatized ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                        className={`py-1.5 rounded transition font-bold ${
+                          isAcclimatized ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                         }`}
                       >
                         Acclimatized
                       </button>
                       <button
                         onClick={() => setIsAcclimatized(false)}
-                        className={`py-1.5 rounded transition ${
-                          !isAcclimatized ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                        className={`py-1.5 rounded transition font-bold ${
+                          !isAcclimatized ? 'bg-red-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                         }`}
                       >
                         Unacclimatized
@@ -530,21 +530,21 @@ export const ForecastPage: React.FC = () => {
                   </div>
 
                   {/* Clothing / PPE */}
-                  <div className="p-3.5 rounded-lg bg-command-panel border border-command-border">
-                    <label className="text-[11px] font-mono uppercase text-command-muted block mb-2">Clothing / PPE Factor</label>
+                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold block mb-2">Clothing / PPE Factor</label>
                     <div className="grid grid-cols-2 gap-1 text-xs font-mono">
                       <button
                         onClick={() => setClothingType('standard')}
-                        className={`py-1.5 rounded transition ${
-                          clothingType === 'standard' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                        className={`py-1.5 rounded transition font-bold ${
+                          clothingType === 'standard' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                         }`}
                       >
                         Light Cotton
                       </button>
                       <button
                         onClick={() => setClothingType('ppe')}
-                        className={`py-1.5 rounded transition ${
-                          clothingType === 'ppe' ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                        className={`py-1.5 rounded transition font-bold ${
+                          clothingType === 'ppe' ? 'bg-orange-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                         }`}
                       >
                         Coveralls / PPE (+2°C)
@@ -553,21 +553,21 @@ export const ForecastPage: React.FC = () => {
                   </div>
 
                   {/* Solar Exposure */}
-                  <div className="p-3.5 rounded-lg bg-command-panel border border-command-border">
-                    <label className="text-[11px] font-mono uppercase text-command-muted block mb-2">Solar Exposure</label>
+                  <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200">
+                    <label className="text-[11px] font-mono uppercase text-slate-500 font-semibold block mb-2">Solar Exposure</label>
                     <div className="grid grid-cols-2 gap-1 text-xs font-mono">
                       <button
                         onClick={() => setInDirectSun(true)}
-                        className={`py-1.5 rounded transition ${
-                          inDirectSun ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                        className={`py-1.5 rounded transition font-bold ${
+                          inDirectSun ? 'bg-amber-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                         }`}
                       >
                         Direct Sun
                       </button>
                       <button
                         onClick={() => setInDirectSun(false)}
-                        className={`py-1.5 rounded transition ${
-                          !inDirectSun ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' : 'bg-command-card text-command-muted hover:text-white'
+                        className={`py-1.5 rounded transition font-bold ${
+                          !inDirectSun ? 'bg-cyan-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
                         }`}
                       >
                         Covered / Shade (-2°C)
@@ -578,26 +578,26 @@ export const ForecastPage: React.FC = () => {
 
                 {/* Guidance Output Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl bg-command-panel border border-command-border">
-                    <div className="text-[11px] font-mono text-command-muted mb-1">Effective Adjusted WBGT</div>
-                    <div className="text-2xl font-black text-white">{guidance.effectiveWbgt}°C</div>
-                    <div className="text-[11px] text-command-subtle mt-1 font-mono">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="text-[11px] font-mono text-slate-500 mb-1">Effective Adjusted WBGT</div>
+                    <div className="text-2xl font-black text-slate-900">{guidance.effectiveWbgt}°C</div>
+                    <div className="text-[11px] text-slate-400 mt-1 font-mono">
                       Base: {peakHourPoint?.wbgt_c || 32.0}°C (Peak Hour)
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-command-panel border border-command-border">
-                    <div className="text-[11px] font-mono text-command-muted mb-1">Recommended Work-Rest Cycle</div>
-                    <div className="text-base font-bold text-cyan-300">{guidance.workRestRatio}</div>
-                    <div className="text-[11px] text-command-subtle mt-1 font-mono">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="text-[11px] font-mono text-slate-500 mb-1">Recommended Work-Rest Cycle</div>
+                    <div className="text-base font-bold text-cyan-800">{guidance.workRestRatio}</div>
+                    <div className="text-[11px] text-slate-400 mt-1 font-mono">
                       Shift: 10:30 AM – 16:00 PM peak interval
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-command-panel border border-command-border">
-                    <div className="text-[11px] font-mono text-command-muted mb-1">Fluid Replacement Protocol</div>
-                    <div className="text-2xl font-black text-emerald-400">{guidance.hydrationLiters} L / hr</div>
-                    <div className="text-[11px] text-command-subtle mt-1 font-mono">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="text-[11px] font-mono text-slate-500 mb-1">Fluid Replacement Protocol</div>
+                    <div className="text-2xl font-black text-emerald-700">{guidance.hydrationLiters} L / hr</div>
+                    <div className="text-[11px] text-slate-400 mt-1 font-mono">
                       Electrolyte ORS water at 20-minute intervals
                     </div>
                   </div>

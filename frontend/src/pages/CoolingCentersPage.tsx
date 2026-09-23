@@ -310,80 +310,80 @@ export const CoolingCentersPage: React.FC = () => {
 
         {/* Right: Resource List & Detail Inspector (5 cols) */}
         <div className="lg:col-span-5 flex flex-col space-y-4">
-          {/* Selected Resource Drawer Card - Sleek Dark Card */}
+          {/* Selected Resource Drawer Card - Clean Light Theme */}
           {selectedCenter ? (
-            <div className="p-5 rounded-2xl bg-[#0f172a] border border-slate-800 shadow-lg space-y-4 text-white">
-              <div className="flex items-start justify-between border-b border-slate-800 pb-3">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4 text-slate-800">
+              <div className="flex items-start justify-between border-b border-slate-100 pb-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+                    <span className="text-[10px] font-mono text-cyan-700 uppercase font-bold tracking-wider">
                       Resource Inspector
                     </span>
                     <span
                       className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold ${
                         selectedCenter.status === 'Open'
-                          ? 'bg-emerald-950/90 text-emerald-300 border border-emerald-700/80'
-                          : 'bg-slate-800 text-slate-400'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
                       }`}
                     >
                       {selectedCenter.status}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-white mt-1 leading-snug">
+                  <h3 className="text-base font-bold text-slate-900 mt-1 leading-snug">
                     {selectedCenter.name}
                   </h3>
-                  <p className="text-xs text-slate-400 font-sans mt-0.5 flex items-center gap-1">
+                  <p className="text-xs text-slate-500 font-sans mt-0.5 flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span className="font-semibold text-slate-300">{selectedCenter.ward_name || selectedCenter.ward_id}</span>
+                    <span className="font-semibold text-slate-700">{selectedCenter.ward_name || selectedCenter.ward_id}</span>
                     <span>·</span>
-                    <span className="text-slate-400 truncate">{selectedCenter.address || `${cityProfile.name} Metro Area`}</span>
+                    <span className="text-slate-500 truncate">{selectedCenter.address || `${cityProfile.name} Metro Area`}</span>
                   </p>
                 </div>
               </div>
 
               {/* Capacity Progress Bar */}
-              <div className="space-y-2 bg-slate-900/90 p-3.5 rounded-xl border border-slate-800">
+              <div className="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-400">Current Capacity:</span>
-                  <span className="text-white font-bold">
+                  <span className="text-slate-600">Current Capacity:</span>
+                  <span className="text-slate-900 font-bold">
                     {selectedCenter.current_occupancy} / {selectedCenter.total_capacity} persons
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       (selectedCenter.current_occupancy / (selectedCenter.total_capacity || 1)) > 0.8
-                        ? 'bg-amber-400'
-                        : 'bg-cyan-400'
+                        ? 'bg-amber-500'
+                        : 'bg-cyan-500'
                     }`}
                     style={{
                       width: `${Math.min(100, Math.round((selectedCenter.current_occupancy / (selectedCenter.total_capacity || 1)) * 100))}%`,
                     }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] font-mono text-slate-400 pt-0.5">
+                <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-0.5">
                   <span>{Math.round((selectedCenter.current_occupancy / (selectedCenter.total_capacity || 1)) * 100)}% occupied</span>
-                  <span className="font-semibold text-cyan-300">{selectedCenter.total_capacity - selectedCenter.current_occupancy} spaces available</span>
+                  <span className="font-semibold text-cyan-700">{selectedCenter.total_capacity - selectedCenter.current_occupancy} spaces available</span>
                 </div>
               </div>
 
               {/* Verification & Facility Attributes */}
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center gap-2.5">
-                  <Droplets className={`w-4 h-4 shrink-0 ${selectedCenter.water_available ? 'text-cyan-400' : 'text-slate-600'}`} />
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2.5">
+                  <Droplets className={`w-4 h-4 shrink-0 ${selectedCenter.water_available ? 'text-cyan-600' : 'text-slate-400'}`} />
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-mono">Potable Water</span>
-                    <span className="font-bold text-white">
+                    <span className="text-[10px] text-slate-500 block font-mono">Potable Water</span>
+                    <span className="font-bold text-slate-900">
                       {selectedCenter.water_available ? 'Active & Tested' : 'Unavailable'}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center gap-2.5">
-                  <Power className={`w-4 h-4 shrink-0 ${selectedCenter.power_backup ? 'text-amber-400' : 'text-slate-600'}`} />
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2.5">
+                  <Power className={`w-4 h-4 shrink-0 ${selectedCenter.power_backup ? 'text-amber-500' : 'text-slate-400'}`} />
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-mono">Power Generator</span>
-                    <span className="font-bold text-white">
+                    <span className="text-[10px] text-slate-500 block font-mono">Power Generator</span>
+                    <span className="font-bold text-slate-900">
                       {selectedCenter.power_backup ? 'Generator Standby' : 'Grid Only'}
                     </span>
                   </div>
@@ -391,30 +391,30 @@ export const CoolingCentersPage: React.FC = () => {
               </div>
 
               {/* Authority & Helpline */}
-              <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5 text-[11px] font-mono text-slate-300">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 text-[11px] font-mono text-slate-700">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Operating Hours:</span>
-                  <span className="text-white font-semibold">{selectedCenter.operating_hours || '08:00 – 20:00 IST'}</span>
+                  <span className="text-slate-500">Operating Hours:</span>
+                  <span className="text-slate-900 font-semibold">{selectedCenter.operating_hours || '08:00 – 20:00 IST'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Helpline / Contact:</span>
-                  <span className="text-emerald-400 font-bold">{selectedCenter.contact || cityProfile.helpline}</span>
+                  <span className="text-slate-500">Helpline / Contact:</span>
+                  <span className="text-emerald-700 font-bold">{selectedCenter.contact || cityProfile.helpline}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Managing Authority:</span>
-                  <span className="text-slate-200 font-medium">{selectedCenter.authority || cityProfile.corporation}</span>
+                  <span className="text-slate-500">Managing Authority:</span>
+                  <span className="text-slate-800 font-medium">{selectedCenter.authority || cityProfile.corporation}</span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="p-8 rounded-2xl bg-[#0f172a] border border-slate-800 text-center text-xs text-slate-400 font-mono shadow-md">
+            <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-xs text-slate-500 font-mono shadow-xs">
               Select a facility on the map or list to inspect capacity details.
             </div>
           )}
 
-          {/* Facility Triage List - Sleek Dark Cards Container */}
-          <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-4 flex-1 flex flex-col space-y-2 overflow-hidden shadow-md text-white">
-            <span className="text-[11px] font-mono uppercase text-cyan-400 font-bold tracking-wider block mb-1">
+          {/* Facility Triage List - Clean Light Theme */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 flex-1 flex flex-col space-y-2 overflow-hidden shadow-xs text-slate-800">
+            <span className="text-[11px] font-mono uppercase text-cyan-800 font-bold tracking-wider block mb-1">
               All Municipal Resources ({filteredCenters.length})
             </span>
             <div className="space-y-2 overflow-y-auto max-h-72 pr-1 scrollbar-thin">
@@ -430,23 +430,23 @@ export const CoolingCentersPage: React.FC = () => {
                       onClick={() => handleSelectResource(c)}
                       className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
                         isSelected
-                          ? 'bg-slate-900 border-cyan-400 shadow-md ring-1 ring-cyan-500/50'
-                          : 'bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+                          ? 'bg-cyan-50/80 border-cyan-400 shadow-xs ring-1 ring-cyan-400'
+                          : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100/80'
                       }`}
                     >
                       <div className="min-w-0 pr-2">
-                        <div className="font-semibold text-white text-xs truncate">{c.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono truncate">{c.ward_name || c.ward_id}</div>
+                        <div className="font-semibold text-slate-900 text-xs truncate">{c.name}</div>
+                        <div className="text-[10px] text-slate-500 font-mono truncate">{c.ward_name || c.ward_id}</div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="text-xs font-mono font-bold text-cyan-400">
+                        <div className="text-xs font-mono font-bold text-cyan-700">
                           {c.current_occupancy}/{c.total_capacity}
                         </div>
                         <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold ${
                           occPct > 80
-                            ? 'bg-amber-950/80 text-amber-300 border border-amber-800/80'
-                            : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                         }`}>
                           {occPct}%
                         </span>
