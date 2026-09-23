@@ -20,7 +20,8 @@ import {
   Info,
   RefreshCw,
   Box,
-  Map as MapIcon
+  Map as MapIcon,
+  LocateFixed
 } from 'lucide-react';
 import { ThermoMap } from '../components/thermomap/ThermoMap';
 import { Municipal3DCommandCenter } from '../components/thermomap/Municipal3DCommandCenter';
@@ -57,6 +58,31 @@ const hospitalMarkerIcon = L.divIcon({
   iconAnchor: [13, 13],
   popupAnchor: [0, -13],
 });
+
+const liveVehicleMarkerIcon = L.divIcon({
+  className: 'custom-live-vehicle-marker',
+  html: `<div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer;">
+    <div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(37, 99, 235, 0.35); animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #1d4ed8, #2563eb); border: 2.5px solid white; box-shadow: 0 4px 12px rgba(37,99,235,0.7); display: flex; align-items: center; justify-content: center; font-size: 16px; color: white;">
+      🚗
+    </div>
+  </div>`,
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
+  popupAnchor: [0, -22],
+});
+
+function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Number((R * c).toFixed(2));
+}
 
 interface FacilityItem {
   id: string;
@@ -104,6 +130,39 @@ export const LiveHeatMapPage: React.FC = () => {
   const [facilityFilter, setFacilityFilter] = useState<'all' | 'cooling' | 'hospitals' | 'none'>('all');
   const [selectedWardProps, setSelectedWardProps] = useState<any | null>(null);
   const [activeViewMode, setActiveViewMode] = useState<'thermomap_2d' | 'thermal_terrain_3d' | 'legacy_choropleth'>('thermal_terrain_3d');
+
+  // Real-time location tracking state
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [isTrackingLocation, setIsTrackingLocation] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isTrackingLocation) return;
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+      },
+      (err) => console.warn('Live map GPS notice:', err),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [isTrackingLocation]);
+
+  const toggleLocationTracking = () => {
+    if (isTrackingLocation) {
+      setIsTrackingLocation(false);
+    } else {
+      setIsTrackingLocation(true);
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude]),
+          () => {}
+        );
+      }
+    }
+  };
 
   // Map center: Greater Chennai
   const defaultCenter: [number, number] = [13.045, 80.225];
@@ -395,6 +454,20 @@ export const LiveHeatMapPage: React.FC = () => {
             </button>
           </div>
 
+          {/* Real-Time User/Vehicle Location Tracking Toggle */}
+          <button
+            onClick={toggleLocationTracking}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5 shadow-xs ${
+              isTrackingLocation
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+            title="Track live moving location on map"
+          >
+            <LocateFixed className="w-3.5 h-3.5" />
+            <span>{isTrackingLocation ? 'Live GPS Active' : 'Track My Location'}</span>
+          </button>
+
           {/* Map Provider Settings Popover */}
           <MapSettingsPopover
             currentConfig={providerConfig}
@@ -480,63 +553,117 @@ export const LiveHeatMapPage: React.FC = () => {
               />
             )}
 
+            {/* Live Moving Vehicle / User Location Marker */}
+            {userLocation && (
+              <Marker position={userLocation} icon={liveVehicleMarkerIcon}>
+                <Popup>
+                  <div className="p-1.5 text-xs text-slate-900 font-sans min-w-[190px]">
+                    <strong className="text-blue-600 font-bold block flex items-center gap-1">
+                      <span>🚗</span>
+                      <span>Your Live Traveling Position</span>
+                    </strong>
+                    <div className="text-[11px] text-slate-600 mt-0.5">
+                      Coordinates: {userLocation[0].toFixed(4)}°N, {userLocation[1].toFixed(4)}°E
+                    </div>
+                    <div className="text-[10px] text-emerald-700 font-semibold mt-1">
+                      Live GPS Navigation Active
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+
             {/* Cooling Centers Pins */}
             {(facilityFilter === 'all' || facilityFilter === 'cooling') &&
-              facilities.cooling_centers.map((cc) => (
-                <Marker
-                  key={cc.id}
-                  position={[cc.latitude, cc.longitude]}
-                  icon={coolingCenterIcon}
-                >
-                  <Popup className="custom-leaflet-popup">
-                    <div className="p-2 space-y-1 font-sans text-xs bg-slate-900 text-white rounded">
-                      <div className="font-bold flex items-center gap-1 text-cyan-400">
-                        <Snowflake className="w-3.5 h-3.5" />
-                        <span>{cc.name}</span>
+              facilities.cooling_centers.map((cc) => {
+                const distFromUser = userLocation
+                  ? haversineDistanceKm(userLocation[0], userLocation[1], cc.latitude, cc.longitude)
+                  : null;
+                return (
+                  <Marker
+                    key={cc.id}
+                    position={[cc.latitude, cc.longitude]}
+                    icon={coolingCenterIcon}
+                  >
+                    <Popup className="custom-leaflet-popup">
+                      <div className="p-2 space-y-1 font-sans text-xs bg-slate-900 text-white rounded min-w-[210px]">
+                        <div className="font-bold flex items-center justify-between text-cyan-400">
+                          <div className="flex items-center gap-1">
+                            <Snowflake className="w-3.5 h-3.5" />
+                            <span>{cc.name}</span>
+                          </div>
+                          {distFromUser !== null && (
+                            <span className="text-[10px] bg-cyan-900/80 text-cyan-200 px-1.5 py-0.2 rounded font-mono font-bold">
+                              {distFromUser} km
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-300">{cc.address}</div>
+                        {distFromUser !== null && (
+                          <div className="text-[11px] text-cyan-300 font-bold font-mono">
+                            📍 Live Distance: {distFromUser} km away
+                          </div>
+                        )}
+                        <div className="text-[10px] text-cyan-300 font-mono pt-1">
+                          Planning Capacity: {cc.capacity} persons
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          Water & Power Backup: Available
+                        </div>
+                        <span className="inline-block px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 text-[9px] font-mono border border-slate-700">
+                          Synthetic demonstration facility
+                        </span>
                       </div>
-                      <div className="text-[11px] text-slate-300">{cc.address}</div>
-                      <div className="text-[10px] text-cyan-300 font-mono pt-1">
-                        Planning Capacity: {cc.capacity} persons
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        Water & Power Backup: Available
-                      </div>
-                      <span className="inline-block px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300 text-[9px] font-mono border border-slate-700">
-                        Synthetic demonstration facility
-                      </span>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+                    </Popup>
+                  </Marker>
+                );
+              })}
 
             {/* Hospital Pins (Non-clinical planning representations) */}
             {(facilityFilter === 'all' || facilityFilter === 'hospitals') &&
-              facilities.hospitals.map((h) => (
-                <Marker
-                  key={h.id}
-                  position={[h.latitude, h.longitude]}
-                  icon={hospitalMarkerIcon}
-                >
-                  <Popup className="custom-leaflet-popup">
-                    <div className="p-2 space-y-1 font-sans text-xs bg-slate-900 text-white rounded">
-                      <div className="font-bold flex items-center gap-1 text-red-400">
-                        <HospitalIcon className="w-3.5 h-3.5" />
-                        <span>{h.name}</span>
+              facilities.hospitals.map((h) => {
+                const distFromUser = userLocation
+                  ? haversineDistanceKm(userLocation[0], userLocation[1], h.latitude, h.longitude)
+                  : null;
+                return (
+                  <Marker
+                    key={h.id}
+                    position={[h.latitude, h.longitude]}
+                    icon={hospitalMarkerIcon}
+                  >
+                    <Popup className="custom-leaflet-popup">
+                      <div className="p-2 space-y-1 font-sans text-xs bg-slate-900 text-white rounded min-w-[210px]">
+                        <div className="font-bold flex items-center justify-between text-red-400">
+                          <div className="flex items-center gap-1">
+                            <HospitalIcon className="w-3.5 h-3.5" />
+                            <span>{h.name}</span>
+                          </div>
+                          {distFromUser !== null && (
+                            <span className="text-[10px] bg-red-900/80 text-red-200 px-1.5 py-0.2 rounded font-mono font-bold">
+                              {distFromUser} km
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-300">{h.type}</div>
+                        {distFromUser !== null && (
+                          <div className="text-[11px] text-red-300 font-bold font-mono">
+                            📍 Live Distance: {distFromUser} km away
+                          </div>
+                        )}
+                        <div className="text-[10px] text-cyan-300 font-mono pt-1">
+                          Readiness Category: {h.readiness_status || 'Demonstration assessment'}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono">
+                          Contact: Not connected in demo mode
+                        </div>
+                        <span className="inline-block px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 text-[9px] font-mono border border-slate-700">
+                          Synthetic demonstration facility
+                        </span>
                       </div>
-                      <div className="text-[11px] text-slate-300">{h.type}</div>
-                      <div className="text-[10px] text-cyan-300 font-mono pt-1">
-                        Readiness Category: {h.readiness_status || 'Demonstration assessment'}
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono">
-                        Contact: Not connected in demo mode
-                      </div>
-                      <span className="inline-block px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 text-[9px] font-mono border border-slate-700">
-                        Synthetic demonstration facility
-                      </span>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
+                    </Popup>
+                  </Marker>
+                );
+              })}
           </MapContainer>
 
           {/* Floating Metric Legend */}
