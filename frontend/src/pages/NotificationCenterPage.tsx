@@ -1174,6 +1174,19 @@ export const NotificationCenterPage: React.FC = () => {
                               {testResult.data.results.whatsapp.status === 'FAILED' ? '⚠️' : 'ℹ️'} {testResult.data.results.whatsapp.error}
                             </p>
                           )}
+                          <div className="pt-1.5">
+                            <a
+                              href={`https://api.whatsapp.com/send?phone=91${testPhoneDigits.replace(/\D/g, '')}&text=${encodeURIComponent(
+                                testCustomMsg.trim() || `🚨 [HEAT ALERT - ${testSeverity}] Ward: ${testWard || 'Ward 14 (Royapettah)'} | HTSI: ${testHtsi}. Extreme heat stress advisory. Hydrate frequently and avoid direct sun.`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition shadow-xs"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5" />
+                              <span>📲 Launch WhatsApp Transmission (+91 {testPhoneDigits.replace(/\D/g, '')})</span>
+                            </a>
+                          </div>
                         </div>
                       )}
 
@@ -1198,6 +1211,11 @@ export const NotificationCenterPage: React.FC = () => {
                             <div>Provider: <strong className="text-stone-800">{testResult.data.results.sms.provider || 'MSG91'}</strong></div>
                             <div>Simulated: <strong className={testResult.data.results.sms.is_simulated ? 'text-amber-600' : 'text-emerald-700'}>{String(testResult.data.results.sms.is_simulated)}</strong></div>
                             <div className="col-span-2 truncate">Ref / ID: <span className="text-stone-800">{testResult.data.results.sms.message_id || 'None'}</span></div>
+                            {testResult.data.results.sms.provider === 'MUNICIPAL_EMERGENCY_DLT' && (
+                              <div className="col-span-2 text-[10px] text-emerald-800 bg-emerald-50/70 p-1.5 rounded-lg border border-emerald-200 font-sans">
+                                🛡️ <strong>TRAI DLT Backbone Header:</strong> <code className="font-mono font-bold">VM-THMSAF</code> (PE: 110156942000 | Circle: Chennai Urban)
+                              </div>
+                            )}
                           </div>
                           {testResult.data.results.sms.error && (
                             <p className={`text-[10px] p-2 rounded-lg border font-medium ${

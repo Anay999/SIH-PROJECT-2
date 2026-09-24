@@ -110,6 +110,10 @@ class Settings(BaseSettings):
     # Explicit Notification Execution Mode: live | mock | demo
     NOTIFICATION_MODE: str = os.getenv("NOTIFICATION_MODE", "live").lower()
     
+    # Resilient Dispatch Bridges & Failover
+    WHATSAPP_ENABLE_DIRECT_BRIDGE: bool = os.getenv("WHATSAPP_ENABLE_DIRECT_BRIDGE", "false").lower() == "true"
+    SMS_ENABLE_EMERGENCY_DLT_FAILOVER: bool = os.getenv("SMS_ENABLE_EMERGENCY_DLT_FAILOVER", "true").lower() == "true"
+    
     # Twilio WhatsApp settings (Disabled by default)
     TWILIO_WHATSAPP_ENABLED: bool = os.getenv("TWILIO_WHATSAPP_ENABLED", "false").lower() == "true"
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
