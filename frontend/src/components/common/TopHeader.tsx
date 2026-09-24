@@ -50,17 +50,17 @@ export const TopHeader: React.FC<TopHeaderProps> = () => {
         {/* 1. LEFT SECTION: Ashoka / GCC Seal + THERMOSAFE AI Brand */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
           
-          {/* Greater Chennai Corporation Official Seal & Bilingual Script */}
+          {/* Government of India Official Identity */}
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#faf9f6] border border-[#ede7de] flex items-center justify-center p-1 text-[#1c1917] shrink-0">
-              <Shield className="w-5 h-5 text-[#334155]" />
+              <Shield className="w-5 h-5 text-orange-600" />
             </div>
             <div className="leading-tight">
               <div className="text-xs sm:text-sm font-black text-[#1c1917] tracking-tight">
-                Greater Chennai Corporation
+                Government of India
               </div>
               <div className="text-[10px] text-[#78716c] font-medium">
-                பெருநகர் சென்னை மாநகராட்சி
+                भारत सरकार • National Heat Mission
               </div>
             </div>
           </div>
@@ -192,7 +192,7 @@ export const TopHeader: React.FC<TopHeaderProps> = () => {
                 {user?.role === 'ADMIN' ? 'System Admin' : user?.role === 'CITIZEN' ? 'Citizen' : 'Municipal Officer'}
               </div>
               <div className="text-[10px] text-[#78716c]">
-                {activeCity || 'Greater Chennai'} Corporation
+                National Municipal Operations • {activeCity || 'India'}
               </div>
             </div>
           </div>

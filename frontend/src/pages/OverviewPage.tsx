@@ -172,10 +172,10 @@ export const OverviewPage: React.FC = () => {
       {/* 1. TOP PANORAMIC BANNER (Matching Image 1 Exactly)       */}
       {/* ======================================================== */}
       <div className="relative rounded-3xl overflow-hidden shadow-sm border border-[#ede7de] bg-[#fdfbf7]">
-        {/* Background Artwork: Chennai Coastline & Ripon Building at Sunset */}
+        {/* Background Artwork: India Landmark Skyline and Solar Horizon */}
         <img
-          src="/assets/chennai_banner.jpg"
-          alt="Chennai City Skyline and Coastline Sunset"
+          src="/assets/india_banner.jpg"
+          alt="Government of India National Heat Resilience Mission"
           className="w-full h-44 sm:h-52 md:h-60 object-cover object-center"
         />
 
@@ -185,14 +185,14 @@ export const OverviewPage: React.FC = () => {
         {/* Left Headline */}
         <div className="absolute inset-y-0 left-0 p-6 sm:p-8 lg:p-10 flex flex-col justify-center max-w-xl z-10 space-y-1 sm:space-y-1.5">
           <span className="text-[11px] font-black tracking-wider uppercase text-red-600 block">
-            GREATER CHENNAI CORPORATION
+            NATIONAL HEAT RISK RESILIENCE MISSION • GOVERNMENT OF INDIA
           </span>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1c1917] tracking-tight leading-tight">
             Beat the Heat, <br className="hidden sm:inline" />
-            <span className="text-[#ea580c]">Build a Safer Chennai</span>
+            <span className="text-[#ea580c]">Build a Safer India</span>
           </h1>
           <p className="text-xs sm:text-sm text-[#57534e] font-medium pt-0.5 max-w-lg">
-            Real-time heat risk insights. Early warnings. Targeted action. Healthier communities.
+            Real-time heat risk insights. Early warnings. Targeted action. Healthier communities across India.
           </p>
         </div>
 

@@ -15,22 +15,20 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
-  Sliders,
-  ChevronDown
+  Sliders
 } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useAuth } from '../../context/AuthContext';
 
 export const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
-  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
   const { actionPlans } = useWorkspace();
   const { user } = useAuth();
 
   const pendingActionsCount = actionPlans.filter(a => a.status === 'Suggested' || a.status === 'Under Review').length;
   const isAdmin = user?.role === 'ADMIN';
 
-  // Core items matching Image 1 exactly
+  // Primary operational features
   const PRIMARY_NAV_ITEMS = [
     { to: '/overview', label: 'Dashboard', icon: Home },
     { to: '/emergency-gis', label: 'Heat Operations', icon: Sun },
@@ -43,8 +41,8 @@ export const Sidebar: React.FC = () => {
     { to: '/analytics', label: 'Reports', icon: BarChart3 },
   ];
 
-  // Secondary/Advanced tools to ensure ZERO features are lost
-  const SECONDARY_NAV_ITEMS = [
+  // Advanced features (all kept fully operational and accessible)
+  const ADVANCED_NAV_ITEMS = [
     { to: '/thermal-terrain', label: '3D Command Center', icon: Compass, badge: '3D Topo', badgeColor: 'bg-gradient-to-r from-orange-600 to-amber-600 text-white' },
     { to: '/users', label: 'Registered Users', icon: Users, badge: 'Citizens', badgeColor: 'bg-emerald-100 text-emerald-800' },
     { to: '/priority-areas', label: 'Priority Vulnerability', icon: Sliders },
@@ -57,14 +55,14 @@ export const Sidebar: React.FC = () => {
         isCollapsed ? 'w-20' : 'w-64'
       } h-full overflow-hidden`}
     >
-      {/* 1. Main Navigation List */}
+      {/* 1. Main Navigation List with all features */}
       <div className="p-3 flex-1 overflow-y-auto space-y-1.5 scrollbar-thin">
         
         {/* Collapse toggle button */}
         <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-[#f5f3ef]">
           {!isCollapsed && (
             <span className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-wider">
-              Navigation
+              Operational Features
             </span>
           )}
           <button
@@ -76,7 +74,7 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
 
-        {/* Primary Image 1 Nav Items */}
+        {/* Primary Features */}
         {PRIMARY_NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           return (
@@ -123,73 +121,56 @@ export const Sidebar: React.FC = () => {
           );
         })}
 
-        {/* Expandable Advanced Operations Section (Ensures Zero Features are lost) */}
+        {/* Section Divider for Advanced Command Features */}
         {!isCollapsed && (
-          <div className="pt-2">
-            <button
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full flex items-center justify-between px-3 py-1.5 text-[11px] font-bold text-[#78716c] hover:text-[#1c1917] transition"
-            >
-              <span>More Modules</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showAdvanced && (
-              <div className="mt-1 space-y-1 pl-1 border-l-2 border-orange-100 animate-fadeIn">
-                {SECONDARY_NAV_ITEMS.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={({ isActive }) =>
-                        `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                          isActive
-                            ? 'bg-orange-50 text-orange-700 font-bold border border-orange-200'
-                            : 'text-[#57534e] hover:text-[#1c1917] hover:bg-[#faf9f6]'
-                        }`
-                      }
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <Icon className="w-3.5 h-3.5 text-[#78716c]" />
-                        <span className="truncate text-[11px]">{item.label}</span>
-                      </div>
-                      {item.badge && (
-                        <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${item.badgeColor || 'bg-stone-100'}`}>
-                          {item.badge}
-                        </span>
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            )}
+          <div className="pt-3 pb-1 px-2 border-t border-[#f5f3ef]">
+            <span className="text-[10px] font-bold text-[#a8a29e] uppercase tracking-wider">
+              Advanced Modules
+            </span>
           </div>
         )}
 
+        {/* Advanced Features directly accessible (No Image below!) */}
+        {ADVANCED_NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 group ${
+                  isActive
+                    ? 'bg-orange-50 text-orange-700 font-bold border border-orange-200'
+                    : 'text-[#57534e] hover:text-[#1c1917] hover:bg-[#faf9f6]'
+                }`
+              }
+              title={isCollapsed ? item.label : undefined}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <Icon className="w-4 h-4 text-[#78716c] group-hover:text-orange-600 transition-transform group-hover:scale-110 shrink-0" />
+                {!isCollapsed && (
+                  <span className="truncate tracking-tight">{item.label}</span>
+                )}
+              </div>
+              {!isCollapsed && item.badge && (
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${item.badgeColor || 'bg-stone-100'}`}>
+                  {item.badge}
+                </span>
+              )}
+            </NavLink>
+          );
+        })}
+
       </div>
 
-      {/* 2. Bottom Sidebar Heritage Card (Matching Image 1) */}
+      {/* 2. Compact Bottom System Status Strip (Image completely removed!) */}
       {!isCollapsed && (
-        <div className="p-3 border-t border-[#ede7de]">
-          <div className="bg-[#faf9f6] border border-[#ede7de] rounded-3xl overflow-hidden shadow-2xs group">
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-amber-50">
-              <img
-                src="/assets/chennai_sidebar.jpg"
-                alt="Ripon Building Heritage Chennai"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-            </div>
-            <div className="p-3 space-y-1">
-              <h4 className="text-xs font-black text-[#1c1917] leading-snug tracking-tight">
-                A Cooler, Safer Chennai for a Healthier Tomorrow
-              </h4>
-              <p className="text-[10px] text-[#78716c] font-medium">
-                People • Preparedness • Resilience
-              </p>
-            </div>
+        <div className="p-3 border-t border-[#ede7de] text-[10px] text-[#78716c] flex items-center justify-between font-medium bg-[#faf9f6]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-semibold text-[#44403c]">National Grid Live</span>
           </div>
+          <span className="font-mono text-[#a8a29e]">GoI • NDMA</span>
         </div>
       )}
 
