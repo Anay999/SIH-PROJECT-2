@@ -9,6 +9,19 @@ from app.models.audit import AuditLog
 from app.models.simulation import SimulationRecord
 from app.models.otp import OtpChallenge, OtpStatus, AuthSession
 from app.models.user import User, UserRole
+from app.models.notifications import (
+    NotificationPreference,
+    NotificationTemplate,
+    NotificationJob,
+    NotificationDelivery,
+    NotificationAuditLog,
+    NotificationProviderConfig,
+    DeliveryStatus,
+    ChannelType,
+    NotificationPriority,
+    SeverityThreshold,
+    ProviderHealthStatus
+)
 
 __all__ = [
     "City",
@@ -33,4 +46,15 @@ __all__ = [
     "AuthSession",
     "User",
     "UserRole",
+    "NotificationPreference",
+    "NotificationTemplate",
+    "NotificationJob",
+    "NotificationDelivery",
+    "NotificationAuditLog",
+    "NotificationProviderConfig",
+    "DeliveryStatus",
+    "ChannelType",
+    "NotificationPriority",
+    "SeverityThreshold",
+    "ProviderHealthStatus"
 ]

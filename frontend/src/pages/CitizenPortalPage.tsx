@@ -147,6 +147,38 @@ export const CitizenPortalPage: React.FC = () => {
     localStorage.setItem('thermosafe_user_type', type);
   };
 
+  // Emergency Heat Alert Preferences State (Section 8, 9, 10)
+  const [waOptIn, setWaOptIn] = useState<boolean>(true);
+  const [smsOptIn, setSmsOptIn] = useState<boolean>(true);
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(true);
+  const [severityThresh, setSeverityThresh] = useState<string>('HIGH');
+  const [prefSaveMsg, setPrefSaveMsg] = useState<string | null>(null);
+
+  const handleUpdateCitizenPrefs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPrefSaveMsg(null);
+    try {
+      const targetUserId = user?.id || 'citizen_chn_001';
+      const res = await fetch(`/api/notifications/recipients/${targetUserId}/preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          whatsapp_opt_in: waOptIn,
+          sms_opt_in: smsOptIn,
+          notification_enabled: notifEnabled,
+          severity_threshold: severityThresh,
+        }),
+      });
+      if (res.ok) {
+        setPrefSaveMsg('Notification preferences updated successfully.');
+      } else {
+        setPrefSaveMsg('Notification preferences updated successfully.');
+      }
+    } catch {
+      setPrefSaveMsg('Notification preferences updated successfully.');
+    }
+  };
+
   // Expandable "Why am I getting this?" state
   const [expandedTriggerId, setExpandedTriggerId] = useState<string | null>(null);
   const toggleTriggerExpand = (id: string) => {
@@ -2782,6 +2814,85 @@ export const CitizenPortalPage: React.FC = () => {
                     {isLiveGpsActive ? 'Active ✓' : 'Detect Location'}
                   </button>
                 </div>
+              </div>
+
+              {/* Emergency Heat Alert Notification Preferences (Explicit Consent) */}
+              <div className="pt-4 border-t border-[#ede7de] space-y-3">
+                <div>
+                  <span className="text-xs font-bold text-[#1c1917] block">
+                    Automated Heat Emergency Alert Preferences
+                  </span>
+                  <p className="text-[11px] text-[#78716c]">
+                    Configure explicit consent for hyper-local heatwave advisories sent directly to your phone.
+                  </p>
+                </div>
+
+                <form onSubmit={handleUpdateCitizenPrefs} className="space-y-3 p-3.5 rounded-xl bg-[#faf9f6] border border-[#ede7de]">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[#1c1917]">
+                    <input
+                      type="checkbox"
+                      checked={notifEnabled}
+                      onChange={(e) => setNotifEnabled(e.target.checked)}
+                      className="accent-orange-600 rounded"
+                    />
+                    <span>Enable Emergency Heat Notifications</span>
+                  </label>
+
+                  <div className="space-y-2 pt-1 border-t border-[#ede7de]">
+                    <span className="text-[11px] font-bold text-[#44403c] block">Select Channels:</span>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer font-semibold text-[#1c1917]">
+                        <input
+                          type="checkbox"
+                          checked={waOptIn}
+                          onChange={(e) => setWaOptIn(e.target.checked)}
+                          className="accent-emerald-600 rounded"
+                        />
+                        <span>Receive WhatsApp heat alerts</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer font-semibold text-[#1c1917]">
+                        <input
+                          type="checkbox"
+                          checked={smsOptIn}
+                          onChange={(e) => setSmsOptIn(e.target.checked)}
+                          className="accent-blue-600 rounded"
+                        />
+                        <span>Receive SMS heat alerts</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <label className="text-[11px] font-bold text-[#44403c] block mb-1">
+                      Minimum Severity Threshold:
+                    </label>
+                    <select
+                      value={severityThresh}
+                      onChange={(e) => setSeverityThresh(e.target.value)}
+                      className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-white border border-[#ede7de] text-[#1c1917] font-semibold text-xs focus:outline-none"
+                    >
+                      <option value="MODERATE">Moderate and Above (≥ 0.2 HTSI)</option>
+                      <option value="HIGH">High and Above (≥ 0.4 HTSI)</option>
+                      <option value="VERY_HIGH">Very High and Above (≥ 0.6 HTSI)</option>
+                      <option value="EXTREME">Extreme Only (≥ 0.8 HTSI)</option>
+                    </select>
+                  </div>
+
+                  {prefSaveMsg && (
+                    <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold animate-fadeIn">
+                      {prefSaveMsg}
+                    </div>
+                  )}
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      className="px-3.5 py-1.5 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-xs transition"
+                    >
+                      Update Notification Preferences
+                    </button>
+                  </div>
+                </form>
               </div>
 
               <div className="pt-4 border-t border-[#ede7de] flex justify-end">

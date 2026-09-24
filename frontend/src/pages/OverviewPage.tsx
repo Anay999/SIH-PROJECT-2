@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../context/AuthContext';
+import { LiveAlertOperations } from '../components/dashboard/LiveAlertOperations';
 
 // Custom Leaflet DivIcons
 const coolingCenterIcon = L.divIcon({
@@ -331,9 +332,10 @@ export const OverviewPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* ---------------------------------------------------- */}
-        {/* LEFT COLUMN: ThermoMap — Chennai (7 Columns on Large) */}
+        {/* LEFT COLUMN: ThermoMap + Live Alert Operations       */}
         {/* ---------------------------------------------------- */}
-        <div className="lg:col-span-7 bg-white border border-[#ede7de] rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col space-y-4">
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-white border border-[#ede7de] rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col space-y-4">
           
           {/* Header Controls matching Image 1 */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -494,8 +496,11 @@ export const OverviewPage: React.FC = () => {
               <span className="font-bold text-amber-400">▲ N</span>
             </div>
           </div>
-
         </div>
+
+        {/* Live Alert Operations Widget (Automated citizen & municipal notification delivery) */}
+        <LiveAlertOperations />
+      </div>
 
         {/* ---------------------------------------------------- */}
         {/* RIGHT COLUMN: 3 STAT WIDGETS (5 Columns on Large)    */}

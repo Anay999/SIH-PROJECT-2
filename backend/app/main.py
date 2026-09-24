@@ -25,6 +25,8 @@ async def lifespan(app: FastAPI):
     try:
         from app.data.seed_chennai import seed_database
         seed_database()
+        from app.data.seed_notifications import seed_notifications_data
+        seed_notifications_data()
     except Exception as exc:
         logger.warning(f"Auto-seed check note: {exc}")
 
