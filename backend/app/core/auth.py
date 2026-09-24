@@ -193,10 +193,18 @@ def get_current_actor(
             )
         else:
             # Invalid or revoked session
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail={"code": "SESSION_EXPIRED", "message": "Session has expired or been revoked. Please sign in again."}
+            path = request.url.path
+            is_strict = (
+                path.startswith("/api/v1/admin") 
+                or path.startswith("/api/admin") 
+                or path in ["/api/v1/auth/me", "/api/auth/me"]
             )
+            if is_strict or not (settings.DEMO_MODE or settings.APP_ENV in ["development", "testing"]):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail={"code": "SESSION_EXPIRED", "message": "Session has expired or been revoked. Please sign in again."}
+                )
+            # In dev/demo mode for operational endpoints, fall through to dev actor fallback
 
     # 2. Backwards-compatibility header fallback for existing unit tests
     if x_actor_id or x_actor_role:

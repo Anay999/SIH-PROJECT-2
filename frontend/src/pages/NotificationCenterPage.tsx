@@ -187,6 +187,7 @@ export const NotificationCenterPage: React.FC = () => {
       const res = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           channel: testChannel,
           recipient_phone: fullPhone,
@@ -196,12 +197,23 @@ export const NotificationCenterPage: React.FC = () => {
           custom_message: testCustomMsg.trim() || undefined,
         }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const errorMsg =
+          typeof json.detail === 'string'
+            ? json.detail
+            : json.detail?.message || json.error || `HTTP ${res.status}: Failed to reach gateway service`;
+        setTestResult({
+          success: false,
+          error: errorMsg,
+        });
+        return;
+      }
       setTestResult(json);
       fetchOverview();
       fetchLogs();
     } catch (err: any) {
-      setTestResult({ success: false, error: err.message });
+      setTestResult({ success: false, error: err.message || 'Network error communicating with server' });
     } finally {
       setTestSending(false);
     }
@@ -1115,13 +1127,17 @@ export const NotificationCenterPage: React.FC = () => {
                       Gateway Telemetry Report
                     </span>
                     <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-stone-200 text-stone-800">
-                      MODE: {testResult.data?.mode?.toUpperCase() || (testResult.success ? 'LIVE' : 'FAILED')}
+                      MODE: {testResult.data?.mode?.toUpperCase() || (testResult.success ? 'LIVE' : (testResult.error ? 'ERROR' : 'LIVE'))}
                     </span>
                   </div>
 
-                  {testResult.error && (
-                    <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium">
-                      ⚠️ {testResult.error}
+                  {(testResult.error || testResult.detail) && (
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium space-y-1">
+                      <div className="font-bold flex items-center gap-1.5 text-red-700">
+                        <AlertTriangle className="w-4 h-4 text-red-600" />
+                        Dispatch Alert
+                      </div>
+                      <p>{testResult.error || (typeof testResult.detail === 'string' ? testResult.detail : testResult.detail?.message)}</p>
                     </div>
                   )}
 
