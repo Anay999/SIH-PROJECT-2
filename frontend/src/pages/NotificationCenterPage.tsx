@@ -1150,8 +1150,12 @@ export const NotificationCenterPage: React.FC = () => {
                             <div className="col-span-2 truncate">Ref / ID: <span className="text-stone-800">{testResult.data.results.whatsapp.message_id || 'None'}</span></div>
                           </div>
                           {testResult.data.results.whatsapp.error && (
-                            <p className="text-[10px] text-amber-800 bg-amber-50/70 p-1.5 rounded-lg border border-amber-100">
-                              ℹ️ {testResult.data.results.whatsapp.error}
+                            <p className={`text-[10px] p-2 rounded-lg border font-medium ${
+                              testResult.data.results.whatsapp.status === 'FAILED'
+                                ? 'text-red-800 bg-red-50 border-red-200'
+                                : 'text-amber-800 bg-amber-50/70 border-amber-100'
+                            }`}>
+                              {testResult.data.results.whatsapp.status === 'FAILED' ? '⚠️' : 'ℹ️'} {testResult.data.results.whatsapp.error}
                             </p>
                           )}
                         </div>
@@ -1180,8 +1184,12 @@ export const NotificationCenterPage: React.FC = () => {
                             <div className="col-span-2 truncate">Ref / ID: <span className="text-stone-800">{testResult.data.results.sms.message_id || 'None'}</span></div>
                           </div>
                           {testResult.data.results.sms.error && (
-                            <p className="text-[10px] text-amber-800 bg-amber-50/70 p-1.5 rounded-lg border border-amber-100">
-                              ℹ️ {testResult.data.results.sms.error}
+                            <p className={`text-[10px] p-2 rounded-lg border font-medium ${
+                              testResult.data.results.sms.status === 'FAILED'
+                                ? 'text-red-800 bg-red-50 border-red-200'
+                                : 'text-amber-800 bg-amber-50/70 border-amber-100'
+                            }`}>
+                              {testResult.data.results.sms.status === 'FAILED' ? '⚠️' : 'ℹ️'} {testResult.data.results.sms.error}
                             </p>
                           )}
                         </div>

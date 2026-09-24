@@ -147,6 +147,39 @@ class MSG91SMSProvider(BaseNotificationProvider):
                         msg_id = str(msg_info.get("messageId") or f"ib_{clean_digits}")
                         status_obj = msg_info.get("status", {})
                         status_name = status_obj.get("name", "PENDING_ACCEPTED")
+                        
+                        # Fast downstream routing verification (Infobip resolves carrier route within 100ms via /sms/1/reports)
+                        try:
+                            import asyncio
+                            await asyncio.sleep(0.35)
+                            rep_resp = await client.get(
+                                f"{self.infobip_base_url.rstrip('/')}/sms/1/reports?limit=5",
+                                headers=headers,
+                                timeout=3.0
+                            )
+                            if rep_resp.status_code == 200:
+                                rep_data = rep_resp.json()
+                                for r in rep_data.get("results", []):
+                                    if r.get("messageId") == msg_id:
+                                        r_status = r.get("status", {})
+                                        r_err = r.get("error", {})
+                                        if r_status.get("groupName") == "REJECTED":
+                                            err_desc = r_err.get("description") or r_status.get("description") or "Route rejected by carrier"
+                                            err_name = r_err.get("name") or r_status.get("name") or "REJECTED_ROUTE"
+                                            logger.warning(f"[INFOBIP DOWNSTREAM REJECTED] {msg_id}: {err_name} - {err_desc}")
+                                            return ProviderResult(
+                                                success=False,
+                                                provider="INFOBIP_SMS",
+                                                message_id=msg_id,
+                                                status="FAILED",
+                                                error_code=str(err_name),
+                                                error_message=f"Carrier rejected: {err_desc} (India Route / DLT required)",
+                                                raw_response=str(r)[:400],
+                                                is_simulated=False
+                                            )
+                        except Exception as log_ex:
+                            logger.debug(f"[INFOBIP REPORT CHECK SKIPPED] {log_ex}")
+
                         logger.info(f"[INFOBIP SENT] Accepted by Infobip Gateway. Message ID: {msg_id}, Status: {status_name}")
                         return ProviderResult(
                             success=True,
