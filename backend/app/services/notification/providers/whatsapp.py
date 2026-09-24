@@ -11,12 +11,25 @@ class MetaWhatsAppProvider(BaseNotificationProvider):
     channel: str = "WHATSAPP"
     provider_name: str = "META_WHATSAPP_CLOUD_API"
 
-    def __init__(self):
-        self.access_token = settings.WHATSAPP_ACCESS_TOKEN or settings.META_WHATSAPP_ACCESS_TOKEN
-        self.phone_number_id = settings.WHATSAPP_PHONE_NUMBER_ID or settings.META_WHATSAPP_PHONE_NUMBER_ID
-        self.api_version = settings.WHATSAPP_API_VERSION or "v20.0"
-        self.is_enabled = settings.WHATSAPP_ENABLED
-        self.callmebot_key = getattr(settings, "CALLMEBOT_API_KEY", "")
+    @property
+    def access_token(self) -> str:
+        return settings.WHATSAPP_ACCESS_TOKEN or settings.META_WHATSAPP_ACCESS_TOKEN or ""
+
+    @property
+    def phone_number_id(self) -> str:
+        return settings.WHATSAPP_PHONE_NUMBER_ID or settings.META_WHATSAPP_PHONE_NUMBER_ID or ""
+
+    @property
+    def api_version(self) -> str:
+        return settings.WHATSAPP_API_VERSION or "v20.0"
+
+    @property
+    def is_enabled(self) -> bool:
+        return settings.WHATSAPP_ENABLED
+
+    @property
+    def callmebot_key(self) -> str:
+        return getattr(settings, "CALLMEBOT_API_KEY", "")
 
     def validate_configuration(self) -> Dict[str, Any]:
         has_token = bool(self.access_token and self.access_token.strip())

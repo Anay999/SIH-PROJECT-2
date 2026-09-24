@@ -10,16 +10,41 @@ class MSG91SMSProvider(BaseNotificationProvider):
     channel: str = "SMS"
     provider_name: str = "MSG91_INDIA_DLT"
 
-    def __init__(self):
-        self.auth_key = settings.MSG91_AUTH_KEY
-        self.sender_id = settings.MSG91_SENDER_ID or "THMSAF"
-        self.dlt_template_id = settings.MSG91_DLT_TEMPLATE_ID
-        self.flow_id = settings.MSG91_FLOW_ID
-        self.is_enabled = settings.SMS_ENABLED
-        self.fast2sms_key = getattr(settings, "FAST2SMS_API_KEY", "")
-        self.infobip_key = getattr(settings, "INFOBIP_API_KEY", "")
-        self.infobip_base_url = getattr(settings, "INFOBIP_BASE_URL", "https://api.infobip.com")
-        self.infobip_sender_id = getattr(settings, "INFOBIP_SENDER_ID", "InfoSMS")
+    @property
+    def auth_key(self) -> str:
+        return settings.MSG91_AUTH_KEY or ""
+
+    @property
+    def flow_id(self) -> str:
+        return settings.MSG91_FLOW_ID or ""
+
+    @property
+    def sender_id(self) -> str:
+        return settings.MSG91_SENDER_ID or "THMSAF"
+
+    @property
+    def dlt_template_id(self) -> str:
+        return settings.MSG91_DLT_TEMPLATE_ID or ""
+
+    @property
+    def is_enabled(self) -> bool:
+        return settings.SMS_ENABLED
+
+    @property
+    def fast2sms_key(self) -> str:
+        return getattr(settings, "FAST2SMS_API_KEY", "")
+
+    @property
+    def infobip_key(self) -> str:
+        return getattr(settings, "INFOBIP_API_KEY", "")
+
+    @property
+    def infobip_base_url(self) -> str:
+        return getattr(settings, "INFOBIP_BASE_URL", "https://api.infobip.com")
+
+    @property
+    def infobip_sender_id(self) -> str:
+        return getattr(settings, "INFOBIP_SENDER_ID", "InfoSMS")
 
     def validate_configuration(self) -> Dict[str, Any]:
         has_msg91 = bool(self.auth_key and self.flow_id)

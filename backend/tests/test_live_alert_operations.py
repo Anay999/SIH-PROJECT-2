@@ -126,6 +126,7 @@ def test_live_mode_diagnostics_and_phone_validation(monkeypatch):
     monkeypatch.setattr(settings, "CALLMEBOT_API_KEY", "")
     monkeypatch.setattr(settings, "MSG91_AUTH_KEY", None)
     monkeypatch.setattr(settings, "FAST2SMS_API_KEY", "")
+    monkeypatch.setattr(settings, "INFOBIP_API_KEY", "")
 
     # Login as officer
     auth_resp = client.post("/api/auth/login", json={"username": "officer", "password": "Officer@123"})
