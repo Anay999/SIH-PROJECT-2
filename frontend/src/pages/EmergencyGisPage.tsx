@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Phone,
   Compass,
-  Award,
   Search,
   MessageSquare,
   LocateFixed,
@@ -21,7 +20,8 @@ import {
   Play,
   Pause,
   Radio,
-  Gauge
+  Gauge,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
@@ -39,7 +39,7 @@ export type VehicleType = 'car' | 'bike' | 'bus';
 
 // Geodesic distance calculation in kilometers
 function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Earth radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -60,7 +60,7 @@ function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number
   return Math.round((brng + 360) % 360);
 }
 
-// Custom Map Centering & Auto-Bounding Hook
+// Map Centering & Auto-Bounding Hook
 function MapAutoBounds({
   userCoord,
   destCoord,
@@ -74,7 +74,6 @@ function MapAutoBounds({
 }) {
   const map = useMap();
   useEffect(() => {
-    // Only auto-fit bounds initially or when destination changes, avoiding disrupting active vehicle tracking
     if (isNavigationActive) return;
 
     if (polyline && polyline.length > 1) {
@@ -86,11 +85,11 @@ function MapAutoBounds({
     } else {
       map.setView(userCoord, 14);
     }
-  }, [destCoord, polyline, isNavigationActive, map]);
+  }, [destCoord, polyline, isNavigationActive, map, userCoord]);
   return null;
 }
 
-// Map Vehicle Follower for Smooth Real-Time Centering (Google Maps Navigation Style)
+// Vehicle Follower for Navigation Centering
 function MapVehicleFollower({
   vehicleCoord,
   isAutoCentered,
@@ -121,28 +120,23 @@ function MapVehicleFollower({
   return null;
 }
 
-// Custom Google Maps-style Moving Vehicle Icon Generator
+// Custom Moving Vehicle Marker Icon Generator
 const createVehicleIcon = (type: VehicleType, headingDeg: number, isMoving: boolean) => {
   const emoji = type === 'car' ? '🚗' : type === 'bike' ? '🏍️' : '🚌';
   return new L.DivIcon({
     className: 'custom-moving-vehicle-marker',
     html: `
-      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; cursor: pointer;">
-        <!-- Pulsing GPS Radar Accuracy Aura -->
-        <div style="position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(37, 99, 235, ${isMoving ? '0.35' : '0.2'}); animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-        
-        <!-- Directional Heading Pointer Triangle (Points in direction of travel) -->
-        <div style="position: absolute; top: 1px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 11px solid #1d4ed8; transform: rotate(${headingDeg}deg); transform-origin: center 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></div>
-        
-        <!-- Vehicle Navigation Disk Puck -->
-        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #1d4ed8, #3b82f6); border: 3px solid #ffffff; box-shadow: 0 4px 14px rgba(29,78,216,0.7), 0 0 0 2px rgba(59,130,246,0.3); display: flex; align-items: center; justify-content: center; font-size: 19px; transform: rotate(${headingDeg}deg); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer;">
+        <div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(30, 64, 175, ${isMoving ? '0.25' : '0.15'}); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+        <div style="position: absolute; top: 0px; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 9px solid #1e40af; transform: rotate(${headingDeg}deg); transform-origin: center 22px;"></div>
+        <div style="width: 34px; height: 34px; border-radius: 50%; background: #1e3a8a; border: 2.5px solid #ffffff; box-shadow: 0 3px 8px rgba(30,58,138,0.4); display: flex; align-items: center; justify-content: center; font-size: 16px; transform: rotate(${headingDeg}deg);">
           ${emoji}
         </div>
       </div>
     `,
-    iconSize: [50, 50],
-    iconAnchor: [25, 25],
-    popupAnchor: [0, -25]
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    popupAnchor: [0, -22]
   });
 };
 
@@ -150,78 +144,75 @@ const createVehicleIcon = (type: VehicleType, headingDeg: number, isMoving: bool
 const coolingCenterMarkerIcon = new L.DivIcon({
   className: 'custom-cool-marker',
   html: `
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; cursor: pointer;">
-      <div style="position: absolute; width: 38px; height: 38px; border-radius: 50%; background: rgba(6, 182, 212, 0.4); animation: ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-      <div style="background: linear-gradient(135deg, #0891b2, #06b6d4); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(6,182,212,0.65); font-size: 16px;">
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; cursor: pointer;">
+      <div style="background: #0284c7; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(2,132,199,0.45); font-size: 15px;">
         ❄️
       </div>
     </div>
   `,
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
-  popupAnchor: [0, -19]
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -17]
 });
 
 const coolingCenterSelectedMarkerIcon = new L.DivIcon({
   className: 'custom-cool-selected-marker',
   html: `
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; cursor: pointer;">
-      <div style="position: absolute; width: 50px; height: 50px; border-radius: 50%; background: rgba(6, 182, 212, 0.55); animation: ping 1.2s infinite;"></div>
-      <div style="background: #0891b2; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; box-shadow: 0 0 22px rgba(6,182,212,0.9); font-size: 20px;">
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer;">
+      <div style="position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(2, 132, 199, 0.35); animation: ping 1.4s infinite;"></div>
+      <div style="background: #0369a1; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 0 14px rgba(3,105,161,0.6); font-size: 18px;">
         ❄️
       </div>
     </div>
   `,
-  iconSize: [50, 50],
-  iconAnchor: [25, 25],
-  popupAnchor: [0, -25]
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
+  popupAnchor: [0, -22]
 });
 
 // 2. HOSPITALS: Distinct Red Cross Marker
 const hospitalMarkerIcon = new L.DivIcon({
   className: 'custom-hosp-marker',
   html: `
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; cursor: pointer;">
-      <div style="position: absolute; width: 38px; height: 38px; border-radius: 10px; background: rgba(220, 38, 38, 0.35); animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-      <div style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white; width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 4px 12px rgba(220,38,38,0.65); font-weight: 900; font-size: 20px;">
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; cursor: pointer;">
+      <div style="background: #dc2626; color: white; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(220,38,38,0.45); font-weight: 900; font-size: 18px; line-height: 1;">
         +
       </div>
     </div>
   `,
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
-  popupAnchor: [0, -19]
+  iconSize: [34, 34],
+  iconAnchor: [17, 17],
+  popupAnchor: [0, -17]
 });
 
 const hospitalSelectedMarkerIcon = new L.DivIcon({
   className: 'custom-hosp-selected-marker',
   html: `
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; cursor: pointer;">
-      <div style="position: absolute; width: 50px; height: 50px; border-radius: 14px; background: rgba(239, 68, 68, 0.55); animation: ping 1.2s infinite;"></div>
-      <div style="background: #dc2626; color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 3px solid #ffffff; box-shadow: 0 0 24px rgba(239,68,68,0.9); font-weight: 900; font-size: 24px;">
+    <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; cursor: pointer;">
+      <div style="position: absolute; width: 44px; height: 44px; border-radius: 10px; background: rgba(220, 38, 38, 0.35); animation: ping 1.4s infinite;"></div>
+      <div style="background: #b91c1c; color: white; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 0 14px rgba(185,28,28,0.6); font-weight: 900; font-size: 22px; line-height: 1;">
         +
       </div>
     </div>
   `,
-  iconSize: [50, 50],
-  iconAnchor: [25, 25],
-  popupAnchor: [0, -25]
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
+  popupAnchor: [0, -22]
 });
 
 const clinicIcon = new L.DivIcon({
   className: 'custom-clinic-marker',
   html: `
-    <div style="background: #ea580c; color: white; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.6); font-weight: bold; font-size: 15px;">
+    <div style="background: #ea580c; color: white; width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ffffff; box-shadow: 0 2px 5px rgba(234,88,12,0.4); font-size: 13px;">
       🚑
     </div>
   `,
-  iconSize: [30, 30],
-  iconAnchor: [15, 15],
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
 });
 
 // Regional Metro Presets
 const LOCATION_PRESETS = [
-  { name: '📍 Live GPS Location', lat: null, lon: null, isGPS: true },
   { name: 'Pune', lat: 18.5204, lon: 73.8567 },
   { name: 'Mumbai', lat: 19.0760, lon: 72.8777 },
   { name: 'Delhi NCR', lat: 28.6139, lon: 77.2090 },
@@ -262,7 +253,7 @@ export const EmergencyGisPage: React.FC = () => {
       wbgtC: 32.1,
       htsi: 83.5,
       riskLevel: 'HIGH_HEAT_STRESS',
-      advisory: 'EXTREME ROAD HEAT STRESS — AUTOMATIC COOLING SHELTERS ACTIVE'
+      advisory: 'EXTREME ROAD HEAT STRESS — MUNICIPAL COOLING SHELTERS ACTIVATED'
     };
   }, []);
 
@@ -276,12 +267,12 @@ export const EmergencyGisPage: React.FC = () => {
   const [alertSent, setAlertSent] = useState<boolean>(false);
   const [smsSent, setSmsSent] = useState<boolean>(false);
   const [activePreset, setActivePreset] = useState<string>('Chennai');
-  const [basemapMode, setBasemapMode] = useState<'satellite' | 'street'>('satellite');
+  const [basemapMode, setBasemapMode] = useState<'satellite' | 'street'>('street');
   const [gisViewMode, setGisViewMode] = useState<'dispatcher' | 'thermomap'>('dispatcher');
 
   const lastFetchedCenterRef = useRef<[number, number]>(userLocation);
 
-  // 1. Initial Permission Check on mount
+  // Initial Permission Check on mount
   useEffect(() => {
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'geolocation' as PermissionName }).then((res) => {
@@ -292,7 +283,7 @@ export const EmergencyGisPage: React.FC = () => {
     }
   }, []);
 
-  // 2. Fetch facilities when user moves significantly (> 300m) or initial load
+  // Fetch facilities when user moves significantly (> 300m) or initial load
   useEffect(() => {
     const distFromLastFetch = haversineDistanceKm(
       lastFetchedCenterRef.current[0],
@@ -302,7 +293,7 @@ export const EmergencyGisPage: React.FC = () => {
     );
 
     if (facilities.length > 0 && distFromLastFetch < 0.3) {
-      return; // Use dynamic local re-sorting for sub-300m travel to avoid network thrashing
+      return;
     }
 
     let isCurrent = true;
@@ -332,7 +323,7 @@ export const EmergencyGisPage: React.FC = () => {
     };
   }, [userLocation]);
 
-  // 3. Dynamic Zero-Latency Facility Prioritization based on Live Vehicle Position
+  // Dynamic Zero-Latency Facility Prioritization based on Live Vehicle Position
   const liveFacilities = useMemo(() => {
     const avgSpeed = vehicleType === 'bike' ? 30 : vehicleType === 'bus' ? 24 : 38;
     return facilities
@@ -348,7 +339,7 @@ export const EmergencyGisPage: React.FC = () => {
       .sort((a, b) => a.distance_km - b.distance_km);
   }, [facilities, userLocation, vehicleType]);
 
-  // 4. Fetch Real OSRM Road Route whenever selectedFacility or initial location changes
+  // Fetch Real OSRM Road Route whenever selectedFacility or initial location changes
   useEffect(() => {
     if (!selectedFacility) return;
     let isCurrent = true;
@@ -378,7 +369,7 @@ export const EmergencyGisPage: React.FC = () => {
     };
   }, [selectedFacility?.id]);
 
-  // 5. Continuous Real-Time GPS Tracking (Google Maps Navigation Style)
+  // Continuous Real-Time GPS Tracking
   useEffect(() => {
     if (!isTrackingActive) return;
 
@@ -423,7 +414,7 @@ export const EmergencyGisPage: React.FC = () => {
     };
   }, [isTrackingActive, vehicleType]);
 
-  // 6. Live Travel Simulation Loop along Real OSRM Road Polyline
+  // Live Travel Simulation Loop along Real OSRM Road Polyline
   useEffect(() => {
     if (!isSimulatingDrive || !routeData?.coordinates || routeData.coordinates.length < 2) {
       return;
@@ -445,7 +436,6 @@ export const EmergencyGisPage: React.FC = () => {
         setHeading(segBearing);
         setUserLocation(nextPt);
 
-        // Realistic vehicular speed variation
         const baseSpeed = vehicleType === 'bike' ? 32 : vehicleType === 'bus' ? 26 : 42;
         const speedVar = Math.round(baseSpeed + Math.sin(nextIdx * 0.4) * 6);
         setSpeedKmh(Math.max(15, speedVar));
@@ -463,7 +453,7 @@ export const EmergencyGisPage: React.FC = () => {
     setIsTrackingActive(true);
     setIsGpsActive(true);
     setIsAutoCentered(true);
-    setActivePreset('📍 Live GPS Location');
+    setActivePreset('📍 Live GPS');
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -482,19 +472,15 @@ export const EmergencyGisPage: React.FC = () => {
 
   const handleSelectPreset = (preset: typeof LOCATION_PRESETS[0]) => {
     setIsSimulatingDrive(false);
-    if (preset.isGPS) {
-      handleStartContinuousGPS();
-    } else if (preset.lat !== null && preset.lon !== null) {
-      setActivePreset(preset.name);
-      setIsTrackingActive(false);
-      setIsGpsActive(false);
-      setUserLocation([preset.lat, preset.lon]);
-      setIsAutoCentered(true);
-      setSimStepIndex(0);
-    }
+    setActivePreset(preset.name);
+    setIsTrackingActive(false);
+    setIsGpsActive(false);
+    setUserLocation([preset.lat, preset.lon]);
+    setIsAutoCentered(true);
+    setSimStepIndex(0);
+    setDetectedLocation(`${preset.name}, India`);
   };
 
-  // 1-Click Selectors prioritizing nearest facility
   const handleSelectNearestHospital = () => {
     setActiveTab('hospital');
     const hospitals = liveFacilities.filter((f) => f.type === 'HOSPITAL');
@@ -567,7 +553,6 @@ export const EmergencyGisPage: React.FC = () => {
     }
   };
 
-  // Filtered & Searched Facilities
   const filteredFacilities = useMemo(() => {
     return liveFacilities.filter((f) => {
       if (activeTab === 'hospital' && f.type !== 'HOSPITAL') return false;
@@ -602,165 +587,213 @@ export const EmergencyGisPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-4 pb-12 font-sans text-slate-800">
-      {/* Return to Citizen Safety Portal Button for Citizens */}
+    <div className="max-w-[1720px] mx-auto px-4 sm:px-6 py-6 space-y-6 font-sans text-slate-800">
+      
+      {/* Citizen Safety Return Banner if in Citizen Mode */}
       {isCitizen && (
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 shadow-xs">
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 shadow-xs">
           <Link
             to="/citizen"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>← Return to Citizen Safety Portal</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Return to Citizen Safety Portal</span>
           </Link>
-          <span className="text-xs text-emerald-800 font-mono hidden sm:inline font-semibold">
+          <span className="text-xs text-emerald-900 font-semibold hidden sm:inline">
             Public Emergency Facility & Route Navigation
           </span>
         </div>
       )}
 
-      {/* Top Emergency Control Bar */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="p-2.5 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 shadow-xs">
-              <Navigation className="w-6 h-6 animate-pulse" />
-            </span>
+      {/* ========================================================================= */}
+      {/* 1. PAGE HEADER & ROUTE ENGINE CONTROLS (Clean Government Card)            */}
+      {/* ========================================================================= */}
+      <section className="bg-white border border-[#ede7de] rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+        
+        {/* Top Row: Title & Government Status Badges */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#f5f3ef] pb-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center shrink-0">
+              <Navigation className="w-5 h-5" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                EMERGENCY GIS & ROAD ROUTING ENGINE
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
-                  OSRM Active
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-black text-[#0f172a] tracking-tight">
+                  Emergency GIS & Road Routing Engine
+                </h1>
+                <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-orange-100 text-orange-800 border border-orange-200">
+                  National Mission
                 </span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-50 text-cyan-700 border border-cyan-200 font-bold flex items-center gap-1">
-                  <Snowflake className="w-3 h-3 text-cyan-600" />
-                  Cooling Centres Active
-                </span>
-                {isGpsActive && (
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold flex items-center gap-1">
-                    <Radio className="w-2.5 h-2.5 text-emerald-600 animate-pulse" />
-                    <span>GPS Locked (±{gpsAccuracy}m)</span>
-                  </span>
-                )}
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Real-time road network routing to verified government emergency hospitals, trauma ICUs, and municipal cooling shelters.
+              </div>
+              <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-3xl">
+                Real-time road routing to verified emergency hospitals, trauma ICUs, and municipal cooling shelters.
               </p>
             </div>
           </div>
-        </div>
 
-        {/* View Mode, Vehicle Selector & Live Tracking Controls */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {/* Dispatcher / ThermoMap Mode Switcher */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
-            <button
-              onClick={() => setGisViewMode('dispatcher')}
-              className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                gisViewMode === 'dispatcher'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Navigation className="w-3.5 h-3.5" />
-              <span>OSRM Dispatcher</span>
-            </button>
-            <button
-              onClick={() => setGisViewMode('thermomap')}
-              className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                gisViewMode === 'thermomap'
-                  ? 'bg-orange-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>ThermoMap Grid</span>
-            </button>
-          </div>
-
-          {/* 3-Way Vehicle Mode Selector */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
-            <button
-              onClick={() => setVehicleType('car')}
-              className={`px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                vehicleType === 'car' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Driving by Car"
-            >
-              <Car className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Car</span>
-            </button>
-            <button
-              onClick={() => setVehicleType('bike')}
-              className={`px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                vehicleType === 'bike' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Traveling by Bike / Motorcycle"
-            >
-              <Bike className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Bike</span>
-            </button>
-            <button
-              onClick={() => setVehicleType('bus')}
-              className={`px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                vehicleType === 'bus' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Transit by Bus"
-            >
-              <Bus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Bus</span>
-            </button>
-          </div>
-
-          {/* Simulated Travel Toggle for Quick Verification on Desktop */}
-          <button
-            onClick={() => {
-              if (isSimulatingDrive) {
-                setIsSimulatingDrive(false);
-              } else {
-                setIsTrackingActive(false);
-                setIsSimulatingDrive(true);
-                setIsAutoCentered(true);
-              }
-            }}
-            className={`px-3 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-xs ${
-              isSimulatingDrive
-                ? 'bg-amber-600 hover:bg-amber-700 text-white animate-pulse'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
-            }`}
-            title="Simulate vehicle moving continuously along the real OSRM road geometry"
-          >
-            {isSimulatingDrive ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 text-amber-600" />}
-            <span>{isSimulatingDrive ? 'Pause Travel' : 'Simulate Road Travel'}</span>
-          </button>
-
-          {/* Continuous Real-Time GPS Tracking Button */}
-          <button
-            onClick={handleStartContinuousGPS}
-            className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 shadow-xs ${
-              isTrackingActive
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-            title="Continuously track user GPS location like Google Maps navigation"
-          >
-            <Radio className="w-4 h-4 animate-spin text-white" style={{ animationDuration: '4s' }} />
-            <span>{isTrackingActive ? `GPS Tracking (±${gpsAccuracy}m)` : 'Track My Live GPS'}</span>
-          </button>
-        </div>
-      </div>
-
-      {gisViewMode === 'thermomap' ? (
-        <div className="space-y-4">
-          <div className="p-3.5 rounded-2xl bg-orange-50/90 border border-orange-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-orange-950">
-              <Layers className="w-4 h-4 text-orange-600 shrink-0" />
-              <span>
-                <strong>2D ThermoMap GIS Canvas:</strong> Real-time Uber H3 hexagonal microclimates (Res 8 / Res 7), biometeorological indices (WBGT, UTCI, Heat Index, HTSI), Overpass emergency facilities, and in-map OSRM road routing.
+          {/* Compact Status Indicators */}
+          <div className="flex items-center flex-wrap gap-2 text-xs font-medium shrink-0">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="font-semibold text-slate-900">OSM:</span>
+              <span className="text-emerald-700 font-bold">Active</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+              <span className="w-2 h-2 rounded-full bg-cyan-500" />
+              <span className="font-semibold text-slate-900">Cooling Centres:</span>
+              <span className="text-cyan-700 font-bold">Active</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+              <span className={`w-2 h-2 rounded-full ${isGpsActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+              <span className="font-semibold text-slate-900">GPS:</span>
+              <span className={isGpsActive ? 'text-emerald-700 font-bold' : 'text-slate-500 font-semibold'}>
+                {isGpsActive ? `Connected (±${gpsAccuracy}m)` : 'Connected'}
               </span>
             </div>
-            <span className="px-2.5 py-1 rounded-lg bg-white border border-orange-200 font-mono text-[11px] text-orange-800 font-bold">
-              GPS: {userLocation[0].toFixed(4)}°N, {userLocation[1].toFixed(4)}°E
+          </div>
+        </div>
+
+        {/* Bottom Row: Organized Controls (Grouped by Function) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pt-1">
+          
+          {/* Left Controls: GIS Mode + Vehicle Mode */}
+          <div className="flex flex-wrap items-center gap-3">
+            
+            {/* GIS Mode Switcher */}
+            <div className="flex items-center bg-[#faf9f6] p-1 rounded-xl border border-[#ede7de] text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setGisViewMode('dispatcher')}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  gisViewMode === 'dispatcher'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                <span>OSM Dispatcher</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGisViewMode('thermomap')}
+                className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  gisViewMode === 'thermomap'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-orange-600" />
+                <span>ThermoMap Grid</span>
+              </button>
+            </div>
+
+            {/* Vehicle Mode Selector */}
+            <div className="flex items-center bg-[#faf9f6] p-1 rounded-xl border border-[#ede7de] text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setVehicleType('car')}
+                className={`px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  vehicleType === 'car'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Routing for Emergency Response Vehicles"
+              >
+                <Car className="w-3.5 h-3.5 text-slate-700" />
+                <span>Car</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVehicleType('bike')}
+                className={`px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  vehicleType === 'bike'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Rapid First-Responder Two Wheeler"
+              >
+                <Bike className="w-3.5 h-3.5 text-slate-700" />
+                <span>Bike</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVehicleType('bus')}
+                className={`px-2.5 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
+                  vehicleType === 'bus'
+                    ? 'bg-white text-slate-900 font-bold shadow-xs border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Public Transit & Mobile Cool Vans"
+              >
+                <Bus className="w-3.5 h-3.5 text-slate-700" />
+                <span>Bus</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Controls: Actions (Secondary Outlined + Primary Solid) */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            
+            {/* Secondary: Simulate Road Travel */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isSimulatingDrive) {
+                  setIsSimulatingDrive(false);
+                } else {
+                  setIsTrackingActive(false);
+                  setIsSimulatingDrive(true);
+                  setIsAutoCentered(true);
+                }
+              }}
+              className={`px-3.5 py-2 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 border ${
+                isSimulatingDrive
+                  ? 'bg-amber-50 text-amber-900 border-amber-300 shadow-xs'
+                  : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-[#faf9f6] border-[#ede7de]'
+              }`}
+              title="Simulate vehicle moving along verified OSRM road coordinates"
+            >
+              {isSimulatingDrive ? (
+                <Pause className="w-3.5 h-3.5 text-amber-700" />
+              ) : (
+                <Play className="w-3.5 h-3.5 text-slate-500" />
+              )}
+              <span>{isSimulatingDrive ? 'Pause Simulation' : 'Simulate Road Travel'}</span>
+            </button>
+
+            {/* Primary: Continuous GPS Tracking */}
+            <button
+              type="button"
+              onClick={handleStartContinuousGPS}
+              className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-xs ${
+                isTrackingActive
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'bg-orange-600 hover:bg-orange-700 text-white'
+              }`}
+              title="Continuously track officer GPS coordinates in real-time"
+            >
+              <Radio className={`w-3.5 h-3.5 text-white ${isTrackingActive ? 'animate-pulse' : ''}`} />
+              <span>{isTrackingActive ? `GPS Tracking (±${gpsAccuracy}m)` : 'GPS Tracking'}</span>
+            </button>
+          </div>
+
+        </div>
+
+      </section>
+
+      {gisViewMode === 'thermomap' ? (
+        <section className="space-y-4">
+          <div className="p-4 rounded-2xl bg-white border border-[#ede7de] flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 text-slate-800">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 text-orange-600 flex items-center justify-center shrink-0">
+                <Layers className="w-4 h-4" />
+              </div>
+              <span>
+                <strong className="text-[#0f172a]">2D ThermoMap GIS Canvas:</strong> Microclimates (Res 8 / Res 7 Uber H3), biometeorological metrics (WBGT, UTCI, HTSI), and multi-point emergency facilities.
+              </span>
+            </div>
+            <span className="px-2.5 py-1 rounded-lg bg-[#faf9f6] border border-[#ede7de] font-mono text-[11px] text-slate-700 font-semibold">
+              Location: {userLocation[0].toFixed(4)}°N, {userLocation[1].toFixed(4)}°E
             </span>
           </div>
 
@@ -770,204 +803,257 @@ export const EmergencyGisPage: React.FC = () => {
             locationName={detectedLocation}
             height="720px"
           />
-        </div>
+        </section>
       ) : (
         <>
-          {/* TWO PRIMARY 1-CLICK EMERGENCY ACTION CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Button 1: Nearest Hospital */}
-            <button
-              onClick={handleSelectNearestHospital}
-              className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group shadow-xs ${
+          {/* ========================================================================= */}
+          {/* 2. EMERGENCY DESTINATION CARDS (Two Equal-Width Structured Cards)          */}
+          {/* ========================================================================= */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            
+            {/* Card 1: Nearest Hospital (Emergency Red Accent) */}
+            <div
+              className={`bg-white border rounded-2xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 ${
                 selectedFacility?.type === 'HOSPITAL'
-                  ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/40'
-                  : 'bg-white border-slate-200 hover:border-rose-300'
+                  ? 'border-rose-400 ring-2 ring-rose-400/20'
+                  : 'border-[#ede7de] hover:border-rose-300'
               }`}
             >
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-rose-100 border border-rose-200 text-rose-600 flex items-center justify-center font-black text-2xl group-hover:scale-110 transition-transform shadow-xs">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center font-black text-xl shrink-0">
                   +
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-rose-700 font-bold">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700">
                       Primary Heatstroke Emergency
                     </span>
-                    <span className="text-[9px] bg-rose-600 text-white font-bold px-1.5 py-0.2 rounded font-mono">
-                      PRIORITIZED
+                    <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                      Verified ICU
                     </span>
                   </div>
-                  <span className="text-base font-bold text-slate-900 block mt-0.5">
-                    Nearest Hospital
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium line-clamp-1">
+                  <h3 className="text-base font-bold text-[#0f172a] mt-1 truncate">
+                    {nearestHospital ? nearestHospital.name : 'Locating closest hospital...'}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
                     {nearestHospital
-                      ? `${nearestHospital.name} (${nearestHospital.distance_km} km away · ~${nearestHospital.travel_time_minutes} mins)`
-                      : 'Locating closest hospital...'}
-                  </span>
+                      ? `${nearestHospital.distance_km} km away · ~${nearestHospital.travel_time_minutes} mins via ${vehicleType} (${nearestHospital.ward_name})`
+                      : 'Scanning regional emergency facility registry...'}
+                  </p>
                 </div>
               </div>
-              <div className="text-right shrink-0">
-                <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-600 text-white shadow-xs group-hover:bg-rose-700 transition">
-                  Road Route →
-                </span>
-              </div>
-            </button>
 
-            {/* Button 2: Nearest Cooling Shelter */}
-            <button
-              onClick={handleSelectNearestCoolingShelter}
-              className={`p-4 rounded-2xl border text-left transition-all duration-200 flex items-center justify-between group shadow-xs ${
+              <div className="mt-4 pt-3.5 border-t border-[#f5f3ef] flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-medium">
+                  {nearestHospital?.icu_beds ? `${nearestHospital.icu_beds} Trauma ICU Beds Available` : '24/7 Heatstroke Protocol'}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleSelectNearestHospital}
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                >
+                  <span>View Road Route</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Nearest Cooling Shelter (Cyan Relief Accent) */}
+            <div
+              className={`bg-white border rounded-2xl p-5 shadow-xs flex flex-col justify-between transition-all duration-200 ${
                 selectedFacility?.type === 'COOLING_CENTRE'
-                  ? 'bg-cyan-50 border-cyan-400 ring-2 ring-cyan-400/40'
-                  : 'bg-white border-slate-200 hover:border-cyan-300'
+                  ? 'border-cyan-400 ring-2 ring-cyan-400/20'
+                  : 'border-[#ede7de] hover:border-cyan-300'
               }`}
             >
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-xl bg-cyan-100 border border-cyan-200 text-cyan-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-xs">
-                  ❄️
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-600 flex items-center justify-center text-lg shrink-0">
+                  <Snowflake className="w-5 h-5 text-cyan-600" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-700 font-bold">
-                      Rapid Shaded Heat Relief & ORS
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-700">
+                      Rapid Heat Relief
                     </span>
-                    <span className="text-[9px] bg-cyan-600 text-white font-bold px-1.5 py-0.2 rounded font-mono">
-                      AUTO-ACTIVATED
+                    <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-cyan-50 text-cyan-700 border border-cyan-200">
+                      Auto-Activated
                     </span>
                   </div>
-                  <span className="text-base font-bold text-slate-900 block mt-0.5">
-                    Nearest Cooling Shelter
-                  </span>
-                  <span className="text-xs text-slate-500 font-medium line-clamp-1">
+                  <h3 className="text-base font-bold text-[#0f172a] mt-1 truncate">
+                    {nearestShelter ? nearestShelter.name : 'Locating closest shelter...'}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5 truncate">
                     {nearestShelter
-                      ? `${nearestShelter.name} (${nearestShelter.distance_km} km away · ~${nearestShelter.travel_time_minutes} mins)`
-                      : 'Locating nearest shelter...'}
-                  </span>
+                      ? `${nearestShelter.distance_km} km away · ~${nearestShelter.travel_time_minutes} mins via ${vehicleType} (${nearestShelter.ward_name})`
+                      : 'Scanning municipal shaded shelters...'}
+                  </p>
                 </div>
               </div>
-              <div className="text-right shrink-0">
-                <span className="text-xs font-bold px-3 py-1.5 rounded-lg bg-cyan-600 text-white shadow-xs group-hover:bg-cyan-700 transition">
-                  Road Route →
+
+              <div className="mt-4 pt-3.5 border-t border-[#f5f3ef] flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-medium">
+                  Air Conditioned · Cold Drinking Water & ORS
                 </span>
-              </div>
-            </button>
-          </div>
-
-          {/* Preset Regional Location Selector Bar */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none text-xs">
-            <span className="text-slate-500 font-mono text-[11px] shrink-0 mr-1 flex items-center gap-1">
-              <Compass className="w-3.5 h-3.5 text-blue-600" />
-              Test Metro:
-            </span>
-            {LOCATION_PRESETS.map((p) => {
-              const isActive = activePreset === p.name;
-              return (
                 <button
-                  key={p.name}
-                  onClick={() => handleSelectPreset(p)}
-                  className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap transition-all flex items-center gap-1.5 shadow-xs ${
-                    isActive
-                      ? 'bg-blue-600 text-white font-bold'
-                      : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-                  }`}
+                  type="button"
+                  onClick={handleSelectNearestCoolingShelter}
+                  className="px-3.5 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
                 >
-                  {p.name}
+                  <span>View Road Route</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
-              );
-            })}
-          </div>
-
-          {/* HIGH HEAT ROAD CORRIDOR ADVISORY BANNER */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-rose-50 to-orange-50 border border-amber-300 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-rose-100 text-rose-700 border border-rose-300">
-                <Flame className="w-5 h-5 animate-pulse" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-rose-800">
-                    ROAD HEAT CORRIDOR MONITOR
-                  </span>
+            </div>
+
+          </section>
+
+          {/* ========================================================================= */}
+          {/* 3. LOCATION & TEST METRO SELECTOR (Compact Outlined Toolbar)              */}
+          {/* ========================================================================= */}
+          <section className="bg-white border border-[#ede7de] rounded-2xl px-4 py-3 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            
+            <div className="flex items-center gap-2.5 shrink-0">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                <Compass className="w-4 h-4 text-orange-600" />
+                <span>Test Metro</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleStartContinuousGPS}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border ${
+                  activePreset === '📍 Live GPS'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : 'bg-[#faf9f6] text-slate-700 hover:text-slate-900 border-[#ede7de]'
+                }`}
+              >
+                <LocateFixed className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Live GPS Location</span>
+              </button>
+            </div>
+
+            {/* Scrollable City Chips */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              {LOCATION_PRESETS.map((p) => {
+                const isSelected = activePreset === p.name;
+                return (
                   <button
-                    onClick={() => setIsHighHeatRoadActive(!isHighHeatRoadActive)}
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition flex items-center gap-1 shadow-xs cursor-pointer ${
-                      isHighHeatRoadActive
-                        ? 'bg-rose-600 text-white border-rose-700'
-                        : 'bg-slate-200 text-slate-700 border-slate-300'
+                    key={p.name}
+                    type="button"
+                    onClick={() => handleSelectPreset(p)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${
+                      isSelected
+                        ? 'bg-slate-900 text-white font-bold border-slate-900 shadow-xs'
+                        : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-[#faf9f6] border-[#ede7de]'
                     }`}
-                    title="Click to toggle road heat condition detection"
                   >
-                    <Flame className="w-3 h-3" />
-                    <span>Heat Condition: {isHighHeatRoadActive ? `HIGH HEAT (${roadHeatMetrics.heatIndexC}°C)` : 'NORMAL (<40°C)'}</span>
+                    {p.name}
+                  </button>
+                );
+              })}
+            </div>
+
+          </section>
+
+          {/* ========================================================================= */}
+          {/* 4. HEAT CORRIDOR MONITORING PANEL (Full-Width Calm Orange Container)      */}
+          {/* ========================================================================= */}
+          <section className="bg-[#fdf9f3] border border-[#fbd38d]/60 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            
+            <div className="flex items-start gap-3.5 max-w-4xl">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0 mt-0.5">
+                <Flame className="w-5 h-5 text-orange-600" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h2 className="text-base font-bold text-[#0f172a]">
+                    Road Heat Corridor Monitor
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setIsHighHeatRoadActive(!isHighHeatRoadActive)}
+                    className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-200 transition cursor-pointer"
+                    title="Click to toggle road heat condition advisory"
+                  >
+                    {isHighHeatRoadActive ? `High Heat (${roadHeatMetrics.heatIndexC}°C)` : 'Normal (<40°C)'}
                   </button>
                   {isHighHeatRoadActive && (
-                    <span className="text-[10px] bg-cyan-600 text-white font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 animate-pulse">
-                      <Snowflake className="w-3 h-3" />
-                      Cooling Shelters Auto-Activated
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-800 border border-cyan-200 flex items-center gap-1">
+                      <Snowflake className="w-3 h-3 text-cyan-600" />
+                      Cooling Shelters Active
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Active Corridor: <strong className="text-slate-900 underline decoration-rose-400">{detectedLocation}</strong>. Heat index is <strong>{roadHeatMetrics.heatIndexC}°C</strong> with WBGT <strong>{roadHeatMetrics.wbgtC}°C</strong>. 
-                  Nearby municipal cooling centres and emergency hospitals are dynamically plotted on the map and automatically prioritized as your vehicle moves.
+
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Active corridor: <strong className="text-slate-900 font-bold">{detectedLocation}</strong>. Heat index is <strong>{roadHeatMetrics.heatIndexC}°C</strong> with WBGT <strong>{roadHeatMetrics.wbgtC}°C</strong>. 
+                  Municipal cooling shelters and emergency hospitals are dynamically prioritized as your vehicle moves along verified road networks.
                 </p>
               </div>
             </div>
 
-            {/* WhatsApp & SMS Quick Dispatch Buttons */}
-            <div className="flex items-center gap-2 shrink-0">
+            {/* Emergency Communication Dispatch Buttons */}
+            <div className="flex items-center gap-2.5 shrink-0 self-start lg:self-center">
               <button
+                type="button"
                 onClick={handleSendWhatsAppAlert}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition flex items-center gap-1.5"
-                title="Dispatch road route to WhatsApp"
+                className="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition flex items-center gap-1.5"
+                title="Send route details via WhatsApp"
               >
                 {alertSent ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" /> : <MessageSquare className="w-3.5 h-3.5" />}
-                <span>{alertSent ? 'Sent to WhatsApp!' : 'WhatsApp Alert'}</span>
+                <span>{alertSent ? 'Dispatched!' : 'WhatsApp Alert'}</span>
               </button>
+              
               <button
+                type="button"
                 onClick={handleSendSmsAlert}
-                className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition flex items-center gap-1.5"
-                title="Dispatch alert via Fast2SMS"
+                className="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-900 text-white shadow-xs transition flex items-center gap-1.5"
+                title="Send SMS notification via Government Gateway"
               >
                 {smsSent ? <CheckCircle2 className="w-3.5 h-3.5 text-blue-200" /> : <Send className="w-3.5 h-3.5" />}
                 <span>{smsSent ? 'SMS Dispatched!' : 'Quick SMS'}</span>
               </button>
             </div>
-          </div>
 
-          {/* Main Grid: Interactive Live Navigation Map (Left 7 Cols) & Facility Routing Navigator (Right 5 Cols) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Interactive Map with Moving Vehicle and Live Facilities */}
-            <div className="lg:col-span-7 bg-[#0b121e] border-2 border-slate-300 rounded-2xl overflow-hidden flex flex-col h-[650px] shadow-md relative">
-              {/* Map Top Status Bar */}
-              <div className="p-3 bg-slate-900/90 backdrop-blur-md border-b border-slate-700 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-200 z-10">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-bold text-white flex items-center gap-1.5">
-                    <span>{vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🚌'}</span>
-                    <span>{selectedFacility ? selectedFacility.name : 'Select Destination'}</span>
+          </section>
+
+          {/* ========================================================================= */}
+          {/* 5. MAIN MAP (Left ~65%) & FACILITY RESULTS (Right ~35%)                   */}
+          {/* ========================================================================= */}
+          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            {/* LEFT COLUMN: Map Container (8 cols = ~66% width) */}
+            <div className="lg:col-span-8 bg-white border border-[#ede7de] rounded-2xl overflow-hidden shadow-xs flex flex-col">
+              
+              {/* Map Header Bar */}
+              <div className="px-4 py-3 bg-[#faf9f6] border-b border-[#ede7de] flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span className="font-bold text-[#0f172a] text-sm">
+                    {selectedFacility ? selectedFacility.name : 'Select a Destination'}
                   </span>
-                  <span className="text-slate-300 text-[11px]">
-                    {loadingRoute ? 'Tracing road network...' : routeData?.summary}
-                  </span>
+                  {selectedFacility && (
+                    <span className="text-slate-500 font-medium">
+                      ({selectedFacility.distance_km} km away · ~{selectedFacility.travel_time_minutes} mins)
+                    </span>
+                  )}
                 </div>
+
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-900/80 text-blue-200 border border-blue-700 font-bold">
-                    {routeData?.provider || 'OSRM Road Engine'}
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+                    {loadingRoute ? 'Tracing road network...' : routeData?.summary || 'OSRM Road Engine'}
                   </span>
                 </div>
               </div>
 
-              {/* Leaflet Map with Real Road Polyline & Moving Vehicle */}
-              <div className="flex-1 w-full relative">
+              {/* Map Canvas with Floating Controls */}
+              <div className="h-[620px] w-full relative">
                 <MapContainer
                   center={userLocation}
                   zoom={14}
-                  style={{ width: '100%', height: '100%', backgroundColor: '#090d16' }}
+                  style={{ width: '100%', height: '100%', backgroundColor: '#f1f5f9' }}
                   zoomControl={true}
                 >
-                  {/* Esri High-Resolution World Imagery Satellite as Default */}
                   <TileLayer
                     url={
                       basemapMode === 'satellite'
@@ -982,38 +1068,31 @@ export const EmergencyGisPage: React.FC = () => {
                     maxZoom={19}
                   />
 
-                  {/* REAL-TIME MOVING VEHICLE / USER LOCATION MARKER */}
+                  {/* Real-time Moving Vehicle Marker */}
                   <Marker
                     position={userLocation}
                     icon={createVehicleIcon(vehicleType, heading, speedKmh > 0 || isSimulatingDrive)}
                   >
                     <Popup>
-                      <div className="p-2 text-slate-900 font-sans text-xs min-w-[210px] space-y-1.5">
+                      <div className="p-2 text-slate-900 font-sans text-xs min-w-[200px] space-y-1">
                         <div className="flex items-center justify-between border-b border-slate-200 pb-1">
-                          <strong className="text-blue-600 font-bold flex items-center gap-1">
+                          <strong className="text-blue-700 font-bold flex items-center gap-1">
                             <span>{vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🚌'}</span>
-                            <span>Live Traveling Vehicle</span>
+                            <span>Live Vehicle</span>
                           </strong>
-                          <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded border border-blue-200">
+                          <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">
                             {speedKmh} km/h
                           </span>
                         </div>
-                        <div className="text-[11px] text-slate-600">
+                        <div className="text-[11px] text-slate-600 pt-0.5">
                           <div><strong>Location:</strong> {detectedLocation}</div>
                           <div><strong>Heading:</strong> {heading}° · Bearing Active</div>
-                          <div><strong>Accuracy:</strong> ±{gpsAccuracy}m (High-Precision GPS)</div>
                         </div>
-                        {selectedFacility && (
-                          <div className="mt-1 pt-1 border-t border-slate-100 text-[11px] flex justify-between font-bold text-slate-800">
-                            <span>Destination:</span>
-                            <span className="text-emerald-700 truncate max-w-[120px]">{selectedFacility.name}</span>
-                          </div>
-                        )}
                       </div>
                     </Popup>
                   </Marker>
 
-                  {/* 1. COOLING CENTRES ON LIVE MAP (Cyan Snowflake Markers, Auto-Activated on High Heat) */}
+                  {/* Cooling Shelters (Cyan Snowflake Markers) */}
                   {liveFacilities
                     .filter((f) => f.type === 'COOLING_CENTRE')
                     .map((f, idx) => {
@@ -1029,38 +1108,36 @@ export const EmergencyGisPage: React.FC = () => {
                           }}
                         >
                           <Popup>
-                            <div className="p-2 text-slate-900 font-sans text-xs min-w-[220px] space-y-1.5">
+                            <div className="p-2 text-slate-900 font-sans text-xs min-w-[210px] space-y-1.5">
                               <div className="flex items-center justify-between gap-1 border-b border-cyan-100 pb-1">
                                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-100 text-cyan-800 border border-cyan-200 flex items-center gap-1">
                                   <Snowflake className="w-3 h-3 text-cyan-600" />
                                   COOLING SHELTER
                                 </span>
                                 {isNearest && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                                    ⭐ NEAREST SHELTER
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                                    NEAREST
                                   </span>
                                 )}
                               </div>
                               <h4 className="text-xs font-bold text-slate-900 leading-snug">{f.name}</h4>
-                              <p className="text-[11px] text-slate-500 leading-tight">{f.ward_name}</p>
-                              <div className="p-1.5 rounded-lg bg-cyan-50/80 border border-cyan-200 text-[11px] space-y-0.5">
+                              <p className="text-[11px] text-slate-500">{f.ward_name}</p>
+                              <div className="p-1.5 rounded-lg bg-cyan-50 border border-cyan-200 text-[11px] space-y-0.5">
                                 <div className="flex justify-between font-bold text-cyan-900">
                                   <span>Live Distance:</span>
                                   <span>{f.distance_km} km away</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 text-[10px]">
                                   <span>Travel Time:</span>
-                                  <span className="text-emerald-700 font-semibold">~{f.travel_time_minutes} mins ({vehicleType})</span>
-                                </div>
-                                <div className="text-[10px] text-cyan-800 font-medium pt-1">
-                                  ✓ Air Conditioned · Cold Drinking Water & ORS
+                                  <span className="text-emerald-700 font-semibold">~{f.travel_time_minutes} mins</span>
                                 </div>
                               </div>
-                              <div className="pt-1 flex items-center justify-between text-[11px]">
-                                <span className="text-slate-500 text-[10px]">Helpline: {f.contact}</span>
+                              <div className="pt-1 flex items-center justify-between">
+                                <span className="text-slate-500 text-[10px]">Tel: {f.contact}</span>
                                 <button
+                                  type="button"
                                   onClick={() => setSelectedFacility(f)}
-                                  className="px-2.5 py-1 text-center bg-cyan-600 hover:bg-cyan-700 text-white rounded text-[10px] font-bold shadow-xs transition"
+                                  className="px-2 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-[10px] font-bold transition"
                                 >
                                   {isSelected ? 'Route Active ✓' : 'Reroute Here →'}
                                 </button>
@@ -1071,7 +1148,7 @@ export const EmergencyGisPage: React.FC = () => {
                       );
                     })}
 
-                  {/* 2. NEARBY HOSPITALS ON LIVE MAP (Red Cross Markers, Prioritized Closest) */}
+                  {/* Hospitals (Red Cross Markers) */}
                   {liveFacilities
                     .filter((f) => f.type === 'HOSPITAL')
                     .map((f, idx) => {
@@ -1087,38 +1164,36 @@ export const EmergencyGisPage: React.FC = () => {
                           }}
                         >
                           <Popup>
-                            <div className="p-2 text-slate-900 font-sans text-xs min-w-[220px] space-y-1.5">
+                            <div className="p-2 text-slate-900 font-sans text-xs min-w-[210px] space-y-1.5">
                               <div className="flex items-center justify-between gap-1 border-b border-rose-100 pb-1">
                                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
-                                  <span className="font-black text-xs">+</span>
+                                  <span>+</span>
                                   EMERGENCY HOSPITAL
                                 </span>
                                 {isNearest && (
-                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                                    ⭐ CLOSEST HOSPITAL
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
+                                    CLOSEST
                                   </span>
                                 )}
                               </div>
                               <h4 className="text-xs font-bold text-slate-900 leading-snug">{f.name}</h4>
-                              <p className="text-[11px] text-slate-500 leading-tight">{f.subtype} · {f.ward_name}</p>
-                              <div className="p-1.5 rounded-lg bg-rose-50/80 border border-rose-200 text-[11px] space-y-0.5">
+                              <p className="text-[11px] text-slate-500">{f.subtype} · {f.ward_name}</p>
+                              <div className="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] space-y-0.5">
                                 <div className="flex justify-between font-bold text-rose-900">
                                   <span>Live Distance:</span>
                                   <span>{f.distance_km} km away</span>
                                 </div>
                                 <div className="flex justify-between text-slate-600 text-[10px]">
                                   <span>Travel Time:</span>
-                                  <span className="text-emerald-700 font-semibold">~{f.travel_time_minutes} mins ({vehicleType})</span>
-                                </div>
-                                <div className="text-[10px] text-rose-800 font-medium pt-1">
-                                  ✓ Trauma ICU ({f.icu_beds || 24} Beds) · 24/7 Heatstroke Unit
+                                  <span className="text-emerald-700 font-semibold">~{f.travel_time_minutes} mins</span>
                                 </div>
                               </div>
-                              <div className="pt-1 flex items-center justify-between text-[11px]">
+                              <div className="pt-1 flex items-center justify-between">
                                 <span className="text-slate-500 text-[10px]">Emergency: {f.contact}</span>
                                 <button
+                                  type="button"
                                   onClick={() => setSelectedFacility(f)}
-                                  className="px-2.5 py-1 text-center bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold shadow-xs transition"
+                                  className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold transition"
                                 >
                                   {isSelected ? 'Route Active ✓' : 'Reroute Here →'}
                                 </button>
@@ -1129,7 +1204,7 @@ export const EmergencyGisPage: React.FC = () => {
                       );
                     })}
 
-                  {/* EMERGENCY CLINICS */}
+                  {/* Clinics */}
                   {liveFacilities
                     .filter((f) => f.type === 'EMERGENCY_CENTRE')
                     .map((f) => (
@@ -1140,35 +1215,16 @@ export const EmergencyGisPage: React.FC = () => {
                         eventHandlers={{
                           click: () => setSelectedFacility(f),
                         }}
-                      >
-                        <Popup>
-                          <div className="p-1.5 text-slate-900 font-sans text-xs min-w-[200px]">
-                            <strong className="text-amber-600 text-xs block">{f.name}</strong>
-                            <span className="text-[11px] text-slate-600 block">{f.subtype}</span>
-                            <div className="mt-1 pt-1 border-t border-slate-200 flex justify-between text-[11px] font-bold">
-                              <span className="text-blue-600">{f.distance_km} km</span>
-                              <span className="text-emerald-700">~{f.travel_time_minutes} mins</span>
-                            </div>
-                            <div className="mt-1.5">
-                              <button
-                                onClick={() => setSelectedFacility(f)}
-                                className="w-full py-1 text-center bg-blue-600 text-white rounded text-[10px] font-bold"
-                              >
-                                Select Destination
-                              </button>
-                            </div>
-                          </div>
-                        </Popup>
-                      </Marker>
+                      />
                     ))}
 
-                  {/* Real Road Polyline (OSRM Street Geometry) */}
+                  {/* Real OSRM Road Polyline */}
                   {routeData?.coordinates && (
                     <Polyline
                       positions={routeData.coordinates}
                       pathOptions={{
-                        color: '#38bdf8',
-                        weight: 6,
+                        color: '#0284c7',
+                        weight: 5,
                         opacity: 0.95,
                         lineCap: 'round',
                         lineJoin: 'round',
@@ -1176,7 +1232,7 @@ export const EmergencyGisPage: React.FC = () => {
                     />
                   )}
 
-                  {/* Initial Auto-bounds controller */}
+                  {/* Auto bounds & vehicle tracking */}
                   <MapAutoBounds
                     userCoord={userLocation}
                     destCoord={selectedFacility ? [selectedFacility.latitude, selectedFacility.longitude] : undefined}
@@ -1184,7 +1240,6 @@ export const EmergencyGisPage: React.FC = () => {
                     isNavigationActive={isSimulatingDrive || isTrackingActive}
                   />
 
-                  {/* Smooth Vehicle Follower for Navigation Centering */}
                   <MapVehicleFollower
                     vehicleCoord={userLocation}
                     isAutoCentered={isAutoCentered}
@@ -1192,131 +1247,147 @@ export const EmergencyGisPage: React.FC = () => {
                   />
                 </MapContainer>
 
-                {/* Basemap Switcher */}
-                <div className="absolute top-3 right-3 z-[1000] flex items-center bg-white/95 backdrop-blur-md p-1 rounded-xl border border-slate-300 shadow-md">
-                  <button
-                    type="button"
-                    onClick={() => setBasemapMode('satellite')}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
-                      basemapMode === 'satellite'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-700 hover:text-slate-900'
-                    }`}
-                  >
-                    Satellite Imagery
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setBasemapMode('street')}
-                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition ${
-                      basemapMode === 'street'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-700 hover:text-slate-900'
-                    }`}
-                  >
-                    Street Map
-                  </button>
-                </div>
-
-                {/* Floating Navigation HUD / Speedometer on Map */}
-                <div className="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md border border-slate-700 px-3 py-1.5 rounded-xl text-white shadow-lg flex items-center gap-3">
+                {/* Upper Left: Compact Vehicle Status Overlay */}
+                <div className="absolute top-3 left-3 z-[1000] bg-white/95 backdrop-blur-md border border-[#ede7de] px-3 py-1.5 rounded-xl text-slate-800 shadow-md flex items-center gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">
+                    <span className="text-lg">
                       {vehicleType === 'car' ? '🚗' : vehicleType === 'bike' ? '🏍️' : '🚌'}
                     </span>
                     <div>
-                      <div className="text-[10px] uppercase font-mono text-slate-400 font-bold flex items-center gap-1">
-                        <Gauge className="w-3 h-3 text-cyan-400" />
-                        <span>Live Velocity</span>
+                      <div className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                        <Gauge className="w-3 h-3 text-blue-600" />
+                        <span>Velocity</span>
                       </div>
-                      <span className="text-sm font-black font-mono text-white leading-tight">
-                        {speedKmh} <span className="text-[10px] font-normal text-slate-300">km/h</span>
+                      <span className="text-xs font-black font-mono text-slate-900 leading-none">
+                        {speedKmh} <span className="text-[10px] font-normal text-slate-500">km/h</span>
                       </span>
                     </div>
                   </div>
-                  <div className="border-l border-slate-700 pl-3">
-                    <div className="text-[10px] uppercase font-mono text-slate-400 font-bold">Bearing</div>
-                    <span className="text-xs font-mono font-bold text-cyan-300">{heading}°</span>
+                  <div className="border-l border-slate-200 pl-2.5">
+                    <div className="text-[10px] uppercase font-bold text-slate-500">Bearing</div>
+                    <span className="text-xs font-mono font-bold text-slate-800">{heading}°</span>
                     {isSimulatingDrive && (
-                      <div className="text-[9px] text-amber-300 font-mono mt-0.5">
+                      <div className="text-[9px] text-amber-700 font-mono mt-0.5">
                         Step {simStepIndex + 1}/{routeData?.coordinates?.length || 0}
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Floating "Re-center on Vehicle" Button (Google Maps Style) */}
+                {/* Upper Right: Basemap Layer Controls */}
+                <div className="absolute top-3 right-3 z-[1000] flex items-center bg-white/95 backdrop-blur-md p-1 rounded-xl border border-[#ede7de] shadow-md">
+                  <button
+                    type="button"
+                    onClick={() => setBasemapMode('street')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
+                      basemapMode === 'street'
+                        ? 'bg-orange-600 text-white shadow-xs'
+                        : 'text-slate-700 hover:text-slate-900'
+                    }`}
+                  >
+                    Street Map
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBasemapMode('satellite')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg transition ${
+                      basemapMode === 'satellite'
+                        ? 'bg-orange-600 text-white shadow-xs'
+                        : 'text-slate-700 hover:text-slate-900'
+                    }`}
+                  >
+                    Satellite Imagery
+                  </button>
+                </div>
+
+                {/* Floating "Re-center on Vehicle" Button */}
                 {!isAutoCentered && (
                   <button
+                    type="button"
                     onClick={() => setIsAutoCentered(true)}
-                    className="absolute bottom-12 right-3 z-[1000] px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xl flex items-center gap-2 transition"
+                    className="absolute bottom-10 right-3 z-[1000] px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md flex items-center gap-1.5 transition"
                   >
-                    <LocateFixed className="w-4 h-4 animate-pulse text-white" />
-                    <span>Re-center on Vehicle</span>
+                    <LocateFixed className="w-3.5 h-3.5 text-white" />
+                    <span>Re-center Vehicle</span>
                   </button>
                 )}
 
-                {/* Bottom Left Map Badge */}
-                <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 backdrop-blur-md border border-slate-300 px-3 py-1.5 rounded-lg text-[10px] font-mono text-slate-700 shadow-xs flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>
-                    GPS Tracking Active · {countHosp} Hospitals · {countCool} Cooling Shelters Locked
-                  </span>
+                {/* Bottom Left: Map Legend Strip */}
+                <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 backdrop-blur-md border border-[#ede7de] px-3 py-1.5 rounded-xl text-[11px] text-slate-700 shadow-xs flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded bg-rose-600 text-white flex items-center justify-center font-bold text-[9px]">+</span>
+                    <span className="font-medium text-slate-800">Hospital</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full bg-cyan-600 text-white flex items-center justify-center text-[9px]">❄</span>
+                    <span className="font-medium text-slate-800">Cooling Shelter</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-1 bg-[#0284c7] rounded-full inline-block" />
+                    <span className="font-medium text-slate-800">Road Route</span>
+                  </div>
                 </div>
+
               </div>
+
             </div>
 
-            {/* Right Column: Search, Filter Tabs, Facility List & Step-by-Step Directions */}
-            <div className="lg:col-span-5 flex flex-col gap-3.5">
-              {/* Search Input Bar */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            {/* RIGHT COLUMN: Facility Results Panel (4 cols = ~34% width) */}
+            <div className="lg:col-span-4 bg-white border border-[#ede7de] rounded-2xl p-5 shadow-xs flex flex-col h-[676px]">
+              
+              {/* Search Bar */}
+              <div className="relative mb-3">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search hospitals, ICUs, cooling shelters..."
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-xs"
+                  className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:bg-white transition"
                 />
               </div>
 
               {/* Category Filter Tabs */}
-              <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 text-xs font-semibold">
+              <div className="flex bg-[#faf9f6] p-1 rounded-xl border border-[#ede7de] gap-1 text-xs font-semibold mb-3">
                 <button
+                  type="button"
                   onClick={() => handleTabChange('all')}
                   className={`flex-1 py-1.5 rounded-lg transition text-center ${
                     activeTab === 'all'
-                      ? 'bg-blue-600 text-white shadow-xs font-bold'
+                      ? 'bg-white text-slate-900 font-bold shadow-xs border border-slate-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   All ({liveFacilities.length})
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleTabChange('hospital')}
                   className={`flex-1 py-1.5 rounded-lg transition text-center ${
                     activeTab === 'hospital'
-                      ? 'bg-rose-600 text-white shadow-xs font-bold'
+                      ? 'bg-rose-50 text-rose-800 font-bold border border-rose-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Hospitals ({countHosp})
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleTabChange('emergency')}
                   className={`flex-1 py-1.5 rounded-lg transition text-center ${
                     activeTab === 'emergency'
-                      ? 'bg-orange-600 text-white shadow-xs font-bold'
+                      ? 'bg-orange-50 text-orange-800 font-bold border border-orange-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Clinics ({countEmerg})
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleTabChange('cooling_centre')}
                   className={`flex-1 py-1.5 rounded-lg transition text-center ${
                     activeTab === 'cooling_centre'
-                      ? 'bg-cyan-600 text-white shadow-xs font-bold'
+                      ? 'bg-cyan-50 text-cyan-800 font-bold border border-cyan-200'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -1324,88 +1395,79 @@ export const EmergencyGisPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Facility List (Dynamically Ranked by Live Distance from Moving Vehicle) */}
-              <div className="space-y-2 max-h-[290px] overflow-y-auto pr-1 scrollbar-thin">
+              {/* Facility Cards List (Vertically Scrollable) */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin">
                 {loadingFacilities ? (
-                  <div className="p-8 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200">
-                    Finding facilities nearest to your coordinates...
+                  <div className="p-8 text-center text-xs text-slate-500 bg-[#faf9f6] rounded-xl border border-[#ede7de]">
+                    Scanning facilities nearest to your coordinates...
                   </div>
                 ) : filteredFacilities.length > 0 ? (
                   filteredFacilities.map((fac, idx) => {
                     const isSelected = selectedFacility?.id === fac.id;
-                    const isClosestInTab = idx === 0;
+                    const isClosest = idx === 0;
                     return (
                       <div
                         key={fac.id}
                         onClick={() => setSelectedFacility(fac)}
-                        className={`p-3 rounded-xl border cursor-pointer transition-all shadow-xs ${
+                        className={`p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
                           isSelected
                             ? fac.type === 'HOSPITAL'
-                              ? 'bg-rose-50 border-rose-400 ring-2 ring-rose-400/30'
-                              : 'bg-cyan-50 border-cyan-400 ring-2 ring-cyan-400/30'
-                            : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                              ? 'bg-rose-50/60 border-rose-300 ring-2 ring-rose-400/20'
+                              : 'bg-cyan-50/60 border-cyan-300 ring-2 ring-cyan-400/20'
+                            : 'bg-white border-[#ede7de] hover:border-slate-300 hover:bg-[#faf9f6]'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-1.5">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span
-                                className={`text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                                className={`text-[9px] font-bold px-1.5 py-0.2 rounded flex items-center gap-1 ${
                                   fac.type === 'HOSPITAL'
-                                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                    ? 'bg-rose-100 text-rose-800 border border-rose-200'
                                     : fac.type === 'COOLING_CENTRE'
-                                    ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
-                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                    ? 'bg-cyan-100 text-cyan-800 border border-cyan-200'
+                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
                                 }`}
                               >
-                                {fac.type === 'HOSPITAL' ? (
-                                  <>
-                                    <span className="font-black">+</span>
-                                    <span>HOSPITAL</span>
-                                  </>
-                                ) : fac.type === 'COOLING_CENTRE' ? (
-                                  <>
-                                    <Snowflake className="w-2.5 h-2.5" />
-                                    <span>COOLING SHELTER</span>
-                                  </>
-                                ) : (
-                                  <span>EMERGENCY CLINIC</span>
-                                )}
+                                {fac.type === 'HOSPITAL' ? 'HOSPITAL' : fac.type === 'COOLING_CENTRE' ? 'COOLING SHELTER' : 'CLINIC'}
                               </span>
-                              {isClosestInTab && (
-                                <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-amber-100 text-amber-800">
+                              {isClosest && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900">
                                   CLOSEST
                                 </span>
                               )}
-                              <span className="text-[11px] text-slate-500 truncate max-w-[170px]">
+                              <span className="text-[11px] text-slate-500 truncate max-w-[150px]">
                                 {fac.ward_name}
                               </span>
                             </div>
-                            <h4 className="text-xs font-bold text-slate-900 mt-1 leading-snug">{fac.name}</h4>
+
+                            <h4 className="text-xs font-bold text-slate-900 mt-1 leading-snug truncate">
+                              {fac.name}
+                            </h4>
+                            
                             {fac.official_authority && (
-                              <span className="text-[10px] text-emerald-700 flex items-center gap-1 mt-0.5 font-medium">
-                                <Award className="w-3 h-3 text-emerald-600" />
+                              <span className="text-[10px] text-slate-500 block mt-0.5 truncate">
                                 {fac.official_authority}
                               </span>
                             )}
                           </div>
 
                           <div className="text-right shrink-0">
-                            <span className="text-xs font-bold text-amber-700 block">
-                              {fac.distance_km} km away
+                            <span className="text-xs font-bold text-slate-900 block font-mono">
+                              {fac.distance_km} km
                             </span>
                             <span className="text-[10px] text-slate-500 block font-mono">
-                              ~{fac.travel_time_minutes} min ({vehicleType})
+                              ~{fac.travel_time_minutes} min
                             </span>
                           </div>
                         </div>
 
-                        <div className="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-100">
-                          <span className="text-emerald-700 font-medium text-[10px] truncate max-w-[200px]">
+                        <div className="mt-2 pt-1.5 border-t border-[#f5f3ef] flex items-center justify-between text-[11px]">
+                          <span className="text-emerald-700 font-medium text-[10px] truncate max-w-[190px]">
                             {fac.status_label}
                           </span>
                           <span className={`font-bold text-[10px] ${
-                            fac.type === 'HOSPITAL' ? 'text-rose-700' : 'text-cyan-700'
+                            isSelected ? 'text-orange-600' : 'text-slate-600 hover:text-slate-900'
                           }`}>
                             {isSelected ? 'Route Active ✓' : 'Select Destination →'}
                           </span>
@@ -1414,74 +1476,63 @@ export const EmergencyGisPage: React.FC = () => {
                     );
                   })
                 ) : (
-                  <div className="p-8 text-center text-xs text-slate-500 bg-white rounded-xl border border-slate-200">
-                    No facilities matching this search in immediate range.
+                  <div className="p-8 text-center text-xs text-slate-500 bg-[#faf9f6] rounded-xl border border-[#ede7de]">
+                    No facilities found matching your search.
                   </div>
                 )}
               </div>
 
-              {/* Turn-by-Turn Road Navigation Card (OSRM Driving Directions) */}
+              {/* Turn-by-Turn Driving Directions (Collapsible / Compact) */}
               {selectedFacility && routeData && (
-                <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs text-slate-800 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <Car className="w-3.5 h-3.5 text-cyan-600" />
-                          <span className="text-[10px] uppercase font-bold text-cyan-800 tracking-wide">
-                            Road Navigation (OSRM · {vehicleType.toUpperCase()})
-                          </span>
-                        </div>
-                        <h4 className="text-xs font-bold text-slate-900 truncate max-w-[220px]">
-                          {selectedFacility.name}
-                        </h4>
-                      </div>
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation[0]},${userLocation[1]}&destination=${selectedFacility.latitude},${selectedFacility.longitude}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-cyan-800 hover:text-cyan-950 flex items-center gap-1 font-bold px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 shadow-xs hover:border-slate-300 transition"
-                      >
-                        Google Maps
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-
-                    {/* Step-by-Step Maneuvers */}
-                    <div className="space-y-1.5 max-h-[135px] overflow-y-auto pr-1 scrollbar-thin">
-                      {routeData.steps.map((step, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-xs text-slate-700">
-                          <span className="w-4 h-4 rounded-full bg-cyan-100 text-cyan-800 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5 border border-cyan-200">
-                            {idx + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[11px] leading-snug text-slate-700">{step.instruction}</p>
-                            <span className="text-[9px] text-slate-500 font-mono">
-                              {step.distance_meters}m • ~{Math.max(1, Math.ceil(step.duration_seconds / 60))} min
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                <div className="mt-3 pt-3 border-t border-[#ede7de] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Car className="w-3.5 h-3.5 text-orange-600" />
+                      <span>Road Route ({vehicleType.toUpperCase()})</span>
+                    </span>
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&origin=${userLocation[0]},${userLocation[1]}&destination=${selectedFacility.latitude},${selectedFacility.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] text-slate-700 hover:text-orange-600 flex items-center gap-1 font-bold"
+                    >
+                      Google Maps
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
                   </div>
 
-                  <div className="pt-2.5 border-t border-slate-100 mt-2 flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-1 text-[11px]">
-                      <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>
-                        Helpline: <strong className="text-emerald-700 font-bold">{selectedFacility.contact}</strong>
-                      </span>
+                  {/* Step-by-Step Directions */}
+                  <div className="space-y-1 max-h-[110px] overflow-y-auto pr-1 scrollbar-thin">
+                    {routeData.steps.slice(0, 4).map((step, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 text-xs text-slate-700">
+                        <span className="w-3.5 h-3.5 rounded-full bg-slate-100 text-slate-700 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5 border border-slate-200">
+                          {idx + 1}
+                        </span>
+                        <p className="text-[10px] leading-tight text-slate-600 truncate flex-1">
+                          {step.instruction} ({step.distance_meters}m)
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-[#f5f3ef]">
+                    <div className="flex items-center gap-1">
+                      <Phone className="w-3 h-3 text-emerald-600" />
+                      <span>Helpline: <strong className="text-emerald-700 font-bold">{selectedFacility.contact}</strong></span>
                     </div>
-                    <span className="text-[10px] text-cyan-800 font-mono font-bold bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
-                      {selectedFacility.distance_km} km away · ~{selectedFacility.travel_time_minutes} min
+                    <span className="font-mono text-[10px] font-bold text-slate-700">
+                      ~{selectedFacility.travel_time_minutes} min
                     </span>
                   </div>
                 </div>
               )}
+
             </div>
-          </div>
+
+          </section>
         </>
       )}
+
     </div>
   );
 };

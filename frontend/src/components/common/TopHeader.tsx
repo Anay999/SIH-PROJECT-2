@@ -94,7 +94,7 @@ export const TopHeader: React.FC<TopHeaderProps> = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search ward, location or facility..."
+              placeholder="Search location, facility, ward or alert..."
               className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-xs text-[#1c1917] placeholder-[#a8a29e] focus:outline-none focus:border-orange-500 focus:bg-white transition"
             />
           </form>
