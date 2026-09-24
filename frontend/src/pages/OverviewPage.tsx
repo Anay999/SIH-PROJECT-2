@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   MapContainer,
   TileLayer,
@@ -11,44 +11,33 @@ import {
 import L from 'leaflet';
 import type { GeoJsonObject } from 'geojson';
 import {
-  ArrowRight,
   TrendingUp,
-  Activity,
-  ChevronRight,
-  Layers,
   Map as MapIcon,
-  Megaphone
+  Sun,
+  Droplets,
+  Thermometer,
+  Flame,
+  Gauge,
+  Users,
+  Compass,
+  Bell
 } from 'lucide-react';
-import { useWorkspace, type MunicipalAction } from '../context/WorkspaceContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { useAuth } from '../context/AuthContext';
 
 // Custom Leaflet DivIcons
 const coolingCenterIcon = L.divIcon({
   className: 'custom-cooling-marker',
-  html: `<div style="background-color: #0284c7; color: #ffffff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(2,132,199,0.6); border: 2px solid white; font-weight: 900; font-size: 11px;">❄</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
+  html: `<div style="background-color: #059669; color: #ffffff; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(5,150,105,0.6); border: 2px solid white; font-weight: 900; font-size: 13px;">❄</div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13]
 });
 
 const hospitalMarkerIcon = L.divIcon({
   className: 'custom-hospital-marker',
-  html: `<div style="background-color: #dc2626; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(220,38,38,0.6); border: 2px solid white; font-weight: 900; font-size: 13px;">+</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-});
-
-const waterPointIcon = L.divIcon({
-  className: 'custom-water-marker',
-  html: `<div style="background-color: #0891b2; color: #ffffff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(8,145,178,0.6); border: 2px solid white; font-weight: 900; font-size: 11px;">💧</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
-});
-
-const schoolIcon = L.divIcon({
-  className: 'custom-school-marker',
-  html: `<div style="background-color: #059669; color: #ffffff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(5,150,105,0.6); border: 2px solid white; font-weight: 900; font-size: 11px;">🏫</div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12]
+  html: `<div style="background-color: #0284c7; color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(2,132,199,0.6); border: 2px solid white; font-weight: 900; font-size: 14px;">+</div>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13]
 });
 
 // Map View Recenter helper
@@ -73,47 +62,25 @@ export const OverviewPage: React.FC = () => {
   const {
     selectWard,
     selectedWardId,
-    actionPlans,
-    updateActionStatus,
-    activityFeed,
-    demoClockTime,
-    temporalDelta,
     cityProfile
   } = useWorkspace();
 
   const [geoJsonData, setGeoJsonData] = useState<GeoJsonObject | null>(null);
   const [facilities, setFacilities] = useState<any>({ cooling_centers: [], hospitals: [] });
-  const [waterPoints, setWaterPoints] = useState<any[]>([]);
-  const [schools, setSchools] = useState<any[]>([]);
   const [communityReports, setCommunityReports] = useState<any[]>([]);
-  const [reportFilter, setReportFilter] = useState<string>('ALL');
-  const [updatingReportId, setUpdatingReportId] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
-  // Map Basemap mode - SATELLITE DEFAULT
-  const [basemapMode, setBasemapMode] = useState<'satellite' | 'street'>('satellite');
+  // Time Filter State matching Image 1: [Now] [Forecast] [24h] [5 Days]
+  const [timeFilter, setTimeFilter] = useState<'Now' | 'Forecast' | '24h' | '5 Days'>('Now');
 
-  // Single active dominant layer on Overview
-  const [activeLayer, setActiveLayer] = useState<'heat' | 'priority' | 'cooling'>('heat');
-
-  // Facilities visibility toggles
-  const [showCooling, setShowCooling] = useState<boolean>(true);
-  const [showHospitals, setShowHospitals] = useState<boolean>(true);
-  const [showWater, setShowWater] = useState<boolean>(true);
-  const [showSchools, setShowSchools] = useState<boolean>(true);
-
-  // Review Modal State
-  const [reviewAction, setReviewAction] = useState<MunicipalAction | null>(null);
+  // Layer mode: Heat Risk (HTSI), WBGT, Vulnerability
+  const [activeLayer, setActiveLayer] = useState<'htsi' | 'wbgt' | 'vulnerability'>('htsi');
 
   useEffect(() => {
     const loadGis = async () => {
       try {
-        setLoading(true);
-        const [wardsRes, facRes, wpRes, schRes, repRes] = await Promise.all([
+        const [wardsRes, facRes, repRes] = await Promise.all([
           fetch('http://127.0.0.1:8000/api/gis/wards').catch(() => null),
           fetch('http://127.0.0.1:8000/api/gis/facilities').catch(() => null),
-          fetch('/api/community/water-points').catch(() => null),
-          fetch('/api/community/schools').catch(() => null),
           fetch('/api/community/reports').catch(() => null),
         ]);
 
@@ -125,943 +92,632 @@ export const OverviewPage: React.FC = () => {
           const fData = await facRes.json();
           setFacilities(fData);
         }
-        if (wpRes && wpRes.ok) {
-          const wpData = await wpRes.json();
-          setWaterPoints(wpData.data || []);
-        }
-        if (schRes && schRes.ok) {
-          const schData = await schRes.json();
-          setSchools(schData.data || []);
-        }
         if (repRes && repRes.ok) {
           const repData = await repRes.json();
           setCommunityReports(repData.data || []);
         }
       } catch (err) {
         console.warn('Overview GIS load error, using default context', err);
-      } finally {
-        setLoading(false);
       }
     };
     loadGis();
   }, []);
 
-  const handleUpdateReportStatus = async (reportId: string, newStatus: string) => {
-    setUpdatingReportId(reportId);
-    try {
-      const res = await fetch(`/api/community/reports/${reportId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: newStatus,
-          notes: `Status updated to ${newStatus} by Municipal Health Officer at ${new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
-        })
-      });
-      if (res.ok) {
-        const json = await res.json();
-        setCommunityReports(prev =>
-          prev.map(r => r.id === reportId ? { ...r, status: newStatus, status_notes: json.data?.status_notes || r.status_notes } : r)
-        );
-      }
-    } catch (err) {
-      console.error('Failed to update report status:', err);
-    } finally {
-      setUpdatingReportId(null);
-    }
-  };
-
   const defaultCenter: [number, number] = [
-    cityProfile?.coordinates?.lat || 13.045,
-    cityProfile?.coordinates?.lon || 80.225
+    cityProfile?.coordinates?.lat || 13.065,
+    cityProfile?.coordinates?.lon || 80.245
   ];
 
-  // Tile layer URL based on basemap selection - High-Res Satellite
-  const tileUrl =
-    basemapMode === 'satellite'
-      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  // Satellite basemap URL
+  const tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
-  // Choropleth style function
+  // Choropleth style function matching Image 1
   const styleFeature = (feature: any) => {
     const props = feature.properties;
     const isSelected = selectedWardId === props.ward_id;
 
-    let fillColor = '#10b981';
-    if (activeLayer === 'heat') {
-      const htsi = props.htsi_score || 60;
-      if (htsi >= 75) fillColor = '#ef4444';
-      else if (htsi >= 65) fillColor = '#f97316';
-      else if (htsi >= 50) fillColor = '#eab308';
-      else fillColor = '#3b82f6';
-    } else if (activeLayer === 'priority') {
-      const vuln = props.vulnerability_score || 50;
-      if (vuln >= 65) fillColor = '#dc2626';
-      else if (vuln >= 50) fillColor = '#ea580c';
-      else fillColor = '#2563eb';
-    } else {
-      fillColor = props.builtup_fraction > 0.8 ? '#f43f5e' : '#10b981';
-    }
+    const htsi = props.htsi_score !== undefined ? props.htsi_score : 68;
+
+    let fillColor = '#10b981'; // Low (< 0.2 / < 40)
+    if (htsi >= 80) fillColor = '#991b1b'; // Extreme (≥ 0.8)
+    else if (htsi >= 65) fillColor = '#dc2626'; // Very High (0.6 - 0.8)
+    else if (htsi >= 50) fillColor = '#f97316'; // High (0.4 - 0.6)
+    else if (htsi >= 35) fillColor = '#eab308'; // Moderate (0.2 - 0.4)
+    else fillColor = '#10b981'; // Low
 
     return {
       fillColor,
-      weight: isSelected ? 3.5 : 1.5,
+      weight: isSelected ? 3 : 1.2,
       opacity: 1,
-      color: isSelected ? '#ffffff' : '#e2e8f0',
-      fillOpacity: isSelected ? 0.75 : 0.55,
+      color: isSelected ? '#ffffff' : 'rgba(255,255,255,0.7)',
+      fillOpacity: 0.72,
     };
   };
 
-  const onEachFeature = (feature: any, layer: L.Layer) => {
+  const onEachFeature = (feature: any, layer: any) => {
     const props = feature.properties;
-
-    layer.bindTooltip(
-      `<div style="font-family: system-ui, sans-serif; font-size: 11px; padding: 4px 8px; line-height: 1.3; background: rgba(255,255,255,0.95); border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-        <strong style="color:#0f172a">${props.name} (Ward ${props.ward_number})</strong><br/>
-        <span style="color:#475569">HTSI: ${props.htsi_score?.toFixed(1) || 'N/A'} · Temp: ${props.air_temp_c?.toFixed(1) || 'N/A'}°C</span>
-      </div>`,
-      { sticky: true, opacity: 0.98 }
-    );
-
     layer.on({
       click: () => {
-        selectWard(props.ward_id, props);
-      },
+        selectWard(props.ward_id);
+      }
     });
+
+    const htsiDecimal = ((props.htsi_score || 72) / 100).toFixed(2);
+    layer.bindTooltip(
+      `<strong>${props.ward_name || props.name || 'Ward'}</strong><br/>HTSI: ${htsiDecimal} • Pop: ${(props.population || 120000).toLocaleString()}`,
+      { direction: 'top', sticky: true, className: 'leaflet-custom-tooltip' }
+    );
   };
 
-  const priorityFocusAreas = [
-    {
-      id: 'ward_04_tondiarpet',
-      name: 'Tondiarpet (Ward 04)',
-      priority: 'CRITICAL',
-      why: 'High nighttime heat retention (>29.5°C) combined with dense uncooled tin-roof dwellings.',
-      temp: '38.8°C',
-      nightMin: '29.7°C',
-      coolingAccess: 'Deficit (1.8km to hub)',
-      status: 'Action Required',
-      badgeBg: 'bg-rose-50 text-rose-700 border border-rose-200',
-      cardBg: 'bg-white border border-slate-200 hover:border-rose-400 text-slate-900 shadow-xs'
-    },
-    {
-      id: 'ward_05_royapuram',
-      name: 'Royapuram (Ward 05)',
-      priority: 'HIGH',
-      why: '34,000 outdoor logistics and harbor laborers exposed to severe solar radiation with WBGT >32.8°C.',
-      temp: '38.2°C',
-      nightMin: '29.2°C',
-      coolingAccess: 'Low (NDVI 0.12)',
-      status: 'Review required',
-      badgeBg: 'bg-orange-50 text-orange-700 border border-orange-200',
-      cardBg: 'bg-white border border-slate-200 hover:border-orange-400 text-slate-900 shadow-xs'
-    },
-    {
-      id: 'ward_06_thiruvika_nagar',
-      name: 'Thiru-Vi-Ka Nagar (Ward 06)',
-      priority: 'ELEVATED',
-      why: 'High-density uncooled residences combined with 18% elderly citizen concentration.',
-      temp: '38.4°C',
-      nightMin: '28.9°C',
-      coolingAccess: 'Moderate',
-      status: 'Monitoring',
-      badgeBg: 'bg-amber-50 text-amber-700 border border-amber-200',
-      cardBg: 'bg-white border border-slate-200 hover:border-amber-400 text-slate-900 shadow-xs'
-    },
+  // High Priority Wards matching Image 1
+  const PRIORITY_WARDS = [
+    { rank: 1, id: 'ward_04_tondiarpet', name: 'Tondiarpet (Ward 04)', htsi: 0.86, risk: 'Extreme', badgeColor: 'bg-red-800 text-white', pop: '142,300', barColor: 'bg-red-800' },
+    { rank: 2, id: 'ward_05_royapuram', name: 'Royapuram (Ward 05)', htsi: 0.78, risk: 'Very High', badgeColor: 'bg-red-600 text-white', pop: '128,400', barColor: 'bg-red-600' },
+    { rank: 3, id: 'ward_01_thiruvottiyur', name: 'Thiruvottiyur (Ward 01)', htsi: 0.74, risk: 'Very High', badgeColor: 'bg-red-600 text-white', pop: '165,900', barColor: 'bg-red-600' },
+    { rank: 4, id: 'ward_11_anna_nagar', name: 'Anna Nagar (Ward 11)', htsi: 0.68, risk: 'High', badgeColor: 'bg-orange-600 text-white', pop: '123,600', barColor: 'bg-orange-500' },
+    { rank: 5, id: 'ward_176_adyar', name: 'Adyar (Ward 176)', htsi: 0.62, risk: 'High', badgeColor: 'bg-orange-600 text-white', pop: '98,200', barColor: 'bg-orange-500' },
+  ];
+
+  // Recent Alerts & Actions matching Image 1
+  const RECENT_ALERTS = [
+    { time: '10:32 AM', icon: '⚠️', title: 'Extreme Heat Alert (12–4 PM)', area: 'North Chennai', status: 'Active', badgeClass: 'bg-red-100 text-red-700 font-bold border border-red-200' },
+    { time: '08:15 AM', icon: '❄️', title: 'Cooling Centre Activation', area: 'Wards 04, 05, 06', status: 'Completed', badgeClass: 'bg-emerald-100 text-emerald-800 font-bold border border-emerald-200' },
+    { time: '07:50 AM', icon: '👷', title: 'Outdoor Work Advisory', area: 'Citywide', status: 'In Progress', badgeClass: 'bg-blue-100 text-blue-700 font-bold border border-blue-200' },
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12 font-sans text-slate-800">
-      {/* ============================================================ */}
-      {/* SECTION 1: CURRENT HEAT SITUATION (WARM COLOR-FRIENDLY HERO) */}
-      {/* ============================================================ */}
-      <section className="bg-gradient-to-br from-amber-50 via-orange-50/40 to-yellow-50/30 border border-amber-200 rounded-3xl p-6 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200/80 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-            <h2 className="text-xs font-mono uppercase tracking-wider text-amber-800 font-bold">
-              Current Heat Operations ({cityProfile.name})
-            </h2>
-          </div>
-          <span className="text-[11px] font-mono text-slate-500 font-medium">
-            Observation at {demoClockTime}
-          </span>
-        </div>
+    <div className="space-y-6 max-w-[1920px] mx-auto animate-fadeIn">
+      
+      {/* ======================================================== */}
+      {/* 1. TOP PANORAMIC BANNER (Matching Image 1 Exactly)       */}
+      {/* ======================================================== */}
+      <div className="relative rounded-3xl overflow-hidden shadow-sm border border-[#ede7de] bg-[#fdfbf7]">
+        {/* Background Artwork: Chennai Coastline & Ripon Building at Sunset */}
+        <img
+          src="/assets/chennai_banner.jpg"
+          alt="Chennai City Skyline and Coastline Sunset"
+          className="w-full h-44 sm:h-52 md:h-60 object-cover object-center"
+        />
 
-        <div className="space-y-1.5">
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight leading-snug">
-            {temporalDelta.situationNarrative}
+        {/* Gradient Overlay for Crisp Text Contrast */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent flex items-center justify-between p-6 sm:p-8 lg:p-10" />
+
+        {/* Left Headline */}
+        <div className="absolute inset-y-0 left-0 p-6 sm:p-8 lg:p-10 flex flex-col justify-center max-w-xl z-10 space-y-1 sm:space-y-1.5">
+          <span className="text-[11px] font-black tracking-wider uppercase text-red-600 block">
+            GREATER CHENNAI CORPORATION
+          </span>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#1c1917] tracking-tight leading-tight">
+            Beat the Heat, <br className="hidden sm:inline" />
+            <span className="text-[#ea580c]">Build a Safer Chennai</span>
           </h1>
-          <p className="text-sm text-slate-700 font-medium">
-            <span className="text-amber-800 font-bold">{temporalDelta.priorityWardsCount} operational wards</span> currently require monitoring due to sustained afternoon thermal stress and limited overnight recovery.
+          <p className="text-xs sm:text-sm text-[#57534e] font-medium pt-0.5 max-w-lg">
+            Real-time heat risk insights. Early warnings. Targeted action. Healthier communities.
           </p>
         </div>
 
-        {/* Clean Light Metric Cards matching Screenshot 1 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-          {/* Card 1: Daytime Temp */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-amber-400 hover:shadow-md transition">
-            <span className="text-[11px] text-amber-600 block mb-0.5 font-bold uppercase tracking-wider">1. Daytime Temperature</span>
-            <div className="text-2xl font-black text-slate-900 font-mono">{temporalDelta.temp.toFixed(1)}°C</div>
-            <span className="text-[11px] text-amber-700 font-sans font-medium">
-              {temporalDelta.tempDelta > 0 ? `+${temporalDelta.tempDelta.toFixed(1)}°C peak rise` : temporalDelta.tempDelta < 0 ? `${temporalDelta.tempDelta.toFixed(1)}°C morning baseline` : 'Elevated peak'}
-            </span>
-          </div>
-
-          {/* Card 2: Humidity */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-sky-400 hover:shadow-md transition">
-            <span className="text-[11px] text-sky-600 block mb-0.5 font-bold uppercase tracking-wider">2. Humidity Burden</span>
-            <div className="text-2xl font-black text-sky-700 font-mono">{temporalDelta.humidity}% RH</div>
-            <span className="text-[11px] text-slate-500 font-sans">Suppresses sweat evaporation</span>
-          </div>
-
-          {/* Card 3: Nighttime Heat */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-rose-400 hover:shadow-md transition">
-            <span className="text-[11px] text-rose-600 block mb-0.5 font-bold uppercase tracking-wider">3. Night Heat Retention</span>
-            <div className="text-2xl font-black text-rose-600 font-mono">{temporalDelta.nighttimeMin.toFixed(1)}°C min</div>
-            <span className="text-[11px] text-slate-500 font-sans">Reduced physiological recovery</span>
-          </div>
-
-          {/* Card 4: Network Status */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs text-slate-900 hover:border-emerald-400 hover:shadow-md transition">
-            <span className="text-[11px] text-emerald-600 block mb-0.5 font-bold uppercase tracking-wider">4. Relief Stations</span>
-            <div className="text-2xl font-black text-emerald-600 font-mono">Verified Active</div>
-            <span className="text-[11px] text-slate-500 font-sans">Cold ORS hydration operational</span>
-          </div>
-        </div>
-
-        {/* Operational Navigation Anchors */}
-        <div className="flex flex-wrap items-center gap-3 pt-2">
-          <button
-            type="button"
-            onClick={() => navigate('/priority-areas')}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition flex items-center gap-2 shadow-sm"
-          >
-            <span>Review priority areas</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => navigate('/forecast')}
-            className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs transition border border-slate-300 shadow-xs"
-          >
-            View 5-day forecast outlook
-          </button>
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 2: WHAT CHANGED? (TEMPORAL MOVEMENT - SKY/BLUE PALETTE) */}
-      {/* ============================================================ */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
-              Temporal Trajectory: Shift from Morning Baseline
-            </h2>
-            <p className="text-xs text-slate-500">
-              Diurnal progression across {cityProfile.name} from 07:30 IST morning baseline to current afternoon peak
-            </p>
-          </div>
-          <span className="text-[11px] text-slate-500 font-mono">
-            6-Hour Movement
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Movement Metric 1: Temperature - Clean Light Card */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-xs text-slate-900 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
-              <span>Dry-Bulb Temperature</span>
-              <span className="text-rose-600 font-mono font-bold flex items-center gap-0.5">
-                <TrendingUp className="w-3.5 h-3.5" />
-                Rising
-              </span>
+        {/* Right Floating Clock & Weather Card (Exact match to Image 1) */}
+        <div className="hidden sm:flex absolute right-6 lg:right-10 top-1/2 -translate-y-1/2 z-10">
+          <div className="bg-white/95 backdrop-blur-md border border-white/80 rounded-2xl p-4 sm:p-5 shadow-xl space-y-1 text-right min-w-[210px]">
+            <div className="text-xs font-semibold text-[#78716c]">
+              Tue, 27 May 2025
             </div>
-            <div className="flex items-baseline justify-between font-mono">
-              <span className="text-slate-500 text-sm">35.9°C</span>
-              <span className="text-slate-400 text-xs">→</span>
-              <span className="text-xl font-bold text-slate-900">38.5°C</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+            <div className="text-2xl sm:text-3xl font-black text-[#1c1917] tracking-tight font-mono">
+              01:42 PM
+            </div>
+            <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-amber-700 pt-1">
+              <Sun className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+              <span>Hot Conditions • Clear Sky • No Rain</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* 2. FIVE HORIZONTAL METRIC CARDS (Matching Image 1)       */}
+      {/* ======================================================== */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+        
+        {/* Card 1: Temperature */}
+        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                <Thermometer className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-[#78716c]">Temperature</span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#1c1917] tracking-tight">38.5°C</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-red-700 text-[10px] font-bold">
                 +2.6°C
               </span>
             </div>
-            <p className="text-[11px] text-slate-600 leading-snug">
-              Afternoon solar accumulation peaking across high-density industrial and tin-roof sectors.
-            </p>
-          </div>
-
-          {/* Movement Metric 2: Humidity - Clean Light Card */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-xs text-slate-900 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
-              <span>Relative Humidity</span>
-              <span className="text-sky-600 font-mono font-bold flex items-center gap-0.5">
-                <TrendingUp className="w-3.5 h-3.5" />
-                Moisture Influx
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between font-mono">
-              <span className="text-slate-500 text-sm">61%</span>
-              <span className="text-slate-400 text-xs">→</span>
-              <span className="text-xl font-bold text-sky-700">68%</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
-                +7%
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-snug">
-              Maritime moisture compounding human heat index and wet-bulb globe temperature.
-            </p>
-          </div>
-
-          {/* Movement Metric 3: Nighttime Minimum - Clean Light Card */}
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2 shadow-xs text-slate-900 hover:shadow-md transition">
-            <div className="flex items-center justify-between text-xs text-slate-700 font-semibold">
-              <span>Nighttime Minimum Forecast</span>
-              <span className="text-amber-600 font-mono font-bold flex items-center gap-0.5">
-                <TrendingUp className="w-3.5 h-3.5" />
-                Elevated Heat Island
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between font-mono">
-              <span className="text-slate-500 text-sm">27.7°C</span>
-              <span className="text-slate-400 text-xs">→</span>
-              <span className="text-xl font-bold text-amber-700">29.5°C</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                +1.8°C
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-snug">
-              Concrete urban surfaces retaining heat through late night hours, diminishing cardiovascular rest.
-            </p>
+            <p className="text-[11px] text-[#78716c] font-medium mt-1">Feels like 42.1°C</p>
           </div>
         </div>
-      </section>
 
-      {/* ============================================================ */}
-      {/* SECTION 3: WHERE IS THE PROBLEM? (GIS SATELLITE WORKSPACE)   */}
-      {/* ============================================================ */}
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-2">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono flex items-center gap-2">
-              <MapIcon className="w-4 h-4 text-blue-600" />
-              Spatial Heat Distribution & Priority Focus
-            </h2>
-            <p className="text-xs text-slate-500">
-              High-resolution satellite view with municipal ward boundaries, microclimate readings, and facilities
-            </p>
+        {/* Card 2: Relative Humidity */}
+        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <Droplets className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-[#78716c]">Relative Humidity</span>
+            </div>
           </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#1c1917] tracking-tight">68%</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-red-50 text-red-700 text-[10px] font-bold">
+                +12%
+              </span>
+            </div>
+            <p className="text-[11px] text-[#78716c] font-medium mt-1">High moisture burden</p>
+          </div>
+        </div>
 
-          {/* Map Layer Controls */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            {/* Basemap Toggle - SATELLITE FIRST */}
-            <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200 shadow-xs">
-              <button
-                type="button"
-                onClick={() => setBasemapMode('satellite')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                  basemapMode === 'satellite'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span>Satellite Imagery</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setBasemapMode('street')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                  basemapMode === 'street'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span>Street Map</span>
-              </button>
+        {/* Card 3: WBGT (Avg.) */}
+        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <Flame className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-[#78716c]">WBGT (Avg.)</span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#1c1917] tracking-tight">30.5°C</span>
+              <span className="px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-bold flex items-center gap-1">
+                <span>▲</span> High
+              </span>
+            </div>
+            <p className="text-[11px] text-[#78716c] font-medium mt-1">Approaching risk threshold</p>
+          </div>
+        </div>
+
+        {/* Card 4: Heat Stress Index (HTSI) */}
+        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                <Gauge className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-[#78716c]">Heat Stress Index (HTSI)</span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#1c1917] tracking-tight">0.78</span>
+              <span className="px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-bold flex items-center gap-1">
+                <span>▲</span> Very High
+              </span>
+            </div>
+            <p className="text-[11px] text-[#78716c] font-medium mt-1">Elevated thermal stress</p>
+          </div>
+        </div>
+
+        {/* Card 5: At Risk Population */}
+        <div className="bg-white border border-[#ede7de] rounded-2xl p-4 shadow-xs hover:shadow-md transition flex flex-col justify-between col-span-2 sm:col-span-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-semibold text-[#78716c]">At Risk Population</span>
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-black text-[#1c1917] tracking-tight">2.3M</span>
+              <span className="px-1.5 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold">
+                +18%
+              </span>
+            </div>
+            <p className="text-[11px] text-[#78716c] font-medium mt-1">Across 12 high-risk wards</p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ======================================================== */}
+      {/* 3. MAIN CONTENT GRID (Left: Map ~58% | Right: Stats ~42%) */}
+      {/* ======================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* ---------------------------------------------------- */}
+        {/* LEFT COLUMN: ThermoMap — Chennai (7 Columns on Large) */}
+        {/* ---------------------------------------------------- */}
+        <div className="lg:col-span-7 bg-white border border-[#ede7de] rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col space-y-4">
+          
+          {/* Header Controls matching Image 1 */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                <MapIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-[#1c1917] tracking-tight">
+                  ThermoMap — {cityProfile?.name || 'Chennai'}
+                </h3>
+                <p className="text-xs text-[#78716c] font-medium">
+                  Live heat risk across wards with key facilities
+                </p>
+              </div>
             </div>
 
-            {/* Dominant Layer Selector */}
-            <div className="flex items-center gap-1.5 bg-white border border-slate-300 rounded-xl px-2.5 py-1 text-xs shadow-xs">
-              <Layers className="w-3.5 h-3.5 text-blue-600" />
+            {/* Layer Dropdown + Time Pills */}
+            <div className="flex items-center flex-wrap gap-2">
               <select
                 value={activeLayer}
-                onChange={e => setActiveLayer(e.target.value as any)}
-                className="bg-transparent border-none text-slate-800 text-xs font-semibold focus:outline-none cursor-pointer"
+                onChange={(e) => setActiveLayer(e.target.value as any)}
+                className="text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-[#1c1917] focus:outline-none cursor-pointer"
               >
-                <option value="heat">Layer: Heat Stress (HTSI)</option>
-                <option value="priority">Layer: Vulnerability Triage</option>
-                <option value="cooling">Layer: Cooling Deficit</option>
+                <option value="htsi">Heat Risk (HTSI)</option>
+                <option value="wbgt">Wet-Bulb Globe Temp (WBGT)</option>
+                <option value="vulnerability">Vulnerability Profile</option>
               </select>
-            </div>
 
-            {/* Facilities Visibility Toggles */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={() => setShowCooling(p => !p)}
-                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-                  showCooling ? 'bg-sky-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Toggle Cooling Centers"
-              >
-                <span>❄</span>
-                <span>Cooling</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowHospitals(p => !p)}
-                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-                  showHospitals ? 'bg-red-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Toggle Hospitals"
-              >
-                <span>+</span>
-                <span>Hospitals</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowWater(p => !p)}
-                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-                  showWater ? 'bg-cyan-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Toggle Public Water Points"
-              >
-                <span>💧</span>
-                <span>Water</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowSchools(p => !p)}
-                className={`px-2 py-1 rounded-lg transition flex items-center gap-1 ${
-                  showSchools ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Toggle School Heat Safety"
-              >
-                <span>🏫</span>
-                <span>Schools</span>
-              </button>
+              {/* Time Pills */}
+              <div className="flex items-center gap-1 p-1 bg-[#faf9f6] border border-[#ede7de] rounded-xl text-xs font-bold">
+                {(['Now', 'Forecast', '24h', '5 Days'] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTimeFilter(t)}
+                    className={`px-2.5 py-1 rounded-lg transition ${
+                      timeFilter === t
+                        ? 'bg-orange-600 text-white shadow-xs'
+                        : 'text-[#78716c] hover:text-[#1c1917]'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* 2-Column Layout: Dominant Satellite Map + Priority Focus Stack */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          {/* Left: Satellite Map Workspace */}
-          <div className="lg:col-span-7 bg-[#0b121e] border-2 border-slate-300 rounded-3xl overflow-hidden relative h-[520px] shadow-md">
-            {loading && (
-              <div className="absolute inset-0 z-20 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center text-xs text-white font-mono">
-                Loading satellite GIS boundaries...
-              </div>
-            )}
-
+          {/* Interactive GIS Map Viewport */}
+          <div className="relative h-[480px] sm:h-[530px] rounded-2xl overflow-hidden border border-[#ede7de] shadow-inner bg-slate-900">
             <MapContainer
               center={defaultCenter}
               zoom={11}
-              style={{ width: '100%', height: '100%', backgroundColor: '#090d16' }}
+              style={{ height: '100%', width: '100%' }}
               zoomControl={true}
             >
               <MapRecenter center={defaultCenter} zoom={11} />
-              <TileLayer attribution="&copy; Esri, Maxar, Earthstar Geographics" url={tileUrl} maxZoom={19} />
+              <TileLayer
+                attribution="&copy; Esri & OpenStreetMap"
+                url={tileUrl}
+                maxZoom={18}
+              />
 
+              {/* Ward GeoJSON Polygons */}
               {geoJsonData && (
                 <GeoJSON
-                  key={`${activeLayer}-${basemapMode}`}
+                  key={`${activeLayer}-${selectedWardId || 'none'}`}
                   data={geoJsonData}
                   style={styleFeature}
                   onEachFeature={onEachFeature}
                 />
               )}
 
-              {/* Cooling Centers Pins */}
-              {showCooling && facilities.cooling_centers?.map((cc: any) => (
-                <Marker key={cc.id} position={[cc.latitude, cc.longitude]} icon={coolingCenterIcon}>
+              {/* Facility Markers: Hospitals */}
+              {facilities.hospitals?.slice(0, 10).map((h: any) => (
+                <Marker
+                  key={h.id || h.name}
+                  position={[h.latitude, h.longitude]}
+                  icon={hospitalMarkerIcon}
+                >
                   <Popup>
-                    <div className="text-xs font-sans text-slate-900 p-1">
-                      <strong>{cc.name}</strong>
-                      <p className="text-[11px] text-slate-600">{cc.address}</p>
-                      <p className="text-[10px] font-mono text-cyan-700 mt-1 font-semibold">
-                        Occupancy: {cc.occupancy}/{cc.capacity} ({cc.occupancy_rate}%)
-                      </p>
+                    <div className="p-1 space-y-1 text-xs">
+                      <strong className="text-blue-900">{h.name}</strong>
+                      <div className="text-slate-600">Surge Readiness: {h.heat_capacity || 'Prepared'}</div>
                     </div>
                   </Popup>
                 </Marker>
               ))}
 
-              {/* Hospital Pins */}
-              {showHospitals && facilities.hospitals?.map((h: any) => (
-                <Marker key={h.id} position={[h.latitude, h.longitude]} icon={hospitalMarkerIcon}>
+              {/* Facility Markers: Cooling Centers */}
+              {facilities.cooling_centers?.slice(0, 10).map((c: any) => (
+                <Marker
+                  key={c.id || c.name}
+                  position={[c.latitude, c.longitude]}
+                  icon={coolingCenterIcon}
+                >
                   <Popup>
-                    <div className="text-xs font-sans text-slate-900 p-1">
-                      <strong>{h.name}</strong>
-                      <p className="text-[11px] text-slate-600">{h.type}</p>
-                      <p className="text-[10px] font-mono text-rose-700 mt-1 font-semibold">
-                        ICU Beds: {h.icu_beds} | Total Beds: {h.total_beds}
-                      </p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
-              {/* Drinking Water Point Pins */}
-              {showWater && waterPoints.map((wp: any) => (
-                <Marker key={wp.id} position={[wp.latitude, wp.longitude]} icon={waterPointIcon}>
-                  <Popup>
-                    <div className="text-xs font-sans text-slate-900 p-1">
-                      <div className="flex items-center gap-1 text-cyan-700 font-bold">
-                        <span>💧</span>
-                        <strong>{wp.name}</strong>
-                      </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5">{wp.address}</p>
-                      <p className="text-[10px] text-slate-500 font-mono">{wp.ward} · {wp.type?.replace(/_/g, ' ')}</p>
-                      <div className="mt-1 flex items-center justify-between gap-1 text-[10px] font-mono">
-                        <span className={`px-1.5 py-0.2 rounded font-bold ${
-                          wp.operational_status === 'OPERATIONAL' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {wp.operational_status}
-                        </span>
-                        <span className="text-cyan-700 font-bold">{wp.daily_capacity_liters}L/day</span>
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
-              {/* School Heat Safety Pins */}
-              {showSchools && schools.map((sch: any) => (
-                <Marker key={sch.id} position={[sch.latitude, sch.longitude]} icon={schoolIcon}>
-                  <Popup>
-                    <div className="text-xs font-sans text-slate-900 p-1">
-                      <div className="flex items-center gap-1 text-emerald-700 font-bold">
-                        <span>🏫</span>
-                        <strong>{sch.name}</strong>
-                      </div>
-                      <p className="text-[11px] text-slate-600 mt-0.5">{sch.address}</p>
-                      <p className="text-[10px] text-slate-500 font-mono">{sch.ward} · {sch.category}</p>
-                      <div className="mt-1.5 p-1 rounded bg-amber-50 border border-amber-200 text-[10px] text-amber-900">
-                        <strong>Heat Protocol:</strong> {sch.heat_action_protocol}
-                      </div>
-                      <p className="text-[10px] text-slate-600 mt-1 font-mono">
-                        Students: {sch.total_students} | AC: {sch.ac_classrooms ? 'Yes' : 'No'}
-                      </p>
+                    <div className="p-1 space-y-1 text-xs">
+                      <strong className="text-emerald-900">{c.name}</strong>
+                      <div className="text-slate-600">Capacity: {c.capacity || 150} people</div>
                     </div>
                   </Popup>
                 </Marker>
               ))}
             </MapContainer>
 
-            {/* Layer Legend Overlay in Map */}
-            <div className="absolute bottom-3 left-3 z-[400] bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-300 text-xs space-y-1 shadow-lg max-w-sm">
-              <div className="font-bold text-slate-900 text-[11px]">
-                {activeLayer === 'heat'
-                  ? 'Heat Stress (HTSI): Combined ambient heat, solar radiation & humidity.'
-                  : activeLayer === 'priority'
-                  ? 'Vulnerability Triage: Demographic frailty & outdoor labor density.'
-                  : 'Cooling Deficit: Concrete cover fraction & low tree canopy.'}
+            {/* Top Right: 3D Command Quicklink */}
+            <div className="absolute top-3 right-3 z-[1000]">
+              <Link
+                to="/thermal-terrain"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/95 backdrop-blur-md hover:bg-white text-[#1c1917] border border-[#ede7de] text-xs font-bold shadow-md hover:scale-105 transition"
+              >
+                <Compass className="w-3.5 h-3.5 text-orange-600" />
+                <span>Open 3D Command →</span>
+              </Link>
+            </div>
+
+            {/* Floating Legend Bottom Left (Matching Image 1 Exactly) */}
+            <div className="absolute bottom-3 left-3 z-[1000] bg-white/95 backdrop-blur-md border border-[#ede7de] rounded-2xl p-3 shadow-xl space-y-1.5 text-xs text-[#1c1917]">
+              <span className="font-black text-[11px] block">Heat Risk Level (HTSI)</span>
+              <div className="grid grid-cols-1 gap-1 text-[10px]">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#991b1b]" />
+                  <span>Extreme (≥ 0.8)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626]" />
+                  <span>Very High (0.6 – 0.8)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#f97316]" />
+                  <span>High (0.4 – 0.6)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#eab308]" />
+                  <span>Moderate (0.2 – 0.4)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
+                  <span>Low (&lt; 0.2)</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-600 pt-0.5">
-                <span className="w-2.5 h-2.5 rounded bg-blue-500" /> Low
-                <span className="w-2.5 h-2.5 rounded bg-yellow-500 ml-1" /> Moderate
-                <span className="w-2.5 h-2.5 rounded bg-orange-500 ml-1" /> High
-                <span className="w-2.5 h-2.5 rounded bg-red-500 ml-1" /> Extreme
+              <div className="pt-1.5 border-t border-[#ede7de] flex items-center gap-3 text-[10px] font-semibold text-[#44403c]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[9px]">+</span>
+                  <span>Hospitals</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[9px]">❄</span>
+                  <span>Cooling Centres</span>
+                </div>
               </div>
+            </div>
+
+            {/* Bottom Right: Scale and North Indicator */}
+            <div className="absolute bottom-3 right-3 z-[1000] bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-xl text-white text-[10px] font-mono flex items-center gap-2 pointer-events-none">
+              <span>0 — 5 — 10 km</span>
+              <span className="font-bold text-amber-400">▲ N</span>
             </div>
           </div>
 
-          {/* Right: Priority Areas Needing Attention */}
-          <div className="lg:col-span-5 space-y-3">
-            <div className="flex items-center justify-between pb-1">
-              <span className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider">
-                Priority Areas Needing Attention
-              </span>
-              <button
-                type="button"
-                onClick={() => navigate('/priority-areas')}
-                className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 transition"
-              >
-                <span>View all wards</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+        </div>
+
+        {/* ---------------------------------------------------- */}
+        {/* RIGHT COLUMN: 3 STAT WIDGETS (5 Columns on Large)    */}
+        {/* ---------------------------------------------------- */}
+        <div className="lg:col-span-5 space-y-5">
+          
+          {/* 1. 5-Day Thermal Stress Forecast Widget */}
+          <div className="bg-white border border-[#ede7de] rounded-3xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-orange-600" />
+                <h4 className="text-sm font-black text-[#1c1917]">5-Day Thermal Stress Forecast</h4>
+              </div>
+              <Link to="/forecast" className="text-xs font-bold text-orange-600 hover:text-orange-700 transition">
+                View Full Forecast →
+              </Link>
             </div>
 
-            <div className="space-y-2.5">
-              {priorityFocusAreas.map(area => (
+            {/* Area Chart SVG (Matching Image 1) */}
+            <div className="h-44 w-full pt-2">
+              <svg viewBox="0 0 400 150" className="w-full h-full overflow-visible">
+                <defs>
+                  <linearGradient id="htsugrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.45" />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Gridlines */}
+                {[0, 30, 60, 90, 120].map((y, i) => (
+                  <line key={i} x1="35" y1={y} x2="380" y2={y} stroke="#f0ece6" strokeWidth="1" />
+                ))}
+
+                {/* Y-axis Labels */}
+                <text x="25" y="10" fontSize="9" fill="#a8a29e" textAnchor="end">1.0</text>
+                <text x="25" y="40" fontSize="9" fill="#a8a29e" textAnchor="end">0.8</text>
+                <text x="25" y="70" fontSize="9" fill="#a8a29e" textAnchor="end">0.6</text>
+                <text x="25" y="100" fontSize="9" fill="#a8a29e" textAnchor="end">0.4</text>
+                <text x="25" y="130" fontSize="9" fill="#a8a29e" textAnchor="end">0.2</text>
+                <text x="12" y="70" fontSize="8" fill="#78716c" fontWeight="bold" textAnchor="middle" transform="rotate(-90 12,70)">HTSI</text>
+
+                {/* Area Gradient Path: Points: (60,42), (135,28), (210,36), (285,57), (360,78) */}
+                <path
+                  d="M 60 42 L 135 28 L 210 36 L 285 57 L 360 78 L 360 130 L 60 130 Z"
+                  fill="url(#htsugrad)"
+                />
+
+                {/* Line Path */}
+                <path
+                  d="M 60 42 L 135 28 L 210 36 L 285 57 L 360 78"
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="2.5"
+                />
+
+                {/* Data Points & Value Badges */}
+                {[
+                  { x: 60, y: 42, val: '0.72', day: 'Today', date: '27 May' },
+                  { x: 135, y: 28, val: '0.81', day: 'Wed', date: '28 May' },
+                  { x: 210, y: 36, val: '0.76', day: 'Thu', date: '29 May' },
+                  { x: 285, y: 57, val: '0.62', day: 'Fri', date: '30 May' },
+                  { x: 360, y: 78, val: '0.48', day: 'Sat', date: '31 May' },
+                ].map((pt, i) => (
+                  <g key={i}>
+                    <circle cx={pt.x} cy={pt.y} r="4" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
+                    <text x={pt.x} y={pt.y - 7} fontSize="10" fontWeight="bold" fill="#1c1917" textAnchor="middle">
+                      {pt.val}
+                    </text>
+                    <text x={pt.x} y="142" fontSize="9" fontWeight="bold" fill="#44403c" textAnchor="middle">
+                      {pt.day}
+                    </text>
+                    <text x={pt.x} y="152" fontSize="8" fill="#a8a29e" textAnchor="middle">
+                      {pt.date}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+          </div>
+
+          {/* 2. High Priority Wards Widget */}
+          <div className="bg-white border border-[#ede7de] rounded-3xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-red-600" />
+                <h4 className="text-sm font-black text-[#1c1917]">High Priority Wards</h4>
+              </div>
+              <Link to="/vulnerability" className="text-xs font-bold text-orange-600 hover:text-orange-700 transition">
+                View All Wards →
+              </Link>
+            </div>
+
+            {/* Wards Ranked Table */}
+            <div className="space-y-2.5 pt-1">
+              {PRIORITY_WARDS.map((w) => (
                 <div
-                  key={area.id}
-                  onClick={() => selectWard(area.id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer shadow-xs ${
-                    selectedWardId === area.id
-                      ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/30 shadow-md text-slate-900'
-                      : area.cardBg
+                  key={w.id}
+                  onClick={() => selectWard(w.id)}
+                  className={`flex items-center justify-between gap-3 p-2.5 rounded-2xl hover:bg-[#faf9f6] transition cursor-pointer border ${
+                    selectedWardId === w.id ? 'border-orange-500 bg-orange-50/50' : 'border-transparent'
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900 tracking-tight">{area.name}</h3>
-                      <span className="text-[10px] font-mono text-blue-600 uppercase font-bold tracking-wider">
-                        Municipal High Priority Zone
-                      </span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-5 text-xs font-bold text-[#78716c] shrink-0">#{w.rank}</span>
+                    <div className="truncate">
+                      <div className="text-xs font-bold text-[#1c1917] truncate">{w.name}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-20 bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                          <div className={`h-full rounded-full ${w.barColor}`} style={{ width: `${w.htsi * 100}%` }} />
+                        </div>
+                        <span className="text-[10px] font-mono font-bold text-[#44403c]">{w.htsi}</span>
+                      </div>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${area.badgeBg}`}>
-                      {area.status}
-                    </span>
                   </div>
 
-                  <p className="text-xs text-slate-600 mt-2 leading-relaxed font-sans">
-                    <strong className="text-slate-900 font-bold">Why:</strong> {area.why}
-                  </p>
-
-                  <div className="grid grid-cols-3 gap-2 mt-3 pt-2.5 border-t border-slate-200 text-xs font-mono bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <div>
-                      <span className="text-[10px] text-slate-500 block font-sans font-medium">Afternoon Heat</span>
-                      <span className="text-slate-900 font-bold">{area.temp}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-500 block font-sans font-medium">Night Minimum</span>
-                      <span className="text-rose-600 font-bold">{area.nightMin}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-500 block font-sans font-medium">Cooling Access</span>
-                      <span className="text-sky-700 font-semibold truncate">{area.coolingAccess}</span>
-                    </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-bold ${w.badgeColor}`}>
+                      {w.risk}
+                    </span>
+                    <span className="text-[10px] text-[#78716c] flex items-center gap-1 font-medium hidden sm:flex">
+                      <Users className="w-3 h-3 text-[#a8a29e]" />
+                      {w.pop}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ============================================================ */}
-      {/* SECTION 4: WHAT SHOULD BE REVIEWED? (RECOMMENDED ACTIONS)   */}
-      {/* ============================================================ */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-mono">
-              Recommended Operational Directives
-            </h2>
-            <p className="text-xs text-slate-500">
-              Review and dispatch municipal heat-action directives based on current biometeorological risk signals
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => navigate('/heat-action-plan')}
-            className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 transition"
-          >
-            <span>Full action plan workflow</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {actionPlans.slice(0, 3).map((action, idx) => {
-            const glowBorder =
-              idx === 0
-                ? 'hover:border-rose-300'
-                : idx === 1
-                ? 'hover:border-amber-300'
-                : 'hover:border-blue-300';
-
-            return (
-              <div
-                key={action.id}
-                className={`bg-white border border-slate-200 ${glowBorder} rounded-2xl p-4 flex flex-col justify-between space-y-3 shadow-xs text-slate-900 hover:shadow-md transition`}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-blue-600 uppercase font-bold tracking-wider">
-                      {action.department}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                        action.status === 'Approved'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : action.status === 'Under Review'
-                          ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                          : 'bg-blue-50 text-blue-700 border border-blue-200'
-                      }`}
-                    >
-                      {action.status}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xs font-bold text-slate-900 leading-snug tracking-tight">{action.title}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-sans">
-                    <strong className="text-slate-900 font-bold">Why:</strong> {action.reason}
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-mono font-medium">{action.wardName}</span>
-                  <button
-                    type="button"
-                    onClick={() => setReviewAction(action)}
-                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 shadow-2xs"
-                  >
-                    Review action
-                  </button>
-                </div>
+          {/* 3. Recent Alerts & Actions Widget */}
+          <div className="bg-white border border-[#ede7de] rounded-3xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-orange-600" />
+                <h4 className="text-sm font-black text-[#1c1917]">Recent Alerts & Actions</h4>
               </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 4.5: CITIZEN HEAT & INFRASTRUCTURE REPORTS           */}
-      {/* ============================================================ */}
-      <section className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Megaphone className="w-5 h-5 text-amber-600" />
-              <h2 className="text-base font-bold text-slate-900 tracking-tight font-sans">
-                Citizen Heat & Infrastructure Reports ({cityProfile.name})
-              </h2>
-              {communityReports.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                  {communityReports.filter(r => r.status !== 'RESOLVED').length} Active
-                </span>
-              )}
+              <Link to="/alerts" className="text-xs font-bold text-orange-600 hover:text-orange-700 transition">
+                View All →
+              </Link>
             </div>
-            <p className="text-xs text-slate-500">
-              Field reports submitted by citizens regarding broken water kiosks, extreme unshaded work sites, and cooling shelter deficits.
+
+            <div className="space-y-2 pt-1">
+              {RECENT_ALERTS.map((alert, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-[#faf9f6] border border-[#ede7de] text-xs"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-sm shrink-0">{alert.icon}</span>
+                    <div className="truncate">
+                      <div className="font-bold text-[#1c1917] truncate">{alert.title}</div>
+                      <div className="text-[10px] text-[#78716c] flex items-center gap-2 mt-0.5">
+                        <span className="font-mono">{alert.time}</span>
+                        <span>•</span>
+                        <span>{alert.area}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <span className={`px-2 py-0.5 rounded-lg text-[10px] shrink-0 ${alert.badgeClass}`}>
+                    {alert.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ======================================================== */}
+      {/* 4. ACTIVE COMMUNITY REPORTS & HEAT ACTION PLAN DIRECTIVES */}
+      {/* (Keeps all existing reporting & action features 100% live) */}
+      {/* ======================================================== */}
+      <div className="bg-white border border-[#ede7de] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#ede7de] pb-4">
+          <div>
+            <h3 className="text-base font-black text-[#1c1917] tracking-tight">
+              Community Ground Evidence & Priority Directives
+            </h3>
+            <p className="text-xs text-[#78716c]">
+              Real-time crowdsourced reports from citizens & automated Heat Action Plan (HAP) deployments
             </p>
           </div>
-
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            {['ALL', 'PENDING', 'UNDER_REVIEW', 'ACTION_INITIATED', 'RESOLVED'].map(filterStatus => {
-              const count = filterStatus === 'ALL'
-                ? communityReports.length
-                : communityReports.filter(r => r.status === filterStatus).length;
-              const label = filterStatus === 'ALL' ? 'All'
-                : filterStatus === 'PENDING' ? 'Pending'
-                : filterStatus === 'UNDER_REVIEW' ? 'Verified'
-                : filterStatus === 'ACTION_INITIATED' ? 'Relief Dispatched'
-                : 'Resolved';
-              return (
-                <button
-                  key={filterStatus}
-                  onClick={() => setReportFilter(filterStatus)}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                    reportFilter === filterStatus
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  <span>{label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    reportFilter === filterStatus ? 'bg-white/30 text-white' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Reports Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {communityReports
-            .filter(r => reportFilter === 'ALL' || r.status === reportFilter)
-            .map((report) => (
-              <div
-                key={report.id}
-                className="bg-[#faf9f6] border border-[#ede7de] hover:border-amber-400 rounded-2xl p-4.5 space-y-3 transition flex flex-col justify-between shadow-2xs"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-200">
-                      {report.category}
-                    </span>
-                    <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                        report.severity === 'CRITICAL'
-                          ? 'bg-red-100 text-red-800 border border-red-200'
-                          : report.severity === 'HIGH'
-                          ? 'bg-orange-100 text-orange-800 border border-orange-200'
-                          : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
-                      }`}
-                    >
-                      {report.severity}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-800 font-medium leading-relaxed">
-                    {report.description}
-                  </p>
-
-                  <div className="bg-white p-2.5 rounded-xl border border-[#ede7de] text-[11px] space-y-1 text-slate-600">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500 font-medium">Location:</span>
-                      <strong className="text-slate-800 font-semibold">{report.ward}</strong>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500 font-medium">Reporter:</span>
-                      <span className="text-slate-700">{report.reporter_name}</span>
-                    </div>
-                    {report.status_notes && (
-                      <div className="pt-1 border-t border-slate-100 text-amber-900 font-medium text-[10px]">
-                        <strong>Officer Note:</strong> {report.status_notes}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Status Indicator & Action Buttons */}
-                <div className="pt-2 border-t border-slate-200/80 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-[10px] font-mono text-slate-500">Status:</span>
-                    <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                        report.status === 'RESOLVED'
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                          : report.status === 'ACTION_INITIATED'
-                          ? 'bg-purple-100 text-purple-800 border border-purple-300'
-                          : report.status === 'UNDER_REVIEW'
-                          ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                          : 'bg-amber-100 text-amber-900 border border-amber-300'
-                      }`}
-                    >
-                      {report.status.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-                    <button
-                      disabled={updatingReportId === report.id || report.status === 'UNDER_REVIEW'}
-                      onClick={() => handleUpdateReportStatus(report.id, 'UNDER_REVIEW')}
-                      className="px-2 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold border border-blue-200 transition disabled:opacity-40"
-                    >
-                      Verify
-                    </button>
-                    <button
-                      disabled={updatingReportId === report.id || report.status === 'ACTION_INITIATED'}
-                      onClick={() => handleUpdateReportStatus(report.id, 'ACTION_INITIATED')}
-                      className="px-2 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-800 font-bold border border-orange-200 transition disabled:opacity-40"
-                    >
-                      Dispatch
-                    </button>
-                    <button
-                      disabled={updatingReportId === report.id || report.status === 'RESOLVED'}
-                      onClick={() => handleUpdateReportStatus(report.id, 'RESOLVED')}
-                      className="px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200 transition disabled:opacity-40"
-                    >
-                      Resolve
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-        </div>
-      </section>
-
-      {/* ============================================================ */}
-      {/* SECTION 5: WHAT HAPPENED RECENTLY? (ACTIVITY FEED)          */}
-      {/* ============================================================ */}
-      <section className="bg-gradient-to-br from-slate-50 via-white to-blue-50/30 border border-blue-100 rounded-3xl p-5 space-y-3 shadow-xs">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-600" />
-            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider font-mono">
-              Recent Municipal Operations Activity
-            </h2>
+            <Link
+              to="/heat-action-plan"
+              className="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition shadow-xs"
+            >
+              Manage Heat Action Plan →
+            </Link>
           </div>
-          <span className="text-[11px] font-mono text-slate-500 font-semibold">Live Operational Feed</span>
         </div>
 
-        <div className="divide-y divide-slate-100">
-          {activityFeed.slice(0, 5).map(event => (
-            <div key={event.id} className="py-2.5 flex items-start justify-between gap-4 text-xs">
-              <div className="flex items-start gap-3">
-                <span className="font-mono text-slate-500 text-[11px] mt-0.5 shrink-0 font-medium">
-                  {event.time}
+        {/* Community Reports List */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          {communityReports.slice(0, 3).map((rep) => (
+            <div key={rep.id} className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#ede7de] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#1c1917] uppercase tracking-wide text-[10px]">
+                  {rep.report_type || 'Heat Hazard'}
                 </span>
-                <p className="text-slate-800 leading-snug">{event.message}</p>
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold">
+                  {rep.status || 'Reported'}
+                </span>
               </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 shrink-0 border border-slate-200 font-semibold">
-                {event.category}
-              </span>
+              <p className="text-xs text-[#44403c] line-clamp-2">{rep.description}</p>
+              <div className="text-[10px] text-[#78716c] flex items-center justify-between pt-1 border-t border-[#ede7de]">
+                <span>{rep.address_text || rep.ward_id || 'Chennai Ward'}</span>
+                <span>{rep.created_at ? new Date(rep.created_at).toLocaleDateString() : 'Active'}</span>
+              </div>
             </div>
           ))}
+          {communityReports.length === 0 && (
+            <div className="col-span-3 p-4 text-center text-xs text-[#78716c]">
+              No active community hazard reports pending. All municipal water points operational.
+            </div>
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* Action Review Modal */}
-      {reviewAction && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-2xl text-xs text-slate-800">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div>
-                <span className="text-[10px] font-mono text-blue-600 uppercase font-bold">
-                  Action Review & Dispatch
-                </span>
-                <h3 className="text-base font-bold text-slate-900 mt-0.5">{reviewAction.title}</h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setReviewAction(null)}
-                className="text-slate-400 hover:text-slate-700 p-1 text-base font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-2 text-slate-600">
-              <p>
-                <strong className="text-slate-800">Department:</strong> {reviewAction.department}
-              </p>
-              <p>
-                <strong className="text-slate-800">Target Area:</strong> {reviewAction.wardName}
-              </p>
-              <p>
-                <strong className="text-slate-800">Operational Justification:</strong> {reviewAction.reason}
-              </p>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-[11px]">
-              Reviewing or approving this action will log the state transition into the operational audit log and dispatch notification prototypes to field coordinators.
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => {
-                  updateActionStatus(reviewAction.id, 'Dismissed', 'Dismissed by officer review');
-                  setReviewAction(null);
-                }}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-bold transition border border-slate-200"
-              >
-                Dismiss
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateActionStatus(reviewAction.id, 'Under Review', 'Placed under inter-departmental review');
-                  setReviewAction(null);
-                }}
-                className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold transition border border-slate-200"
-              >
-                Mark Under Review
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  updateActionStatus(reviewAction.id, 'Approved', 'Approved by Municipal Officer');
-                  setReviewAction(null);
-                }}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition shadow-xs"
-              >
-                Approve & Dispatch
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

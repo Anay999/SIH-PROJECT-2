@@ -143,12 +143,12 @@ export const AppShell: React.FC = () => {
         <>
           <div className="shrink-0 z-40">
             <TopHeader />
-            <GlobalContextBar />
+            {location.pathname !== '/' && location.pathname !== '/overview' && <GlobalContextBar />}
           </div>
 
           <div className="flex flex-1 min-h-0 overflow-hidden relative">
             <Sidebar />
-            <main className="flex-1 min-h-0 overflow-y-auto p-6 bg-slate-50 scrollbar-thin">
+            <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 bg-[#faf9f6] scrollbar-thin">
               <Outlet />
             </main>
           </div>

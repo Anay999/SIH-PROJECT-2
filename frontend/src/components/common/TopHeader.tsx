@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   MapPin,
   LogOut,
   Activity,
   Navigation,
-  Flame,
-  Shield
+  Sun,
+  Shield,
+  Search,
+  Bell,
+  Globe
 } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -26,107 +29,152 @@ export const TopHeader: React.FC<TopHeaderProps> = () => {
     isLiveGpsActive
   } = useWorkspace();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [isFeedOpen, setIsFeedOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/vulnerability?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const activeAlertsCount = 3;
 
   return (
-    <header className="border-b border-slate-200 bg-white/95 backdrop-blur px-4 py-2.5 sticky top-0 z-40 shadow-xs">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Brand & Identity */}
-        <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 via-amber-500 to-blue-600 flex items-center justify-center border border-rose-200 shadow-md shadow-rose-200/50 group-hover:scale-105 transition-transform">
-              <Flame className="w-5 h-5 text-white" />
+    <header className="border-b border-[#ede7de] bg-white sticky top-0 z-40 shadow-xs">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 sm:gap-4">
+        
+        {/* 1. LEFT SECTION: Ashoka / GCC Seal + THERMOSAFE AI Brand */}
+        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+          
+          {/* Greater Chennai Corporation Official Seal & Bilingual Script */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#faf9f6] border border-[#ede7de] flex items-center justify-center p-1 text-[#1c1917] shrink-0">
+              <Shield className="w-5 h-5 text-[#334155]" />
+            </div>
+            <div className="leading-tight">
+              <div className="text-xs sm:text-sm font-black text-[#1c1917] tracking-tight">
+                Greater Chennai Corporation
+              </div>
+              <div className="text-[10px] text-[#78716c] font-medium">
+                பெருநகர் சென்னை மாநகராட்சி
+              </div>
+            </div>
+          </div>
+
+          <div className="h-7 w-px bg-[#ede7de] hidden md:block" />
+
+          {/* THERMOSAFE AI Brand */}
+          <Link to="/" className="hidden lg:flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-orange-600 via-amber-500 to-yellow-500 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
+              <Sun className="w-4 h-4 text-white" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-base tracking-wider text-slate-900">HEATSHIELD AI</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-100 text-rose-700 border border-rose-200 font-bold uppercase">
-                  Heat Action Portal
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-black tracking-tight text-[#1c1917]">
+                  THERMOSAFE <span className="text-orange-600">AI</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 font-sans tracking-tight">
-                Hyper-Local Heat Risk & Emergency Response Platform
+              <p className="text-[9px] text-[#78716c] font-medium leading-none">
+                Heatwave Early Warning & Human Thermal Stress Platform • Safer Communities. Cooler Tomorrows.
               </p>
             </div>
           </Link>
+
         </div>
 
-        {/* Operational Context Controls */}
-        <div className="flex items-center flex-wrap gap-2 text-xs">
-          {/* Quick 1-Click Emergency GIS Road Navigation Button */}
+        {/* 2. CENTER SECTION: Search bar */}
+        <div className="flex-1 max-w-xs md:max-w-md hidden md:block">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <Search className="w-3.5 h-3.5 text-[#a8a29e] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search ward, location or facility..."
+              className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-xs text-[#1c1917] placeholder-[#a8a29e] focus:outline-none focus:border-orange-500 focus:bg-white transition"
+            />
+          </form>
+        </div>
+
+        {/* 3. RIGHT SECTION: City Selector, Notification Bell (3), Officer Avatar, Language, Logout */}
+        <div className="flex items-center gap-2 sm:gap-3 text-xs shrink-0">
+          
+          {/* Quick Emergency Route Navigation */}
           <Link
             to="/emergency-gis"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-sm transition"
-            title="Instant one-click road navigation to nearest hospital or cooling shelter"
+            className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs transition"
+            title="Instant GIS Navigation to nearest cooling shelter or hospital"
           >
             <Navigation className="w-3.5 h-3.5 text-white" />
             <span>Emergency Route</span>
           </Link>
 
-          {/* Officer Municipality Selector */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 text-xs shadow-2xs">
-            <MapPin className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-            <span className="font-bold text-[10px] text-slate-500 uppercase hidden sm:inline">Municipality:</span>
+          {/* Location Selector (Chennai with MapPin) */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-xs font-semibold text-[#1c1917]">
+            <MapPin className="w-3.5 h-3.5 text-orange-600 shrink-0" />
             <select
               value={activeCity}
               onChange={(e) => setActiveCity(e.target.value)}
-              className="bg-transparent font-bold text-slate-800 text-xs focus:outline-none cursor-pointer pr-1"
-              title="Officer Manual Jurisdiction Selection"
+              className="bg-transparent font-bold text-xs text-[#1c1917] focus:outline-none cursor-pointer pr-1"
             >
               {CITIES_REGISTRY.map((c) => (
-                <option key={c.id} value={c.name} className="text-slate-800 font-medium">
-                  {c.name} ({c.state})
+                <option key={c.id} value={c.name} className="text-[#1c1917]">
+                  {c.name}
                 </option>
               ))}
             </select>
             <button
               type="button"
               onClick={toggleLiveGps}
-              className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition ${
+              className={`hidden sm:inline px-1 py-0.5 rounded text-[9px] font-mono font-bold transition ${
                 isLiveGpsActive
-                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                  : 'bg-white hover:bg-slate-200 text-slate-600 border border-slate-300'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-stone-200 text-stone-600'
               }`}
-              title="Toggle Officer GPS Detection"
+              title="Toggle Officer GPS"
             >
-              {isLiveGpsActive ? 'GPS ON' : 'GPS'}
+              GPS
             </button>
           </div>
 
-          {/* Activity Feed Toggle */}
+          {/* Notification Bell with Red Badge "3" */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsFeedOpen(!isFeedOpen)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition text-xs font-medium"
-              title="Recent operational activity"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#faf9f6] hover:bg-[#ede7de] border border-[#ede7de] flex items-center justify-center text-[#44403c] transition relative"
+              title="Alert Notifications"
             >
-              <Activity className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">Activity</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">
-                {activityFeed.length}
+              <Bell className="w-4 h-4 text-[#44403c]" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white font-bold text-[9px] flex items-center justify-center shadow-xs">
+                {activeAlertsCount}
               </span>
             </button>
 
-            {/* Activity Feed Dropdown Popover */}
+            {/* Notification Popover */}
             {isFeedOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-2xl p-3 z-50 space-y-2 text-xs">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <span className="font-bold text-slate-800 uppercase text-[10px] font-mono tracking-wider flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5 text-blue-600" />
-                    Operational Event Log
+              <div className="absolute right-0 mt-2 w-80 bg-white border border-[#ede7de] rounded-2xl shadow-2xl p-3 z-50 space-y-2 text-xs animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-[#ede7de] pb-2">
+                  <span className="font-bold text-[#1c1917] text-xs flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5 text-orange-600" />
+                    Heat Action & Operational Log
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono">Live</span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                    Live Stream
+                  </span>
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {activityFeed.slice(0, 8).map(ev => (
-                    <div key={ev.id} className="p-2 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
-                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
-                        <span className="text-blue-600 font-semibold">{ev.category}</span>
+                  {activityFeed.slice(0, 6).map((ev) => (
+                    <div key={ev.id} className="p-2.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-[#78716c]">
+                        <span className="text-orange-700 font-bold">{ev.category}</span>
                         <span>{ev.time} IST</span>
                       </div>
-                      <p className="text-slate-800 text-[11px] leading-snug">{ev.message}</p>
+                      <p className="text-[#1c1917] text-xs leading-snug">{ev.message}</p>
                     </div>
                   ))}
                 </div>
@@ -134,34 +182,39 @@ export const TopHeader: React.FC<TopHeaderProps> = () => {
             )}
           </div>
 
-          {/* Authenticated Role Badge */}
-          <Link
-            to="/auth"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border font-mono text-xs transition ${
-              user?.role === 'ADMIN'
-                ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200 shadow-xs'
-                : user?.role === 'CITIZEN'
-                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 shadow-xs'
-                : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 shadow-xs'
-            }`}
-            title={`Authenticated as @${user?.username || 'user'}. Click to switch identity.`}
-          >
-            <Shield className="w-3.5 h-3.5 shrink-0" />
-            <span className="font-bold text-[10px] tracking-wide">
-              {user?.role === 'ADMIN' ? 'SUPERUSER ADMIN' : user?.role === 'CITIZEN' ? 'PUBLIC CITIZEN' : 'MUNICIPAL OFFICER'}
-            </span>
-          </Link>
+          {/* User Profile Avatar ("M" Municipal Officer) */}
+          <div className="flex items-center gap-2 pl-1 border-l border-[#ede7de]">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 flex items-center justify-center text-white font-black text-xs shadow-xs shrink-0">
+              {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'M'}
+            </div>
+            <div className="hidden sm:block leading-tight text-left">
+              <div className="text-xs font-black text-[#1c1917]">
+                {user?.role === 'ADMIN' ? 'System Admin' : user?.role === 'CITIZEN' ? 'Citizen' : 'Municipal Officer'}
+              </div>
+              <div className="text-[10px] text-[#78716c]">
+                {activeCity || 'Greater Chennai'} Corporation
+              </div>
+            </div>
+          </div>
 
-          {/* Session Logout / Exit */}
+          {/* Language Selector */}
+          <div className="relative hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-xs font-semibold text-[#44403c]">
+            <Globe className="w-3.5 h-3.5 text-[#78716c]" />
+            <span>English</span>
+          </div>
+
+          {/* Sign Out Button */}
           <button
             type="button"
             onClick={() => logout()}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-rose-200"
+            className="p-1.5 rounded-xl text-[#78716c] hover:text-red-600 hover:bg-red-50 transition border border-transparent hover:border-red-200"
             title="Sign out session"
           >
             <LogOut className="w-4 h-4" />
           </button>
+
         </div>
+
       </div>
     </header>
   );
