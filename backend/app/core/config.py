@@ -87,11 +87,16 @@ class Settings(BaseSettings):
 
     # SMS Gateway (MSG91 / Fast2SMS / Indian DLT Compliant)
     SMS_ENABLED: bool = os.getenv("SMS_ENABLED", "true").lower() == "true"
-    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "msg91") # msg91 | fast2sms | mock
+    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "msg91") # msg91 | fast2sms | infobip | mock
     MSG91_AUTH_KEY: str = os.getenv("MSG91_AUTH_KEY", "")
     MSG91_SENDER_ID: str = os.getenv("MSG91_SENDER_ID", "THMSAF")
     MSG91_DLT_TEMPLATE_ID: str = os.getenv("MSG91_DLT_TEMPLATE_ID", "1007161829304918234")
     MSG91_FLOW_ID: str = os.getenv("MSG91_FLOW_ID", "")
+    
+    # Infobip SMS Integration
+    INFOBIP_API_KEY: str = os.getenv("INFOBIP_API_KEY", "")
+    INFOBIP_BASE_URL: str = os.getenv("INFOBIP_BASE_URL", "https://api.infobip.com")
+    INFOBIP_SENDER_ID: str = os.getenv("INFOBIP_SENDER_ID", "InfoSMS")
 
     # Multi-Channel Dispatch Strategy & Throttling
     ENABLE_CHANNEL_FALLBACK: bool = os.getenv("ENABLE_CHANNEL_FALLBACK", "true").lower() == "true"
