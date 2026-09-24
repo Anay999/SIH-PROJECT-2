@@ -21,31 +21,39 @@ SEVERITY_RANKS = {
 
 def normalize_phone(phone: str) -> Optional[str]:
     """
-    Normalizes Indian & international numbers to strict E.164 format (+91...).
-    Rejects malformed numbers before queueing.
+    Normalizes strictly Indian mobile numbers to strict E.164 format (+91XXXXXXXXXX).
+    Only valid 10-digit Indian numbers starting with 6, 7, 8, 9 are accepted.
+    Rejects all non-Indian or malformed numbers.
     """
     if not phone:
         return None
     # Strip spaces, dashes, parentheses
     cleaned = re.sub(r"[\s\-\(\)]", "", phone.strip())
-    
-    # If starts with +
-    if cleaned.startswith("+"):
-        if re.match(r"^\+\d{11,15}$", cleaned):
-            return cleaned
+
+    # If starts with +91
+    if cleaned.startswith("+91"):
+        digits = cleaned[3:]
+        if re.match(r"^[6-9]\d{9}$", digits):
+            return f"+91{digits}"
         return None
 
-    # If starts with 0
+    # If starts with 91 (without +) and 12 digits total
+    if cleaned.startswith("91") and len(cleaned) == 12:
+        digits = cleaned[2:]
+        if re.match(r"^[6-9]\d{9}$", digits):
+            return f"+91{digits}"
+        return None
+
+    # If starts with 0 and 11 digits total
     if cleaned.startswith("0") and len(cleaned) == 11:
-        cleaned = cleaned[1:]
+        digits = cleaned[1:]
+        if re.match(r"^[6-9]\d{9}$", digits):
+            return f"+91{digits}"
+        return None
 
     # If standard 10 digit Indian number
     if re.match(r"^[6-9]\d{9}$", cleaned):
         return f"+91{cleaned}"
-    
-    # If 91 followed by 10 digits
-    if re.match(r"^91[6-9]\d{9}$", cleaned):
-        return f"+{cleaned}"
 
     return None
 

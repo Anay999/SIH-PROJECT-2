@@ -60,6 +60,9 @@ class TestNotificationRequest(BaseModel):
     channel: str = Field(default="BOTH", description="WHATSAPP | SMS | BOTH")
     severity: Optional[str] = "HIGH"
     custom_message: Optional[str] = None
+    ward: Optional[str] = None
+    htsi: Optional[float] = None
+    test_message: Optional[str] = None
 
 
 # Envelope response helper
@@ -239,8 +242,11 @@ def get_notification_logs(
         user = db.query(User).filter(User.id == d.recipient_id).first()
         alert = db.query(Alert).filter(Alert.id == d.alert_id).first()
         ward = db.query(Ward).filter(Ward.id == alert.ward_id).first() if alert else None
+        job = db.query(NotificationJob).filter(NotificationJob.id == d.job_id).first() if d.job_id else None
 
-        phone = user.phone_number if user else "+919876543210"
+        phone = (job.recipient_phone if job and job.recipient_phone else (user.phone_number if user and user.phone_number else "+919876543210"))
+        recipient_name = (job.recipient_name if job and job.recipient_name else (user.full_name if user and user.full_name else "Citizen"))
+
         logs.append({
             "id": d.id,
             "job_id": d.job_id,
@@ -248,7 +254,7 @@ def get_notification_logs(
             "headline": alert.headline if alert else "Municipal Advisory",
             "ward_name": ward.name if ward else "Citywide",
             "severity": alert.severity if alert else "HIGH",
-            "recipient_name": user.full_name if user else "Citizen",
+            "recipient_name": recipient_name,
             "recipient_phone_masked": mask_phone_number(phone),
             "channel": d.channel,
             "status": d.status,
@@ -282,6 +288,10 @@ def get_notification_log_detail(
 
     alert = db.query(Alert).filter(Alert.id == delivery.alert_id).first()
     user = db.query(User).filter(User.id == delivery.recipient_id).first()
+    job = db.query(NotificationJob).filter(NotificationJob.id == delivery.job_id).first() if delivery.job_id else None
+
+    phone = (job.recipient_phone if job and job.recipient_phone else (user.phone_number if user and user.phone_number else ""))
+    recipient_name = (job.recipient_name if job and job.recipient_name else (user.full_name if user and user.full_name else "Citizen"))
 
     # Associated audit events
     audit_records = db.query(NotificationAuditLog).filter(
@@ -299,8 +309,8 @@ def get_notification_log_detail(
         "provider_status": delivery.provider_status,
         "provider_error_code": delivery.provider_error_code,
         "provider_error_message": delivery.provider_error_message,
-        "recipient_name": user.full_name if user else "Citizen",
-        "recipient_phone_masked": mask_phone_number(user.phone_number if user else ""),
+        "recipient_name": recipient_name,
+        "recipient_phone_masked": mask_phone_number(phone) if phone else "N/A",
         "rendered_message": delivery.rendered_message,
         "content_hash": delivery.content_hash,
         "attempt_count": delivery.attempt_count,
@@ -545,65 +555,232 @@ async def test_notification_dispatch(
 ):
     """
     Sends a clearly-labeled TEST message to verify provider connectivity.
+    Strictly validates Indian mobile numbers (+91XXXXXXXXXX).
     Never masquerades as a genuine emergency alert.
+    Persists test records to DB for real-time visibility in Delivery Logs.
     """
     if actor.role not in [UserRole.OFFICER, UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Access restricted to Officers and Admins.")
 
     norm_phone = normalize_phone(payload.recipient_phone)
     if not norm_phone:
-        raise HTTPException(status_code=400, detail="Invalid phone format. Please provide E.164 (+91...).")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid phone format. Only Indian mobile numbers (+91 followed by 10 digits starting with 6, 7, 8, or 9) are supported."
+        )
 
     ch = payload.channel.upper()
-    results = {}
+    ward_name = payload.ward or "Ward 14 (Royapettah)"
+    htsi_val = payload.htsi if payload.htsi is not None else 78.4
+    sev = (payload.severity or "HIGH").upper()
+    user_msg = payload.custom_message or payload.test_message
+    now_utc = datetime.now(timezone.utc)
 
-    test_wa_text = (
+    # Reference or fallback alert for DB foreign key
+    alert = db.query(Alert).first()
+    alert_id = alert.id if alert else "alert_test_001"
+    
+    # Recipient user record for DB foreign key
+    user = db.query(User).filter(User.phone_number == norm_phone).first()
+    if not user:
+        user = db.query(User).filter(User.id == actor.actor_id).first()
+    if not user:
+        user = db.query(User).first()
+    user_id = user.id if user else "user_system"
+
+    test_wa_text = user_msg or (
         f"🚨 *[TEST MESSAGE] THERMOSAFE AI SYSTEM TEST*\n"
         f"━━━━━━━━━━━━━━━━━━\n"
         f"This is an authorized municipal test transmission to verify emergency channels.\n"
-        f"Severity Simulation: *{payload.severity}*\n"
+        f"Target Ward: *{ward_name}*\n"
+        f"Simulated Severity: *{sev}* (HTSI: {htsi_val:.1f})\n"
         f"Timestamp: {time.strftime('%I:%M %p IST')}\n"
-        f"Note: _No emergency action required._"
+        f"Note: _No emergency action required. Verification complete._"
     )
 
-    test_sms_text = (
-        f"[TEST MESSAGE] THERMOSAFE AI: Operational connectivity test for {payload.severity} heat notifications. "
-        f"No emergency action required. Ref:TEST-{int(time.time())}"
+    test_sms_text = user_msg or (
+        f"[TEST MESSAGE] THERMOSAFE AI: Operational connectivity test for {sev} heat alert in {ward_name}. "
+        f"HTSI: {htsi_val:.1f}. No emergency action required. Ref:TEST-{int(time.time())}"
     )
+
+    results = {}
 
     if ch in ["WHATSAPP", "BOTH"]:
         wa_provider = ProviderFactory.get_whatsapp_provider()
         wa_res = await wa_provider.send_message(
             recipient_phone=norm_phone,
-            message_text=payload.custom_message or test_wa_text,
-            priority="LOW"
+            message_text=test_wa_text,
+            priority="HIGH"
         )
         results["whatsapp"] = {
             "success": wa_res.success,
             "status": wa_res.status,
+            "provider": wa_res.provider,
             "message_id": wa_res.message_id,
             "is_simulated": wa_res.is_simulated,
             "error": wa_res.error_message
         }
 
+        # Persist NotificationJob and NotificationDelivery
+        try:
+            job_wa = NotificationJob(
+                id=f"job_test_wa_{uuid.uuid4().hex[:8]}",
+                alert_id=alert_id,
+                recipient_id=user_id,
+                recipient_phone=norm_phone,
+                recipient_name=f"Test Officer ({mask_phone_number(norm_phone)})",
+                channel="WHATSAPP",
+                status=wa_res.status,
+                attempt_count=1,
+                priority="HIGH",
+                scheduled_at=now_utc,
+                started_at=now_utc,
+                completed_at=now_utc,
+                provider_message_id=wa_res.message_id,
+                idempotency_key=f"test:wa:{uuid.uuid4().hex}",
+                rendered_message=test_wa_text,
+                last_error=wa_res.error_message if not wa_res.success else None
+            )
+            db.add(job_wa)
+            db.flush()
+
+            del_wa = NotificationDelivery(
+                id=f"del_test_wa_{uuid.uuid4().hex[:8]}",
+                job_id=job_wa.id,
+                alert_id=alert_id,
+                recipient_id=user_id,
+                channel="WHATSAPP",
+                status=wa_res.status,
+                provider=wa_res.provider,
+                provider_message_id=wa_res.message_id,
+                provider_error_code=wa_res.error_code,
+                provider_error_message=wa_res.error_message,
+                raw_provider_response=wa_res.raw_response,
+                rendered_message=test_wa_text,
+                sent_at=now_utc if wa_res.status in ["SENT", "DELIVERED"] else None,
+                delivered_at=now_utc if wa_res.status == "DELIVERED" else None,
+                failed_at=now_utc if wa_res.status in ["FAILED", "NOT_CONFIGURED"] else None
+            )
+            db.add(del_wa)
+
+            audit_wa = NotificationAuditLog(
+                id=f"audit_test_wa_{uuid.uuid4().hex[:8]}",
+                actor_id=actor.actor_id,
+                action="TEST_WHATSAPP_DISPATCHED",
+                alert_id=alert_id,
+                recipient_id=user_id,
+                channel="WHATSAPP",
+                old_status=None,
+                new_status=wa_res.status,
+                provider=wa_res.provider,
+                timestamp=now_utc,
+                extra_metadata={
+                    "recipient": mask_phone_number(norm_phone),
+                    "raw_phone": norm_phone,
+                    "status": wa_res.status,
+                    "message_id": wa_res.message_id,
+                    "is_simulated": wa_res.is_simulated,
+                    "error": wa_res.error_message
+                }
+            )
+            db.add(audit_wa)
+            db.commit()
+        except Exception as e:
+            logger.error(f"Failed to record test whatsapp delivery in DB: {e}")
+            db.rollback()
+
     if ch in ["SMS", "BOTH"]:
         sms_provider = ProviderFactory.get_sms_provider()
         sms_res = await sms_provider.send_message(
             recipient_phone=norm_phone,
-            message_text=payload.custom_message or test_sms_text,
-            priority="LOW"
+            message_text=test_sms_text,
+            priority="HIGH"
         )
         results["sms"] = {
             "success": sms_res.success,
             "status": sms_res.status,
+            "provider": sms_res.provider,
             "message_id": sms_res.message_id,
             "is_simulated": sms_res.is_simulated,
             "error": sms_res.error_message
         }
 
+        # Persist NotificationJob and NotificationDelivery
+        try:
+            job_sms = NotificationJob(
+                id=f"job_test_sms_{uuid.uuid4().hex[:8]}",
+                alert_id=alert_id,
+                recipient_id=user_id,
+                recipient_phone=norm_phone,
+                recipient_name=f"Test Officer ({mask_phone_number(norm_phone)})",
+                channel="SMS",
+                status=sms_res.status,
+                attempt_count=1,
+                priority="HIGH",
+                scheduled_at=now_utc,
+                started_at=now_utc,
+                completed_at=now_utc,
+                provider_message_id=sms_res.message_id,
+                idempotency_key=f"test:sms:{uuid.uuid4().hex}",
+                rendered_message=test_sms_text,
+                last_error=sms_res.error_message if not sms_res.success else None
+            )
+            db.add(job_sms)
+            db.flush()
+
+            del_sms = NotificationDelivery(
+                id=f"del_test_sms_{uuid.uuid4().hex[:8]}",
+                job_id=job_sms.id,
+                alert_id=alert_id,
+                recipient_id=user_id,
+                channel="SMS",
+                status=sms_res.status,
+                provider=sms_res.provider,
+                provider_message_id=sms_res.message_id,
+                provider_error_code=sms_res.error_code,
+                provider_error_message=sms_res.error_message,
+                raw_provider_response=sms_res.raw_response,
+                rendered_message=test_sms_text,
+                sent_at=now_utc if sms_res.status in ["SENT", "DELIVERED"] else None,
+                delivered_at=now_utc if sms_res.status == "DELIVERED" else None,
+                failed_at=now_utc if sms_res.status in ["FAILED", "NOT_CONFIGURED"] else None
+            )
+            db.add(del_sms)
+
+            audit_sms = NotificationAuditLog(
+                id=f"audit_test_sms_{uuid.uuid4().hex[:8]}",
+                actor_id=actor.actor_id,
+                action="TEST_SMS_DISPATCHED",
+                alert_id=alert_id,
+                recipient_id=user_id,
+                channel="SMS",
+                old_status=None,
+                new_status=sms_res.status,
+                provider=sms_res.provider,
+                timestamp=now_utc,
+                extra_metadata={
+                    "recipient": mask_phone_number(norm_phone),
+                    "raw_phone": norm_phone,
+                    "status": sms_res.status,
+                    "message_id": sms_res.message_id,
+                    "is_simulated": sms_res.is_simulated,
+                    "error": sms_res.error_message
+                }
+            )
+            db.add(audit_sms)
+            db.commit()
+        except Exception as e:
+            logger.error(f"Failed to record test sms delivery in DB: {e}")
+            db.rollback()
+
     return api_response({
+        "mode": settings.NOTIFICATION_MODE,
+        "is_simulated": settings.NOTIFICATION_MODE == "mock",
         "recipient": mask_phone_number(norm_phone),
+        "raw_recipient": norm_phone,
         "channel_tested": ch,
+        "ward": ward_name,
+        "severity": sev,
         "results": results
     })
 
@@ -745,7 +922,9 @@ class LegacySmsTest(BaseModel):
 @router.post("/whatsapp/test")
 async def legacy_send_whatsapp_test(req: LegacyWhatsAppTest):
     wa = ProviderFactory.get_whatsapp_provider()
-    phone = req.phone or "+919876543210"
+    norm_phone = normalize_phone(req.phone or "+919876543210")
+    if not norm_phone:
+        raise HTTPException(status_code=400, detail="Invalid Indian mobile number format.")
     text_body = req.message or (
         f"🚨 *THERMOSAFE AI TEST ALERT*\n\n"
         f"📍 *Ward*: {req.ward}\n"
@@ -755,29 +934,36 @@ async def legacy_send_whatsapp_test(req: LegacyWhatsAppTest):
         f"🧭 *Distance*: {req.distance or '1.4 km'}\n\n"
         f"⚠️ _This is a TEST notification._"
     )
-    res = await wa.send_message(recipient_phone=phone, message_text=text_body)
+    res = await wa.send_message(recipient_phone=norm_phone, message_text=text_body)
     return {
-        "success": True,
+        "success": res.success,
+        "status": res.status,
         "provider": res.provider,
         "message_id": res.message_id,
         "mode": "simulated" if res.is_simulated else "live",
         "message_sent": text_body,
-        "recipient": phone
+        "recipient": norm_phone,
+        "error": res.error_message
     }
 
 @router.post("/sms/test")
 async def legacy_send_sms_test(req: LegacySmsTest):
     sms = ProviderFactory.get_sms_provider()
+    norm_phone = normalize_phone(req.numbers or "9876543210")
+    if not norm_phone:
+        raise HTTPException(status_code=400, detail="Invalid Indian mobile number format.")
     text_body = req.message or (
         f"THERMOSAFE AI ALERT: High heat stress detected in {req.ward}. "
         f"HTSI {req.value}. Follow local heat-safety guidance & stay hydrated."
     )
-    res = await sms.send_message(recipient_phone=req.numbers, message_text=text_body)
+    res = await sms.send_message(recipient_phone=norm_phone, message_text=text_body)
     return {
-        "success": True,
+        "success": res.success,
+        "status": res.status,
         "provider": res.provider,
         "message_id": res.message_id,
         "mode": "simulated" if res.is_simulated else "live",
         "message_sent": text_body,
-        "recipient": req.numbers
+        "recipient": norm_phone,
+        "error": res.error_message
     }

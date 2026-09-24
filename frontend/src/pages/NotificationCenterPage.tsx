@@ -47,8 +47,12 @@ export const NotificationCenterPage: React.FC = () => {
 
   // Channel Settings / Provider State
   const [providersStatus, setProvidersStatus] = useState<any>(null);
-  const [testChannel, setTestChannel] = useState<'WHATSAPP' | 'SMS' | 'BOTH'>('WHATSAPP');
-  const [testPhone, setTestPhone] = useState<string>('+919876543210');
+  const [testChannel, setTestChannel] = useState<'WHATSAPP' | 'SMS' | 'BOTH'>('BOTH');
+  const [testPhoneDigits, setTestPhoneDigits] = useState<string>('8838930577');
+  const [testWard, setTestWard] = useState<string>('Ward 14 (Royapettah)');
+  const [testSeverity, setTestSeverity] = useState<string>('HIGH');
+  const [testHtsi, setTestHtsi] = useState<number>(78.4);
+  const [testCustomMsg, setTestCustomMsg] = useState<string>('');
   const [testSending, setTestSending] = useState<boolean>(false);
   const [testResult, setTestResult] = useState<any | null>(null);
 
@@ -168,21 +172,34 @@ export const NotificationCenterPage: React.FC = () => {
   // Handle Test Dispatch
   const handleTestDispatch = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanDigits = testPhoneDigits.replace(/\D/g, '');
+    if (!/^[6-9]\d{9}$/.test(cleanDigits)) {
+      setTestResult({
+        success: false,
+        error: 'Only Indian mobile numbers (+91 followed by 10 digits starting with 6, 7, 8, or 9) are supported.',
+      });
+      return;
+    }
     setTestSending(true);
     setTestResult(null);
     try {
+      const fullPhone = `+91${cleanDigits}`;
       const res = await fetch('/api/notifications/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           channel: testChannel,
-          recipient_phone: testPhone,
-          test_message: 'THERMOSAFE AI [TEST MESSAGE]: Heat emergency dispatch verified operational.',
+          recipient_phone: fullPhone,
+          ward: testWard,
+          severity: testSeverity,
+          htsi: parseFloat(testHtsi.toString()),
+          custom_message: testCustomMsg.trim() || undefined,
         }),
       });
       const json = await res.json();
       setTestResult(json);
       fetchOverview();
+      fetchLogs();
     } catch (err: any) {
       setTestResult({ success: false, error: err.message });
     } finally {
@@ -969,18 +986,24 @@ export const NotificationCenterPage: React.FC = () => {
 
           {/* Authorized Provider Test Dispatch Form */}
           <div className="lg:col-span-5 bg-white border border-[#ede7de] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="border-b border-[#ede7de] pb-3">
-              <h3 className="text-base font-black text-[#1c1917] tracking-tight">
-                Live Gateway Diagnostic Test
-              </h3>
-              <p className="text-xs text-[#78716c]">
-                Send an explicit [TEST MESSAGE] to verify provider end-to-end delivery
-              </p>
+            <div className="border-b border-[#ede7de] pb-3 flex items-start justify-between">
+              <div>
+                <h3 className="text-base font-black text-[#1c1917] tracking-tight flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-orange-600 animate-pulse" />
+                  Live Gateway Diagnostic Dispatch
+                </h3>
+                <p className="text-xs text-[#78716c]">
+                  Send a verified test alert to an Indian mobile number. Real external gateways only.
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold text-[10px] border border-emerald-200 uppercase tracking-wider">
+                Mode: Live
+              </span>
             </div>
 
             <form onSubmit={handleTestDispatch} className="space-y-4 text-xs">
               <div>
-                <label className="font-bold text-[#1c1917] block mb-1.5">Select Channel:</label>
+                <label className="font-bold text-[#1c1917] block mb-1.5">Delivery Channel:</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(['WHATSAPP', 'SMS', 'BOTH'] as const).map((ch) => (
                     <button
@@ -1001,44 +1024,193 @@ export const NotificationCenterPage: React.FC = () => {
 
               <div>
                 <label className="font-bold text-[#1c1917] block mb-1">
-                  Recipient Phone (E.164):
+                  Recipient Indian Mobile Number:
                 </label>
-                <input
-                  type="text"
-                  value={testPhone}
-                  onChange={(e) => setTestPhone(e.target.value)}
-                  placeholder="+919876543210"
-                  className="w-full px-3 py-2 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-[#1c1917] font-mono focus:outline-none"
-                  required
-                />
-                <span className="text-[10px] text-[#78716c] mt-0.5 block">
-                  Must include country code (e.g. +91)
-                </span>
+                <div className="flex items-center rounded-xl bg-[#faf9f6] border border-[#ede7de] overflow-hidden focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500 transition">
+                  <div className="flex items-center gap-1.5 px-3 py-2 bg-stone-100 text-stone-700 font-bold border-r border-[#ede7de] select-none text-xs">
+                    <span>🇮🇳</span>
+                    <span>+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    value={testPhoneDigits}
+                    onChange={(e) => setTestPhoneDigits(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="8838930577"
+                    className="w-full px-3 py-2 bg-transparent text-[#1c1917] font-mono font-medium focus:outline-none tracking-wide text-xs"
+                    required
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-[#78716c] mt-1">
+                  <span>Enter 10 digits starting with 6, 7, 8, or 9</span>
+                  <span className={`font-mono font-bold ${testPhoneDigits.length === 10 ? 'text-emerald-600' : 'text-stone-400'}`}>
+                    {testPhoneDigits.length}/10 digits
+                  </span>
+                </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
-                <strong>Safety Guarantee:</strong> Outgoing test broadcasts are strictly prepended with <span className="font-mono font-bold">[TEST MESSAGE]</span> and will never trigger municipal emergency sirens.
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-bold text-[#1c1917] block mb-1">Target Ward:</label>
+                  <select
+                    value={testWard}
+                    onChange={(e) => setTestWard(e.target.value)}
+                    className="w-full p-2 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-[#1c1917] font-semibold focus:outline-none text-xs"
+                  >
+                    <option value="Ward 14 (Royapettah)">Ward 14 (Royapettah)</option>
+                    <option value="Ward 45 (Tondiarpet)">Ward 45 (Tondiarpet)</option>
+                    <option value="Ward 52 (Royapuram)">Ward 52 (Royapuram)</option>
+                    <option value="Ward 78 (Thiru Vi Ka Nagar)">Ward 78 (Thiru Vi Ka Nagar)</option>
+                    <option value="Ward 114 (Teynampet)">Ward 114 (Teynampet)</option>
+                    <option value="Ward 138 (Kodambakkam)">Ward 138 (Kodambakkam)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-bold text-[#1c1917] block mb-1">Alert Severity:</label>
+                  <select
+                    value={testSeverity}
+                    onChange={(e) => {
+                      const s = e.target.value;
+                      setTestSeverity(s);
+                      if (s === 'EXTREME') setTestHtsi(84.2);
+                      else if (s === 'VERY_HIGH') setTestHtsi(74.5);
+                      else if (s === 'HIGH') setTestHtsi(62.8);
+                      else setTestHtsi(46.0);
+                    }}
+                    className="w-full p-2 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-[#1c1917] font-semibold focus:outline-none text-xs"
+                  >
+                    <option value="EXTREME">EXTREME (≥ 80 HTSI)</option>
+                    <option value="VERY_HIGH">VERY HIGH (70–79 HTSI)</option>
+                    <option value="HIGH">HIGH (55–69 HTSI)</option>
+                    <option value="MODERATE">MODERATE (40–54 HTSI)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-[#1c1917] block mb-1">
+                  Custom Advisory Text <span className="text-[#78716c] font-normal">(Optional Override)</span>:
+                </label>
+                <textarea
+                  value={testCustomMsg}
+                  onChange={(e) => setTestCustomMsg(e.target.value)}
+                  placeholder="Leave blank to use canonical municipal emergency template..."
+                  rows={2}
+                  className="w-full p-2.5 rounded-xl bg-[#faf9f6] border border-[#ede7de] text-[#1c1917] text-xs focus:outline-none resize-none font-sans"
+                />
+              </div>
+
+              <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed flex items-start gap-2">
+                <Shield className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong>Safety & Telemetry Guarantee:</strong> Outgoing test broadcasts are strictly prepended with <span className="font-mono font-bold">[TEST MESSAGE]</span> and logged into <span className="font-bold">Delivery Logs</span> for audit traceability.
+                </div>
               </div>
 
               {testResult && (
-                <div
-                  className={`p-3 rounded-xl border text-xs font-mono whitespace-pre-wrap ${
-                    testResult.success
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                      : 'bg-red-50 border-red-200 text-red-900'
-                  }`}
-                >
-                  {JSON.stringify(testResult, null, 2)}
+                <div className="p-4 rounded-2xl border bg-[#faf9f6] border-[#ede7de] space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#ede7de] pb-2">
+                    <span className="font-black text-stone-900 text-xs flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-orange-600" />
+                      Gateway Telemetry Report
+                    </span>
+                    <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-stone-200 text-stone-800">
+                      MODE: {testResult.data?.mode?.toUpperCase() || (testResult.success ? 'LIVE' : 'FAILED')}
+                    </span>
+                  </div>
+
+                  {testResult.error && (
+                    <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium">
+                      ⚠️ {testResult.error}
+                    </div>
+                  )}
+
+                  {testResult.data?.results && (
+                    <div className="space-y-2">
+                      {testResult.data.results.whatsapp && (
+                        <div className="p-2.5 rounded-xl border bg-white border-[#ede7de] text-[11px] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[#1c1917] flex items-center gap-1.5">
+                              <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                              WhatsApp Gateway
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${
+                              testResult.data.results.whatsapp.status === 'SENT' || testResult.data.results.whatsapp.status === 'DELIVERED'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : testResult.data.results.whatsapp.status === 'NOT_CONFIGURED'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-red-50 text-red-700 border border-red-200'
+                            }`}>
+                              {testResult.data.results.whatsapp.status}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-stone-600 pt-1">
+                            <div>Provider: <strong className="text-stone-800">{testResult.data.results.whatsapp.provider || 'META'}</strong></div>
+                            <div>Simulated: <strong className={testResult.data.results.whatsapp.is_simulated ? 'text-amber-600' : 'text-emerald-700'}>{String(testResult.data.results.whatsapp.is_simulated)}</strong></div>
+                            <div className="col-span-2 truncate">Ref / ID: <span className="text-stone-800">{testResult.data.results.whatsapp.message_id || 'None'}</span></div>
+                          </div>
+                          {testResult.data.results.whatsapp.error && (
+                            <p className="text-[10px] text-amber-800 bg-amber-50/70 p-1.5 rounded-lg border border-amber-100">
+                              ℹ️ {testResult.data.results.whatsapp.error}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {testResult.data.results.sms && (
+                        <div className="p-2.5 rounded-xl border bg-white border-[#ede7de] text-[11px] space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[#1c1917] flex items-center gap-1.5">
+                              <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                              SMS Gateway (DLT)
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full font-extrabold text-[10px] ${
+                              testResult.data.results.sms.status === 'SENT' || testResult.data.results.sms.status === 'DELIVERED'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : testResult.data.results.sms.status === 'NOT_CONFIGURED'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-red-50 text-red-700 border border-red-200'
+                            }`}>
+                              {testResult.data.results.sms.status}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-stone-600 pt-1">
+                            <div>Provider: <strong className="text-stone-800">{testResult.data.results.sms.provider || 'MSG91'}</strong></div>
+                            <div>Simulated: <strong className={testResult.data.results.sms.is_simulated ? 'text-amber-600' : 'text-emerald-700'}>{String(testResult.data.results.sms.is_simulated)}</strong></div>
+                            <div className="col-span-2 truncate">Ref / ID: <span className="text-stone-800">{testResult.data.results.sms.message_id || 'None'}</span></div>
+                          </div>
+                          {testResult.data.results.sms.error && (
+                            <p className="text-[10px] text-amber-800 bg-amber-50/70 p-1.5 rounded-lg border border-amber-100">
+                              ℹ️ {testResult.data.results.sms.error}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-1 border-t border-[#ede7de]">
+                    <span className="text-[10px] text-stone-500">
+                      Dispatched to Delivery Logs & Audit Trail
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('logs')}
+                      className="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 cursor-pointer"
+                    >
+                      View in Delivery Logs &rarr;
+                    </button>
+                  </div>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={testSending}
-                className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold transition flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold transition flex items-center justify-center gap-2 shadow-xs disabled:opacity-50 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
-                <span>{testSending ? 'Testing Gateway...' : `TEST ${testChannel}`}</span>
+                <span>{testSending ? 'Testing Gateway Connectivity...' : `DISPATCH LIVE TEST (${testChannel})`}</span>
               </button>
             </form>
           </div>

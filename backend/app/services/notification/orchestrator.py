@@ -53,8 +53,7 @@ class NotificationOrchestrator:
             window_ago = now_utc - timedelta(minutes=settings.ALERT_DEDUP_WINDOW_MINUTES)
             recent_job = db.query(NotificationJob).filter(
                 NotificationJob.alert_id == alert.id,
-                NotificationJob.created_at >= window_ago,
-                NotificationJob.status.in_([DeliveryStatus.SENT.value, DeliveryStatus.DELIVERED.value])
+                NotificationJob.created_at >= window_ago
             ).first()
 
             if recent_job:
@@ -118,9 +117,10 @@ class NotificationOrchestrator:
             
             # Idempotency check
             existing_job = db.query(NotificationJob).filter(NotificationJob.idempotency_key == idempotency_key).first()
-            if existing_job and existing_job.status in [DeliveryStatus.SENT.value, DeliveryStatus.DELIVERED.value]:
+            if existing_job:
                 wa_results_summary["skipped"] += 1
-                wa_success_users.add(recip.user_id)
+                if existing_job.status in [DeliveryStatus.SENT.value, DeliveryStatus.DELIVERED.value]:
+                    wa_success_users.add(recip.user_id)
                 continue
 
             wa_text = WhatsAppRenderer.render(canonical_msg, recipient_name=recip.full_name)
@@ -198,7 +198,7 @@ class NotificationOrchestrator:
             idempotency_key = f"alert:{alert.id}:user:{recip.user_id}:chan:SMS:v1"
             
             existing_job = db.query(NotificationJob).filter(NotificationJob.idempotency_key == idempotency_key).first()
-            if existing_job and existing_job.status in [DeliveryStatus.SENT.value, DeliveryStatus.DELIVERED.value]:
+            if existing_job:
                 sms_results_summary["skipped"] += 1
                 continue
 

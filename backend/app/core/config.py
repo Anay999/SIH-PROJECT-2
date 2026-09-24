@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     WHATSAPP_RATE_LIMIT_PER_SECOND: int = int(os.getenv("WHATSAPP_RATE_LIMIT_PER_SECOND", "10"))
     SMS_RATE_LIMIT_PER_SECOND: int = int(os.getenv("SMS_RATE_LIMIT_PER_SECOND", "20"))
 
+    # Explicit Notification Execution Mode: live | mock | demo
+    NOTIFICATION_MODE: str = os.getenv("NOTIFICATION_MODE", "live").lower()
+    
     # Twilio WhatsApp settings (Disabled by default)
     TWILIO_WHATSAPP_ENABLED: bool = os.getenv("TWILIO_WHATSAPP_ENABLED", "false").lower() == "true"
     TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
