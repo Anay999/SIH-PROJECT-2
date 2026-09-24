@@ -45,6 +45,18 @@ def seed_default_users(db: Session):
             "phone_verified": True,
         },
         {
+            "id": "usr_officer_chennai_01",
+            "username": "chennai_officer",
+            "full_name": "Chennai Corporation Heat Officer",
+            "phone_number": "+919876543299",
+            "email": "officer@chennaicorp.gov.in",
+            "password_hash": hash_password("Officer@123"),
+            "role": UserRole.MUNICIPAL_OFFICER.value,
+            "city": "Chennai",
+            "is_active": True,
+            "phone_verified": True,
+        },
+        {
             "id": "usr_citizen_01",
             "username": "citizen",
             "full_name": "Public Citizen User",
