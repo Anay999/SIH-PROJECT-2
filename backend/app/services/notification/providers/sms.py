@@ -153,7 +153,10 @@ class MSG91SMSProvider(BaseNotificationProvider):
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.post(url, headers=headers, json=payload)
-                    data = resp.json() if resp.status_code == 200 else {}
+                    try:
+                        data = resp.json()
+                    except Exception:
+                        data = {}
                     success = resp.status_code == 200 and data.get("return") is True
                     if success:
                         msg_id = str(data.get("request_id") or f"f2s_{clean_number}_{abs(hash(message_text[:15]))}")
@@ -166,13 +169,19 @@ class MSG91SMSProvider(BaseNotificationProvider):
                             raw_response=str(data)[:400],
                             is_simulated=False
                         )
-                    logger.error(f"[FAST2SMS FAILED] {data}")
+                    err_msg = ""
+                    if isinstance(data, dict):
+                        m = data.get("message")
+                        err_msg = "; ".join(m) if isinstance(m, list) else str(m or "")
+                    if not err_msg:
+                        err_msg = resp.text[:200] or "Gateway error"
+                    logger.error(f"[FAST2SMS FAILED] {resp.status_code}: {err_msg}")
                     return ProviderResult(
                         success=False,
                         provider="FAST2SMS_INDIA",
                         status="FAILED",
                         error_code="FAST2SMS_REJECTED",
-                        error_message=str(data.get("message") or "Gateway error"),
+                        error_message=err_msg,
                         is_retryable=resp.status_code in [429, 500, 502],
                         is_simulated=False
                     )
