@@ -1,0 +1,14 @@
+# Spatial Mapping Configuration
+spatial_mapping:
+  primary_method: "area_weighted_and_centroid_sampling"
+  supported_methods:
+    - "nearest_grid_cell"
+    - "bilinear_interpolation"
+    - "area_weighted"
+    - "centroid_sampling"
+  grid_source: "ECMWF ERA5 / ERA5-Land Reanalysis"
+  source_resolution_km: 9.0
+  source_crs: "EPSG:4326"
+  target_crs: "EPSG:4326"
+  ward_dataset: "data/geojson/chennai_wards.geojson"
+  provenance_note: "Meteorological reanalysis values mapped from ECMWF ERA5 grid (~9-25km resolution) to administrative polygons via coordinate centroid and spatial polygon intersection."

@@ -88,3 +88,7 @@ api_router.include_router(admin_router)
 api_router.include_router(thermomap_router)
 api_router.include_router(community_router)
 
+# Mount Spatiotemporal Heatwave AI Prediction & Intelligence Router
+from app.api.routes_ai_prediction import router as ai_prediction_router
+api_router.include_router(ai_prediction_router)
+

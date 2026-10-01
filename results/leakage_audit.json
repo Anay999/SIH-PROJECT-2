@@ -1,0 +1,418 @@
+{
+  "total_features_audited": 82,
+  "leakage_detected": false,
+  "certified_leakage_free": true,
+  "audit_timestamp": "2026-10-01 13:54:55.215776",
+  "features": {
+    "temperature_2m_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_min": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_min": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "precipitation_sum": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "wind_speed_10m_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "wind_gusts_10m_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "wind_direction_10m_dominant": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "shortwave_radiation_sum": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "surface_pressure_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "latitude": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "longitude": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "tmax_normal": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_departure": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "diurnal_temp_range": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "relative_humidity_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "dew_point_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "dew_point_depression": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "wind_u": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "wind_v": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "pressure_change_24h": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "wbgt_approx": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "thermal_discomfort_proxy": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "precip_3d_sum": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "precip_7d_sum": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_lag1": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_lag2": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_lag3": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_lag5": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_lag7": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_mean_lag1": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_mean_lag2": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_mean_lag3": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_mean_lag5": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_mean_lag7": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_lag1": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_lag2": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_lag3": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_lag5": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_lag7": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "shortwave_radiation_sum_lag1": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "shortwave_radiation_sum_lag2": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "shortwave_radiation_sum_lag3": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "shortwave_radiation_sum_lag5": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "shortwave_radiation_sum_lag7": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_lag1": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_lag2": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_lag3": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_lag5": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_lag7": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll3_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll3_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll3_min": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll5_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll5_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll7_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "temperature_2m_max_roll7_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll3_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll3_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll3_min": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll5_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll5_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll7_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "apparent_temperature_max_roll7_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll3_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll3_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll3_min": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll5_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll5_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll7_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "heat_index_roll7_max": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "tmax_trend_1d": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "tmax_trend_3d": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "tmax_trend_7d": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "srad_roll3_mean": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "month": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "sin_day_of_year": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "cos_day_of_year": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    },
+    "elevation_m": {
+      "status": "SAFE",
+      "is_target_derived": false,
+      "contains_future_keywords": false
+    }
+  }
+}

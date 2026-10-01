@@ -1,0 +1,6 @@
+configuration,num_features,accuracy,recall,precision,f1,delta_f1,roc_auc,pr_auc
+Raw Meteorological Features Only,32,0.98,0.2143,0.1927,0.2029,0.0,0.961,0.2142
++ Temporal Lags,52,0.9778,0.5408,0.2775,0.3668,0.1639,0.964,0.3011
++ Rolling Statistics & Trends,67,0.9754,0.1939,0.1329,0.1577,-0.0452,0.9101,0.1014
+"+ Thermal Stress Indices (HI, WBGT)",81,0.9517,0.5816,0.1373,0.2222,0.0193,0.9341,0.1421
+Full Proposed Multi-Source Spatiotemporal Feature Set,82,0.9547,0.3367,0.0965,0.15,-0.0529,0.737,0.055

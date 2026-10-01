@@ -1,0 +1,7 @@
+model,training_time_s,inference_latency_ms,model_size_kb
+Logistic Regression,1.208,0.001,1.2
+Random Forest,3.498,0.014,1220.9
+XGBoost,3.703,0.001,396.7
+LightGBM,3.379,0.004,678.2
+LSTM,0.0,0.021,290.0
+Attention-GRU,0.0,0.026,419.2

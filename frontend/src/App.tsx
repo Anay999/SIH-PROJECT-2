@@ -30,6 +30,7 @@ import { ThermalStressPage } from './pages/ThermalStressPage';
 import { HealthRiskPage } from './pages/HealthRiskPage';
 import { RegisteredUsersPage } from './pages/RegisteredUsersPage';
 import { Municipal3DCommandCenter } from './components/thermomap/Municipal3DCommandCenter';
+import { AiResearchDashboardPage } from './pages/AiResearchDashboardPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -136,6 +137,9 @@ export const App: React.FC = () => {
                 <Route path="evidence" element={<MethodologyPage />} />
                 <Route path="methodology" element={<MethodologyPage />} />
                 <Route path="data-sources" element={<MethodologyPage />} />
+                <Route path="spatiotemporal-ai" element={<AiResearchDashboardPage />} />
+                <Route path="ai-framework" element={<AiResearchDashboardPage />} />
+                <Route path="research-lab" element={<AiResearchDashboardPage />} />
 
                 {/* Secondary Supporting Tools */}
                 <Route path="map" element={<LiveHeatMapPage />} />

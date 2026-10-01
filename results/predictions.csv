@@ -1,0 +1,70 @@
+location,ward_name,district,location_type,latest_observation_date,forecast_date,horizon,model,probability,prediction,threshold,risk_level,color_hex,latitude,longitude,latest_tmax,latest_heat_index
+loc_chennai,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.0827,80.2707,28.2,31.62
+loc_chennai,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.0827,80.2707,28.2,31.62
+loc_chennai,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.0827,80.2707,28.2,31.62
+loc_coimbatore,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,11.0168,76.9558,28.6,34.96
+loc_coimbatore,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,11.0168,76.9558,28.6,34.96
+loc_coimbatore,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,11.0168,76.9558,28.6,34.96
+loc_cuddalore,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,11.748,79.7714,28.7,33.59
+loc_cuddalore,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,11.748,79.7714,28.7,33.59
+loc_cuddalore,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,11.748,79.7714,28.7,33.59
+loc_madurai,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,9.9252,78.1198,30.0,38.13
+loc_madurai,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,9.9252,78.1198,30.0,38.13
+loc_madurai,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,9.9252,78.1198,30.0,38.13
+loc_salem,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,11.6643,78.146,31.3,41.26
+loc_salem,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,11.6643,78.146,31.3,41.26
+loc_salem,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,11.6643,78.146,31.3,41.26
+loc_tiruchirappalli,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,10.7905,78.7047,29.5,36.27
+loc_tiruchirappalli,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,10.7905,78.7047,29.5,36.27
+loc_tiruchirappalli,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,10.7905,78.7047,29.5,36.27
+loc_tirunelveli,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,8.7139,77.7567,30.3,37.33
+loc_tirunelveli,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0002,NO HEATWAVE,0.38,NORMAL,#10B981,8.7139,77.7567,30.3,37.33
+loc_tirunelveli,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,8.7139,77.7567,30.3,37.33
+loc_vellore,,,,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.9165,79.1325,29.0,34.68
+loc_vellore,,,,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,12.9165,79.1325,29.0,34.68
+loc_vellore,,,,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.9165,79.1325,29.0,34.68
+ward_01_thiruvottiyur,Thiruvottiyur,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.164,80.301,28.6,32.52
+ward_01_thiruvottiyur,Thiruvottiyur,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.164,80.301,28.6,32.52
+ward_01_thiruvottiyur,Thiruvottiyur,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.164,80.301,28.6,32.52
+ward_02_manali,Manali,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.168,80.258,28.6,32.66
+ward_02_manali,Manali,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.168,80.258,28.6,32.66
+ward_02_manali,Manali,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.168,80.258,28.6,32.66
+ward_03_madhavaram,Madhavaram,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.148,80.231,28.6,32.66
+ward_03_madhavaram,Madhavaram,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.148,80.231,28.6,32.66
+ward_03_madhavaram,Madhavaram,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.148,80.231,28.6,32.66
+ward_04_tondiarpet,Tondiarpet,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.125,80.289,28.2,31.62
+ward_04_tondiarpet,Tondiarpet,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.125,80.289,28.2,31.62
+ward_04_tondiarpet,Tondiarpet,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.125,80.289,28.2,31.62
+ward_05_royapuram,Royapuram,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.109,80.294,28.1,31.4
+ward_05_royapuram,Royapuram,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.109,80.294,28.1,31.4
+ward_05_royapuram,Royapuram,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.109,80.294,28.1,31.4
+ward_06_thiruvika_nagar,Thiru-Vi-Ka Nagar,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.111,80.245,28.2,31.62
+ward_06_thiruvika_nagar,Thiru-Vi-Ka Nagar,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.111,80.245,28.2,31.62
+ward_06_thiruvika_nagar,Thiru-Vi-Ka Nagar,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.111,80.245,28.2,31.62
+ward_07_ambattur,Ambattur,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.114,80.154,28.7,32.22
+ward_07_ambattur,Ambattur,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.114,80.154,28.7,32.22
+ward_07_ambattur,Ambattur,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.114,80.154,28.7,32.22
+ward_08_anna_nagar,Anna Nagar,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.085,80.21,28.11,30.83
+ward_08_anna_nagar,Anna Nagar,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.085,80.21,28.11,30.83
+ward_08_anna_nagar,Anna Nagar,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.085,80.21,28.11,30.83
+ward_09_teynampet,Teynampet,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.042,80.248,28.18,30.77
+ward_09_teynampet,Teynampet,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.042,80.248,28.18,30.77
+ward_09_teynampet,Teynampet,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.042,80.248,28.18,30.77
+ward_10_kodambakkam,Kodambakkam,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.052,80.221,28.35,31.18
+ward_10_kodambakkam,Kodambakkam,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.052,80.221,28.35,31.18
+ward_10_kodambakkam,Kodambakkam,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.052,80.221,28.35,31.18
+ward_11_valasaravakkam,Valasaravakkam,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.04,80.175,28.24,31.17
+ward_11_valasaravakkam,Valasaravakkam,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.04,80.175,28.24,31.17
+ward_11_valasaravakkam,Valasaravakkam,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.04,80.175,28.24,31.17
+ward_12_alandur,Alandur,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.997,80.201,28.23,31.06
+ward_12_alandur,Alandur,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,12.997,80.201,28.23,31.06
+ward_12_alandur,Alandur,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.997,80.201,28.23,31.06
+ward_13_adyar,Adyar,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.006,80.257,27.91,30.27
+ward_13_adyar,Adyar,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,13.006,80.257,27.91,30.27
+ward_13_adyar,Adyar,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,13.006,80.257,27.91,30.27
+ward_14_perungudi,Perungudi,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.965,80.244,28.04,30.54
+ward_14_perungudi,Perungudi,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,12.965,80.244,28.04,30.54
+ward_14_perungudi,Perungudi,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.965,80.244,28.04,30.54
+ward_15_sholinganallur,Sholinganallur,Chennai,ward,2024-12-31,2025-01-01,T+1,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.901,80.228,28.03,30.6
+ward_15_sholinganallur,Sholinganallur,Chennai,ward,2024-12-31,2025-01-02,T+2,attention_gru,0.0001,NO HEATWAVE,0.38,NORMAL,#10B981,12.901,80.228,28.03,30.6
+ward_15_sholinganallur,Sholinganallur,Chennai,ward,2024-12-31,2025-01-03,T+3,attention_gru,0.0,NO HEATWAVE,0.38,NORMAL,#10B981,12.901,80.228,28.03,30.6

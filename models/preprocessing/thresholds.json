@@ -1,0 +1,8 @@
+{
+  "logistic_regression": 0.9,
+  "random_forest": 0.76,
+  "xgboost": 0.14,
+  "lightgbm": 0.12,
+  "lstm": 0.43,
+  "attention_gru": 0.38
+}

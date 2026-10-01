@@ -16,7 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Sliders,
-  Radio
+  Radio,
+  Cpu
 } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { useAuth } from '../../context/AuthContext';
@@ -44,6 +45,7 @@ export const Sidebar: React.FC = () => {
 
   // Advanced features (all kept fully operational and accessible)
   const ADVANCED_NAV_ITEMS = [
+    { to: '/spatiotemporal-ai', label: 'AI Heatwave Lab', icon: Cpu, badge: 'Research', badgeColor: 'bg-indigo-600 text-white' },
     { to: '/thermal-terrain', label: '3D Command Center', icon: Compass, badge: '3D Topo', badgeColor: 'bg-gradient-to-r from-orange-600 to-amber-600 text-white' },
     { to: '/notifications', label: 'Notification Center', icon: Radio, badge: 'Live', badgeColor: 'bg-emerald-600 text-white' },
     { to: '/users', label: 'Registered Users', icon: Users, badge: 'Citizens', badgeColor: 'bg-emerald-100 text-emerald-800' },

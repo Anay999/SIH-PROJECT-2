@@ -1,0 +1,138 @@
+# Multi-Source Spatiotemporal AI Framework Configuration
+project:
+  name: "Multi-Source Spatiotemporal AI Framework for Early Heatwave Prediction"
+  version: "1.0.0"
+  random_seed: 42
+
+geographic:
+  country: "India"
+  state: "Tamil Nadu"
+  study_region: "Tamil Nadu & South India"
+  locations:
+    # Key Tamil Nadu & South Indian Districts
+    - id: "loc_chennai"
+      name: "Chennai"
+      type: "district"
+      category: "coastal"
+      latitude: 13.0827
+      longitude: 80.2707
+      elevation_m: 6.0
+    - id: "loc_madurai"
+      name: "Madurai"
+      type: "district"
+      category: "plains"
+      latitude: 9.9252
+      longitude: 78.1198
+      elevation_m: 101.0
+    - id: "loc_coimbatore"
+      name: "Coimbatore"
+      type: "district"
+      category: "inland_plateau"
+      latitude: 11.0168
+      longitude: 76.9558
+      elevation_m: 411.0
+    - id: "loc_tiruchirappalli"
+      name: "Tiruchirappalli"
+      type: "district"
+      category: "plains"
+      latitude: 10.7905
+      longitude: 78.7047
+      elevation_m: 88.0
+    - id: "loc_salem"
+      name: "Salem"
+      type: "district"
+      category: "plains"
+      latitude: 11.6643
+      longitude: 78.1460
+      elevation_m: 278.0
+    - id: "loc_vellore"
+      name: "Vellore"
+      type: "district"
+      category: "plains"
+      latitude: 12.9165
+      longitude: 79.1325
+      elevation_m: 216.0
+    - id: "loc_tirunelveli"
+      name: "Tirunelveli"
+      type: "district"
+      category: "plains"
+      latitude: 8.7139
+      longitude: 77.7567
+      elevation_m: 47.0
+    - id: "loc_cuddalore"
+      name: "Cuddalore"
+      type: "district"
+      category: "coastal"
+      latitude: 11.7480
+      longitude: 79.7714
+      elevation_m: 6.0
+
+temporal:
+  start_date: "2014-01-01"
+  end_date: "2024-12-31"
+  train_years: [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021]
+  val_years: [2022, 2023]
+  test_years: [2024]
+  sequence_length: 7
+  forecast_horizons: [1, 2, 3] # T+1, T+2, T+3 days ahead
+
+labeling:
+  institution: "India Meteorological Department (IMD)"
+  normal_climatology_period: "2014-2021" # Strictly training period only! No leakage.
+  rules:
+    plains:
+      heatwave_departure_threshold: 4.5
+      severe_departure_threshold: 6.5
+      absolute_heatwave_threshold: 45.0
+      absolute_severe_threshold: 47.0
+      normal_min_threshold: 40.0
+    coastal:
+      coastal_heatwave_temp_threshold: 37.0
+      coastal_departure_threshold: 4.5
+
+models:
+  logistic_regression:
+    C: 0.1
+    max_iter: 1000
+    solver: "lbfgs"
+    class_weight: "balanced"
+  random_forest:
+    n_estimators: 150
+    max_depth: 8
+    min_samples_split: 5
+    min_samples_leaf: 2
+    class_weight: "balanced"
+    random_state: 42
+  xgboost:
+    n_estimators: 200
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 4.0
+    random_state: 42
+  lightgbm:
+    n_estimators: 200
+    learning_rate: 0.05
+    num_leaves: 31
+    max_depth: 6
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 4.0
+    random_state: 42
+  lstm:
+    hidden_dim: 64
+    num_layers: 2
+    dropout: 0.2
+    learning_rate: 0.001
+    batch_size: 64
+    epochs: 40
+    early_stopping_patience: 10
+  attention_gru:
+    hidden_dim: 128
+    dense_dim: 64
+    dropout: 0.25
+    learning_rate: 0.001
+    batch_size: 64
+    epochs: 50
+    early_stopping_patience: 10

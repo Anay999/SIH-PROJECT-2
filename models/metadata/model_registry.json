@@ -1,0 +1,396 @@
+{
+  "project": "Multi-Source Spatiotemporal AI Framework for 1-3 Day Heatwave Prediction",
+  "timestamp": "2026-10-01 14:09:03.710652",
+  "thresholds": {
+    "logistic_regression": 0.9,
+    "random_forest": 0.76,
+    "xgboost": 0.14,
+    "lightgbm": 0.12,
+    "lstm": 0.43,
+    "attention_gru": 0.38
+  },
+  "models": {
+    "logistic_regression": {
+      "version": "1.0",
+      "type": "Linear Statistical Baseline",
+      "test_metrics": {
+        "model": "Logistic Regression",
+        "horizon": "T+1",
+        "threshold": 0.9,
+        "accuracy": 0.9808,
+        "balanced_accuracy": 0.6525,
+        "precision": 0.248,
+        "recall": 0.3163,
+        "f1": 0.278,
+        "roc_auc": 0.9598,
+        "pr_auc": 0.2976,
+        "specificity": 0.9887,
+        "sensitivity": 0.3163,
+        "mcc": 0.2705,
+        "brier_score": 0.0247,
+        "log_loss": 0.1054,
+        "true_positives": 31,
+        "false_positives": 94,
+        "true_negatives": 8203,
+        "false_negatives": 67,
+        "false_negative_rate": 0.6837,
+        "imbalance_warning": "High overall accuracy may be influenced by class imbalance. Heatwave-class recall and F1 should be considered before interpreting model performance.",
+        "calibration_bins": [
+          {
+            "predicted_prob": 0.0022,
+            "empirical_prob": 0.0032
+          },
+          {
+            "predicted_prob": 0.1488,
+            "empirical_prob": 0.0301
+          },
+          {
+            "predicted_prob": 0.2418,
+            "empirical_prob": 0.0532
+          },
+          {
+            "predicted_prob": 0.35,
+            "empirical_prob": 0.0339
+          },
+          {
+            "predicted_prob": 0.454,
+            "empirical_prob": 0.0196
+          },
+          {
+            "predicted_prob": 0.5521,
+            "empirical_prob": 0.0833
+          },
+          {
+            "predicted_prob": 0.6483,
+            "empirical_prob": 0.1224
+          },
+          {
+            "predicted_prob": 0.7522,
+            "empirical_prob": 0.2941
+          },
+          {
+            "predicted_prob": 0.8572,
+            "empirical_prob": 0.3448
+          },
+          {
+            "predicted_prob": 0.978,
+            "empirical_prob": 0.248
+          }
+        ]
+      }
+    },
+    "random_forest": {
+      "version": "1.0",
+      "type": "Ensemble Tree Baseline",
+      "test_metrics": {
+        "model": "Random Forest",
+        "horizon": "T+1",
+        "threshold": 0.76,
+        "accuracy": 0.9858,
+        "balanced_accuracy": 0.5391,
+        "precision": 0.2162,
+        "recall": 0.0816,
+        "f1": 0.1185,
+        "roc_auc": 0.9653,
+        "pr_auc": 0.1986,
+        "specificity": 0.9965,
+        "sensitivity": 0.0816,
+        "mcc": 0.1267,
+        "brier_score": 0.0157,
+        "log_loss": 0.0528,
+        "true_positives": 8,
+        "false_positives": 29,
+        "true_negatives": 8268,
+        "false_negatives": 90,
+        "false_negative_rate": 0.9184,
+        "imbalance_warning": "High overall accuracy may be influenced by class imbalance. Heatwave-class recall and F1 should be considered before interpreting model performance.",
+        "calibration_bins": [
+          {
+            "predicted_prob": 0.0047,
+            "empirical_prob": 0.0009
+          },
+          {
+            "predicted_prob": 0.1461,
+            "empirical_prob": 0.0347
+          },
+          {
+            "predicted_prob": 0.2473,
+            "empirical_prob": 0.08
+          },
+          {
+            "predicted_prob": 0.3526,
+            "empirical_prob": 0.2846
+          },
+          {
+            "predicted_prob": 0.4498,
+            "empirical_prob": 0.0822
+          },
+          {
+            "predicted_prob": 0.5392,
+            "empirical_prob": 0.1406
+          },
+          {
+            "predicted_prob": 0.6413,
+            "empirical_prob": 0.3143
+          },
+          {
+            "predicted_prob": 0.7363,
+            "empirical_prob": 0.381
+          },
+          {
+            "predicted_prob": 0.8558,
+            "empirical_prob": 0.037
+          },
+          {
+            "predicted_prob": 0.9531,
+            "empirical_prob": 0.25
+          }
+        ]
+      }
+    },
+    "xgboost": {
+      "version": "1.0",
+      "type": "Gradient Boosted Trees",
+      "test_metrics": {
+        "model": "XGBoost",
+        "horizon": "T+1",
+        "threshold": 0.14,
+        "accuracy": 0.987,
+        "balanced_accuracy": 0.5548,
+        "precision": 0.3333,
+        "recall": 0.1122,
+        "f1": 0.1679,
+        "roc_auc": 0.9758,
+        "pr_auc": 0.2834,
+        "specificity": 0.9973,
+        "sensitivity": 0.1122,
+        "mcc": 0.1881,
+        "brier_score": 0.0107,
+        "log_loss": 0.0515,
+        "true_positives": 11,
+        "false_positives": 22,
+        "true_negatives": 8275,
+        "false_negatives": 87,
+        "false_negative_rate": 0.8878,
+        "imbalance_warning": "High overall accuracy may be influenced by class imbalance. Heatwave-class recall and F1 should be considered before interpreting model performance.",
+        "calibration_bins": [
+          {
+            "predicted_prob": 0.0009,
+            "empirical_prob": 0.0099
+          },
+          {
+            "predicted_prob": 0.1362,
+            "empirical_prob": 0.1515
+          },
+          {
+            "predicted_prob": 0.2449,
+            "empirical_prob": 0.375
+          },
+          {
+            "predicted_prob": 0.3559,
+            "empirical_prob": 0.6
+          },
+          {
+            "predicted_prob": 0.4409,
+            "empirical_prob": 0.25
+          },
+          {
+            "predicted_prob": 0.5324,
+            "empirical_prob": 1.0
+          }
+        ]
+      }
+    },
+    "lightgbm": {
+      "version": "1.0",
+      "type": "Light Gradient Boosted Machine",
+      "test_metrics": {
+        "model": "LightGBM",
+        "horizon": "T+1",
+        "threshold": 0.12,
+        "accuracy": 0.9846,
+        "balanced_accuracy": 0.5435,
+        "precision": 0.1837,
+        "recall": 0.0918,
+        "f1": 0.1224,
+        "roc_auc": 0.608,
+        "pr_auc": 0.0619,
+        "specificity": 0.9952,
+        "sensitivity": 0.0918,
+        "mcc": 0.1227,
+        "brier_score": 0.0147,
+        "log_loss": 0.1897,
+        "true_positives": 9,
+        "false_positives": 40,
+        "true_negatives": 8257,
+        "false_negatives": 89,
+        "false_negative_rate": 0.9082,
+        "imbalance_warning": "High overall accuracy may be influenced by class imbalance. Heatwave-class recall and F1 should be considered before interpreting model performance.",
+        "calibration_bins": [
+          {
+            "predicted_prob": 0.0001,
+            "empirical_prob": 0.0107
+          },
+          {
+            "predicted_prob": 0.1281,
+            "empirical_prob": 0.0
+          },
+          {
+            "predicted_prob": 0.2715,
+            "empirical_prob": 0.0
+          },
+          {
+            "predicted_prob": 0.3389,
+            "empirical_prob": 0.5
+          },
+          {
+            "predicted_prob": 0.4159,
+            "empirical_prob": 0.0
+          },
+          {
+            "predicted_prob": 0.5527,
+            "empirical_prob": 0.3333
+          },
+          {
+            "predicted_prob": 0.6364,
+            "empirical_prob": 0.5
+          },
+          {
+            "predicted_prob": 0.7165,
+            "empirical_prob": 1.0
+          },
+          {
+            "predicted_prob": 0.8994,
+            "empirical_prob": 0.0
+          },
+          {
+            "predicted_prob": 0.9969,
+            "empirical_prob": 0.1351
+          }
+        ]
+      }
+    },
+    "lstm": {
+      "version": "1.0",
+      "type": "Recurrent Deep Temporal Baseline",
+      "test_metrics": {
+        "model": "LSTM",
+        "horizon": "T+1",
+        "threshold": 0.43,
+        "accuracy": 0.9839,
+        "balanced_accuracy": 0.6138,
+        "precision": 0.284,
+        "recall": 0.2347,
+        "f1": 0.257,
+        "roc_auc": 0.9361,
+        "pr_auc": 0.2071,
+        "specificity": 0.9929,
+        "sensitivity": 0.2347,
+        "mcc": 0.2501,
+        "brier_score": 0.0127,
+        "log_loss": 0.0592,
+        "true_positives": 23,
+        "false_positives": 58,
+        "true_negatives": 8101,
+        "false_negatives": 75,
+        "false_negative_rate": 0.7653,
+        "imbalance_warning": "High overall accuracy may be influenced by class imbalance. Heatwave-class recall and F1 should be considered before interpreting model performance.",
+        "calibration_bins": [
+          {
+            "predicted_prob": 0.0021,
+            "empirical_prob": 0.0085
+          },
+          {
+            "predicted_prob": 0.1285,
+            "empirical_prob": 0.0455
+          },
+          {
+            "predicted_prob": 0.2505,
+            "empirical_prob": 0.0
+          },
+          {
+            "predicted_prob": 0.3526,
+            "empirical_prob": 0.1765
+          },
+          {
+            "predicted_prob": 0.4548,
+            "empirical_prob": 0.1429
+          },
+          {
+            "predicted_prob": 0.5185,
+            "empirical_prob": 0.2727
+          },
+          {
+            "predicted_prob": 0.6531,
+            "empirical_prob": 0.2667
+          },
+          {
+            "predicted_prob": 0.7598,
+            "empirical_prob": 0.1875
+          },
+          {
+            "predicted_prob": 0.8503,
+            "empirical_prob": 0.3333
+          },
+          {
+            "predicted_prob": 0.9312,
+            "empirical_prob": 0.8333
+          }
+        ]
+      }
+    },
+    "attention_gru": {
+      "version": "1.0",
+      "type": "Proposed Spatiotemporal Attention-GRU",
+      "test_metrics": {
+        "model": "Attention-GRU",
+        "horizon": "T+1",
+        "threshold": 0.38,
+        "accuracy": 0.9879,
+        "balanced_accuracy": 0.5654,
+        "precision": 0.4643,
+        "recall": 0.1327,
+        "f1": 0.2063,
+        "roc_auc": 0.7139,
+        "pr_auc": 0.1699,
+        "specificity": 0.9982,
+        "sensitivity": 0.1327,
+        "mcc": 0.2437,
+        "brier_score": 0.0108,
+        "log_loss": 0.085,
+        "true_positives": 13,
+        "false_positives": 15,
+        "true_negatives": 8144,
+        "false_negatives": 85,
+        "false_negative_rate": 0.8673,
+        "imbalance_warning": "High overall accuracy may be influenced by class imbalance. Heatwave-class recall and F1 should be considered before interpreting model performance.",
+        "calibration_bins": [
+          {
+            "predicted_prob": 0.0023,
+            "empirical_prob": 0.0092
+          },
+          {
+            "predicted_prob": 0.1372,
+            "empirical_prob": 0.0667
+          },
+          {
+            "predicted_prob": 0.2447,
+            "empirical_prob": 0.1905
+          },
+          {
+            "predicted_prob": 0.346,
+            "empirical_prob": 0.3125
+          },
+          {
+            "predicted_prob": 0.4474,
+            "empirical_prob": 0.3125
+          },
+          {
+            "predicted_prob": 0.5456,
+            "empirical_prob": 0.75
+          }
+        ]
+      }
+    }
+  }
+}
